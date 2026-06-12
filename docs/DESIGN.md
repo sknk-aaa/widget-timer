@@ -4,7 +4,7 @@
 
 ## 技術スタック
 
-- Expo SDK 56 / React Native 0.85 / React 19（New Architecture）
+- Expo SDK 54 / React Native 0.81 / React 19（New Architecture）※Expo Go対応SDKに合わせて54を採用
 - expo-router（ファイルベース。メイン1画面＋モーダル）
 - 状態管理: Zustand / DB: Drizzle ORM + expo-sqlite
 - アニメーション: react-native-reanimated 4（+ react-native-worklets）/ ジェスチャ: react-native-gesture-handler

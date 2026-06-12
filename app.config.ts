@@ -15,7 +15,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: false,
     bundleIdentifier: BUNDLE_ID,
-    deploymentTarget: '26.0',
     config: {
       usesNonExemptEncryption: false,
     },
