@@ -1,0 +1,153 @@
+import * as React from 'react';
+import { View, Text, ScrollView, Switch, Alert, Pressable } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { usePresetsStore } from '../src/store/presets';
+import { useProStore } from '../src/store/pro';
+import { FREE_WIDGET_SLOTS } from '../src/domain/types';
+import { DEFAULT_COLOR_ID } from '../src/domain/colors';
+import { DEFAULT_ICON_ID } from '../src/ui/icons/registry';
+import { useTheme } from '../src/ui/theme';
+import { Dial } from '../src/ui/components/Dial';
+import { ColorPicker, IconPicker } from '../src/ui/components/Pickers';
+import { Button } from '../src/ui/components/Button';
+import { PresetTileVisual } from '../src/ui/components/PresetTile';
+import { SheetHeader, SectionLabel } from '../src/ui/components/common';
+import { t } from '../src/i18n';
+
+export default function PresetScreen() {
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { c, spacing, radius } = useTheme();
+  const s = t();
+
+  const params = useLocalSearchParams<{ id?: string }>();
+  const presets = usePresetsStore((st) => st.presets);
+  const isPro = useProStore((st) => st.isPro);
+  const existing = params.id ? presets.find((p) => p.id === params.id) : undefined;
+  const isEdit = !!existing;
+
+  const [durationSec, setDurationSec] = React.useState(existing?.durationSec ?? 300);
+  const [icon, setIcon] = React.useState(existing?.icon ?? DEFAULT_ICON_ID);
+  const [color, setColor] = React.useState(existing?.color ?? DEFAULT_COLOR_ID);
+  const [inWidget, setInWidget] = React.useState(existing?.inWidget ?? false);
+  const [dialActive, setDialActive] = React.useState(false);
+
+  const close = () => router.back();
+
+  const widgetCountExclSelf = presets.filter(
+    (p) => p.inWidget && p.id !== existing?.id,
+  ).length;
+  const wouldExceed = !isPro && inWidget && widgetCountExclSelf >= FREE_WIDGET_SLOTS;
+
+  const onSave = () => {
+    if (durationSec <= 0) return;
+    if (wouldExceed) {
+      router.push('/paywall');
+      return;
+    }
+    if (isEdit && existing) {
+      usePresetsStore.getState().update(existing.id, { durationSec, icon, color, inWidget });
+    } else {
+      const created = usePresetsStore.getState().create({ durationSec, icon, color, inWidget });
+      if (!created) {
+        router.push('/paywall');
+        return;
+      }
+    }
+    close();
+  };
+
+  const onDelete = () => {
+    if (!existing) return;
+    Alert.alert(s.preset.delete, s.preset.deleteConfirm, [
+      { text: s.common.cancel, style: 'cancel' },
+      {
+        text: s.preset.delete,
+        style: 'destructive',
+        onPress: () => {
+          usePresetsStore.getState().remove(existing.id);
+          close();
+        },
+      },
+    ]);
+  };
+
+  return (
+    <View style={{ flex: 1, backgroundColor: c.bgElevated }} accessibilityViewIsModal>
+      <ScrollView
+        scrollEnabled={!dialActive}
+        contentContainerStyle={{
+          padding: spacing.xl,
+          paddingTop: spacing.lg,
+          paddingBottom: insets.bottom + spacing.xxl,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        <SheetHeader
+          title={isEdit ? s.preset.editTitle : s.preset.newTitle}
+          onClose={close}
+          right={
+            <Pressable
+              onPress={onSave}
+              hitSlop={10}
+              disabled={durationSec <= 0}
+              accessibilityRole="button"
+              accessibilityLabel={s.preset.save}
+              accessibilityState={{ disabled: durationSec <= 0 }}
+            >
+              <Text
+                style={{
+                  color: durationSec <= 0 ? c.textTertiary : c.accent,
+                  fontSize: 16,
+                  fontWeight: '700',
+                }}
+              >
+                {s.preset.save}
+              </Text>
+            </Pressable>
+          }
+        />
+
+        <View style={{ alignItems: 'center', marginBottom: spacing.lg }}>
+          <PresetTileVisual icon={icon} color={color} size={68} />
+        </View>
+
+        <View style={{ alignItems: 'center', marginBottom: spacing.xl }}>
+          <Dial valueSec={durationSec} onChange={setDurationSec} onActiveChange={setDialActive} />
+        </View>
+
+        <View style={{ marginBottom: spacing.xl }}>
+          <SectionLabel>{s.preset.color}</SectionLabel>
+          <ColorPicker value={color} onChange={setColor} />
+        </View>
+
+        <View style={{ marginBottom: spacing.xl }}>
+          <SectionLabel>{s.preset.icon}</SectionLabel>
+          <IconPicker value={icon} color={color} onChange={setIcon} />
+        </View>
+
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            backgroundColor: c.surface,
+            borderRadius: radius.md,
+            padding: spacing.lg,
+            marginBottom: spacing.xl,
+          }}
+        >
+          <Text style={{ color: c.textPrimary, fontSize: 15, fontWeight: '600' }}>
+            {s.preset.showInWidget}
+          </Text>
+          <Switch value={inWidget} onValueChange={setInWidget} />
+        </View>
+
+        {isEdit && (
+          <Button title={s.preset.delete} variant="ghost" onPress={onDelete} />
+        )}
+      </ScrollView>
+    </View>
+  );
+}
