@@ -57,6 +57,7 @@ export function PresetBoard(props: Props) {
   const [hiddenIds, setHiddenIds] = React.useState<string[]>(props.hidden.map((p) => p.id));
   const [widgetIds, setWidgetIds] = React.useState<string[]>(props.widget.map((p) => p.id));
   const [draggingId, setDraggingId] = React.useState<string | null>(null);
+  const draggingRef = React.useRef<string | null>(null);
 
   const byId = React.useMemo(() => {
     const m = new Map<string, Preset>();
@@ -115,6 +116,7 @@ export function PresetBoard(props: Props) {
       dragX.value = 0;
       dragY.value = 0;
       dragScale.value = withSpring(1.08, springs.snappy);
+      draggingRef.current = id;
       setDraggingId(id);
       props.onDragActiveChange(true);
       haptics.pickup();
@@ -156,6 +158,8 @@ export function PresetBoard(props: Props) {
   );
 
   const endDrag = React.useCallback(() => {
+    if (!draggingRef.current) return; // ドラッグ未開始（タップ等）では何もしない
+    draggingRef.current = null;
     dragScale.value = withSpring(1, springs.snappy);
     const ok = props.onArrange(hiddenIds, widgetIds);
     if (!ok) {
@@ -387,7 +391,7 @@ function PresetCell({
         .activateAfterLongPress(150)
         .onStart(() => runOnJS(onBegin)())
         .onUpdate((e) => runOnJS(onMove)(e.translationX, e.translationY))
-        .onEnd(() => runOnJS(onEnd)()),
+        .onFinalize(() => runOnJS(onEnd)()),
     [onBegin, onMove, onEnd],
   );
 
