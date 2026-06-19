@@ -22,12 +22,20 @@ group.com.sknk.imasugutimer
 
 ## 環境の使い分け
 
-- **JS/UI**: `npx expo start` → Expo Go で確認（AlarmKit/ウィジェット/Live Activity/課金はモック動作）。
+- **JS/UI**: Expo Go で確認（AlarmKit/ウィジェット/Live Activity/課金はモック動作）。
 - **ネイティブ確認・配信**: `v*` タグ push か手動実行で GitHub Actions → TestFlight。
 
 ```
-npx expo start
+npm start
 ```
+
+### Expo Go 接続の要点（WSL2）
+
+- **SDK は 54 に固定**（App Store の Expo Go が SDK 56 未対応のため）。`expo install --fix` で揃える。
+- `npm start` = `expo start --tunnel --go`。WSL2 は NAT(`172.x`)で LAN が届かないため **tunnel 必須**（`@expo/ngrok` 同梱）。**「Tunnel ready」表示後**に QR が有効化される（出る前は localhost で QR 不可）。iPhone はカメラアプリで読む。
+- `expo-dev-client` は Phase1 では入れない（入れると `expo start` が開発ビルドモードになり Expo Go で開けない）。Phase2 のネイティブ実装時に追加。
+- `session closed`（ngrok）が出たら、**同一 Expo アカウントで同時に2つトンネルを張っていないか**確認（`pkill -f ngrok` 後に再実行）。
+- LAN 直結したい場合は Windows 11 のミラーモード（`.wslconfig` に `networkingMode=mirrored`）＋ `npm run start:local`。
 
 ## CI/CD（GitHub Actions）
 
