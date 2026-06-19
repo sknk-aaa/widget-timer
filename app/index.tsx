@@ -13,7 +13,7 @@ import { PresetBoard } from '../src/ui/components/PresetBoard';
 import { RunningTimerRow } from '../src/ui/components/RunningTimerRow';
 import { PressableScale } from '../src/ui/components/PressableScale';
 import { Banner } from '../src/ui/components/common';
-import { ChartIcon, GearIcon, PlusIcon } from '../src/ui/icons/ui';
+import { GearIcon, PlusIcon } from '../src/ui/icons/ui';
 import { IconGlyph } from '../src/ui/icons/registry';
 import { haptics } from '../src/ui/haptics';
 import { enterItem, exitItem, listLayout } from '../src/ui/motion';
@@ -110,14 +110,6 @@ export default function MainScreen() {
           </Pressable>
         ) : (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xl }}>
-            <Pressable
-              onPress={() => router.push('/analytics')}
-              hitSlop={12}
-              accessibilityRole="button"
-              accessibilityLabel="分析"
-            >
-              <ChartIcon color={c.textPrimary} size={23} />
-            </Pressable>
             <Pressable
               onPress={() => router.push('/settings')}
               hitSlop={12}

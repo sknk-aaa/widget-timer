@@ -98,7 +98,6 @@ export default function RootLayout() {
           <Stack.Screen name="preset" options={{ presentation: 'modal' }} />
           <Stack.Screen name="quick" options={{ presentation: 'modal' }} />
           <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="analytics" options={{ presentation: 'modal' }} />
           <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />
         </Stack>
       </SafeAreaProvider>

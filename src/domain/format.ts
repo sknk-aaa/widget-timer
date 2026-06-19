@@ -81,6 +81,15 @@ export function nowMs(): number {
   return Date.now();
 }
 
+/** 指定の時刻（時:分）までの秒数。過ぎていれば翌日扱い。 */
+export function secondsUntilClock(hour: number, minute: number, now: number = nowMs()): number {
+  const d = new Date(now);
+  const target = new Date(d.getFullYear(), d.getMonth(), d.getDate(), hour, minute, 0, 0);
+  let diff = Math.round((target.getTime() - now) / 1000);
+  if (diff <= 0) diff += 86400;
+  return diff;
+}
+
 /** RunningTimer の現在残り秒数を計算する。 */
 export function remainingSecOf(
   timer: { state: string; endAt: number; pausedRemainingSec: number | null },

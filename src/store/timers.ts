@@ -4,7 +4,6 @@ import {
   insertRunningTimer,
   updateRunningTimer,
   deleteRunningTimer,
-  insertLaunchHistory,
 } from '../db/repo';
 import type { Preset, RunningTimer, TimerSource } from '../domain/types';
 import { nowMs, remainingSecOf } from '../domain/format';
@@ -68,12 +67,6 @@ export const useTimersStore = create<TimersState>((set, get) => ({
       createdAt: now,
     };
     insertRunningTimer(timer);
-    insertLaunchHistory({
-      presetId: input.presetId,
-      durationSec: input.durationSec,
-      startedAt: now,
-      source: input.source,
-    });
     set({ timers: [...get().timers, timer] });
 
     await alarmService.schedule({

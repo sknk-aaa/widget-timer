@@ -19,7 +19,6 @@ export default function PaywallScreen() {
 
   const features = [
     { title: s.pro.featureWidget, sub: s.pro.featureWidgetSub },
-    { title: s.pro.featureAnalytics, sub: s.pro.featureAnalyticsSub },
     { title: s.pro.featureSupport, sub: s.pro.featureSupportSub },
   ];
 

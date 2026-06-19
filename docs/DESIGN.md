@@ -20,7 +20,7 @@ app/                 expo-router ルート（画面）
   onboarding.tsx     初回オンボーディング（3ページ）
   preset.tsx         プリセット作成・編集シート
   quick.tsx          今すぐタイマー（ダイヤル＋スタート）
-  settings/analytics/paywall.tsx
+  settings/paywall.tsx
 src/
   domain/            型・整形・色パレット・定数・UUID
   db/                schema / client / repo / migrate（起動時DDL）
@@ -70,4 +70,4 @@ src/
 
 ## スコープ
 
-製品スコープ・非対象は SPEC.md §1/§8 を参照。Pro 制限（ウィジェット枠3、分析ロック）は `domain/types.ts` の `FREE_WIDGET_SLOTS` と各ストアで実装。
+製品スコープ・非対象は SPEC.md §1/§8 を参照。**分析画面はv1で不採用**（SPEC §3.9 は対象外に変更）。Pro 特典はウィジェット枠の無制限のみ（`domain/types.ts` の `FREE_WIDGET_SLOTS`）。時間入力はホイールピッカー（`WheelPicker`/`ClockWheel`）。

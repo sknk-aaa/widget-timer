@@ -130,31 +130,42 @@ export function PresetBoard(props: Props) {
       const fy = startTop.value + TILE_SIZE / 2 + ty;
       const targetArea: Area = fy < widgetLabelTop ? 'hidden' : 'widget';
 
-      const curHidden = hiddenIds.filter((x) => x !== id);
-      const curWidget = widgetIds.filter((x) => x !== id);
-      const targetList = targetArea === 'hidden' ? curHidden : curWidget;
+      const fromHidden = hiddenIds.includes(id);
+      const srcArr = fromHidden ? hiddenIds : widgetIds;
+      const fromIdx = srcArr.indexOf(id);
+      const sameArea = (targetArea === 'hidden') === fromHidden;
 
       const col = clamp(Math.round((fx - PAD) / CELL_W), 0, cols - 1);
       const row = Math.max(0, Math.floor((fy - areaTopOf(targetArea)) / CELL_H));
-      const idx = clamp(row * cols + col, 0, targetList.length);
+      let j = row * cols + col;
 
-      const cur = locate(id);
-      if (cur.area === targetArea && cur.index === idx) return;
-
-      haptics.swap();
-      if (targetArea === 'hidden') {
-        const next = [...curHidden];
-        next.splice(idx, 0, id);
-        setHiddenIds(next);
-        setWidgetIds(curWidget);
+      if (sameArea) {
+        // 表示中の並び（id を含む）と同じ index 空間で比較。掴んだ位置なら動かさない。
+        j = clamp(j, 0, srcArr.length - 1);
+        if (j === fromIdx) return;
+        const arr = [...srcArr];
+        arr.splice(fromIdx, 1);
+        arr.splice(j, 0, id);
+        if (fromHidden) setHiddenIds(arr);
+        else setWidgetIds(arr);
       } else {
-        const next = [...curWidget];
-        next.splice(idx, 0, id);
-        setWidgetIds(next);
-        setHiddenIds(curHidden);
+        const dstArr = targetArea === 'hidden' ? hiddenIds : widgetIds;
+        j = clamp(j, 0, dstArr.length);
+        const src = [...srcArr];
+        src.splice(fromIdx, 1);
+        const dst = [...dstArr];
+        dst.splice(j, 0, id);
+        if (targetArea === 'hidden') {
+          setHiddenIds(dst);
+          setWidgetIds(src);
+        } else {
+          setWidgetIds(dst);
+          setHiddenIds(src);
+        }
       }
+      haptics.swap();
     },
-    [hiddenIds, widgetIds, cols, widgetLabelTop, locate, areaTopOf],
+    [hiddenIds, widgetIds, cols, widgetLabelTop, areaTopOf],
   );
 
   const endDrag = React.useCallback(() => {
@@ -388,14 +399,15 @@ function PresetCell({
   const pan = React.useMemo(
     () =>
       Gesture.Pan()
-        .activateAfterLongPress(150)
+        .activateAfterLongPress(220)
         .onStart(() => runOnJS(onBegin)())
         .onUpdate((e) => runOnJS(onMove)(e.translationX, e.translationY))
         .onFinalize(() => runOnJS(onEnd)()),
     [onBegin, onMove, onEnd],
   );
 
-  const gesture = editMode ? Gesture.Exclusive(pan, tap) : tap;
+  // 通常モードでも長押しで並び替え可能（タップは起動、長押しはドラッグ）
+  const gesture = Gesture.Exclusive(pan, tap);
 
   const animStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pressScale.value }, { rotate: `${jiggle.value}deg` }],

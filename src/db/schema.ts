@@ -23,16 +23,6 @@ export const runningTimers = sqliteTable('running_timers', {
   createdAt: integer('created_at').notNull(),
 });
 
-export const launchHistory = sqliteTable('launch_history', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  presetId: text('preset_id'),
-  durationSec: integer('duration_sec').notNull(),
-  startedAt: integer('started_at').notNull(),
-  source: text('source', {
-    enum: ['app', 'widget', 'liveactivity', 'quick'],
-  }).notNull(),
-});
-
 export const meta = sqliteTable('meta', {
   key: text('key').primaryKey(),
   value: text('value').notNull(),

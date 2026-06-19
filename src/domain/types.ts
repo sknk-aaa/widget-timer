@@ -27,13 +27,5 @@ export interface RunningTimer {
   createdAt: number;
 }
 
-export interface LaunchHistory {
-  id: number;
-  presetId: string | null;
-  durationSec: number;
-  startedAt: number;
-  source: TimerSource;
-}
-
 export const MAX_DURATION_SEC = 604800; // 7日
 export const FREE_WIDGET_SLOTS = 3;

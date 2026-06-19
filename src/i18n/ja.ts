@@ -23,6 +23,8 @@ export const ja = {
   quick: {
     title: '今すぐタイマー',
     start: 'スタート',
+    byDuration: '時間で指定',
+    byClock: '時刻で指定',
   },
   timer: {
     pause: '一時停止',
@@ -44,24 +46,11 @@ export const ja = {
     privacy: 'プライバシーポリシー',
     terms: '利用規約',
   },
-  analytics: {
-    title: '分析',
-    week: '今週',
-    month: '今月',
-    total: '累計',
-    countByPreset: 'プリセット別 起動回数',
-    totalTime: '合計タイマー時間',
-    totalCount: '合計起動回数',
-    lockedTitle: '分析は Pro 機能です',
-    lockedBody: '起動回数や合計時間を確認するには Pro が必要です。',
-  },
   pro: {
     title: 'Pro にアップグレード',
     subtitle: '買い切り・サブスクリプションではありません',
     featureWidget: 'ウィジェット枠を無制限に',
     featureWidgetSub: '下エリアに好きなだけプリセットを並べられます',
-    featureAnalytics: '分析を解放',
-    featureAnalyticsSub: '起動回数と合計時間をいつでも確認',
     featureSupport: '個人開発を応援',
     featureSupportSub: '今後のアップデートを支えます',
     cta: '購入する',

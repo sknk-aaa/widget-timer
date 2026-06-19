@@ -1,12 +1,7 @@
 import { asc, eq } from 'drizzle-orm';
 import { db } from './client';
-import { presets, runningTimers, launchHistory, meta } from './schema';
-import type {
-  Preset,
-  RunningTimer,
-  LaunchHistory,
-  TimerSource,
-} from '../domain/types';
+import { presets, runningTimers, meta } from './schema';
+import type { Preset, RunningTimer } from '../domain/types';
 
 // ---- presets ----
 
@@ -66,23 +61,6 @@ export function updateRunningTimer(
 
 export function deleteRunningTimer(id: string): void {
   db.delete(runningTimers).where(eq(runningTimers.id, id)).run();
-}
-
-// ---- launch history ----
-
-export function insertLaunchHistory(entry: {
-  presetId: string | null;
-  durationSec: number;
-  startedAt: number;
-  source: TimerSource;
-}): void {
-  db.insert(launchHistory).values(entry).run();
-}
-
-export function listLaunchHistory(sinceMs?: number): LaunchHistory[] {
-  const rows = db.select().from(launchHistory).all();
-  if (sinceMs == null) return rows;
-  return rows.filter((r) => r.startedAt >= sinceMs);
 }
 
 // ---- meta (key-value) ----
