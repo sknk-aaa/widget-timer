@@ -8,7 +8,7 @@ import { FREE_WIDGET_SLOTS } from '../src/domain/types';
 import { DEFAULT_COLOR_ID } from '../src/domain/colors';
 import { DEFAULT_ICON_ID } from '../src/ui/icons/registry';
 import { useTheme } from '../src/ui/theme';
-import { Dial } from '../src/ui/components/Dial';
+import { WheelPicker } from '../src/ui/components/WheelPicker';
 import { ColorPicker, IconPicker } from '../src/ui/components/Pickers';
 import { Button } from '../src/ui/components/Button';
 import { PresetTileVisual } from '../src/ui/components/PresetTile';
@@ -113,8 +113,8 @@ export default function PresetScreen() {
           <PresetTileVisual icon={icon} color={color} size={68} />
         </View>
 
-        <View style={{ alignItems: 'center', marginBottom: spacing.xl }}>
-          <Dial valueSec={durationSec} onChange={setDurationSec} onActiveChange={setDialActive} />
+        <View style={{ marginBottom: spacing.xl }}>
+          <WheelPicker valueSec={durationSec} onChange={setDurationSec} onActiveChange={setDialActive} />
         </View>
 
         <View style={{ marginBottom: spacing.xl }}>

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, Text, LayoutChangeEvent } from 'react-native';
+import { View, Text, Pressable, LayoutChangeEvent } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
@@ -13,6 +13,7 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import { PresetTileVisual, TILE_SIZE } from './PresetTile';
+import { PlusIcon } from '../icons/ui';
 import { formatDurationShort } from '../../domain/format';
 import { springs, listLayout } from '../motion';
 import { haptics } from '../haptics';
@@ -25,6 +26,8 @@ const CELL_W = TILE_SIZE + GAP;
 const CELL_H = TILE_SIZE + 24 + GAP;
 const LABEL_BLOCK = 40;
 
+type Area = 'hidden' | 'widget';
+
 interface Props {
   hidden: Preset[];
   widget: Preset[];
@@ -34,12 +37,11 @@ interface Props {
   widgetCountLabel: string;
   onLaunch: (p: Preset) => void;
   onEdit: (p: Preset) => void;
-  onEnterEdit: () => void;
-  /** 並び替え結果を適用。枠超過などで拒否されたら false。 */
+  onDelete: (p: Preset) => void;
+  onAdd: () => void;
   onArrange: (hiddenIds: string[], widgetIds: string[]) => boolean;
+  onDragActiveChange: (active: boolean) => void;
 }
-
-type Area = 'hidden' | 'widget';
 
 function clamp(n: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, n));
@@ -48,6 +50,7 @@ function clamp(n: number, lo: number, hi: number): number {
 export function PresetBoard(props: Props) {
   const theme = useTheme();
   const { c } = theme;
+  const { editMode } = props;
   const [width, setWidth] = React.useState(0);
   const cols = width > 0 ? Math.max(3, Math.floor((width - 2 * PAD + GAP) / CELL_W)) : 4;
 
@@ -62,14 +65,15 @@ export function PresetBoard(props: Props) {
     return m;
   }, [props.hidden, props.widget]);
 
-  // 親の状態と同期（ドラッグ中は触らない）
   React.useEffect(() => {
     if (draggingId) return;
     setHiddenIds(props.hidden.map((p) => p.id));
     setWidgetIds(props.widget.map((p) => p.id));
   }, [props.hidden, props.widget, draggingId]);
 
-  const hiddenRows = Math.max(1, Math.ceil(hiddenIds.length / cols));
+  // 編集モードでは追加タイル分を hidden 末尾に確保
+  const hiddenSlots = hiddenIds.length + (editMode ? 1 : 0);
+  const hiddenRows = Math.max(1, Math.ceil(hiddenSlots / cols));
   const widgetRows = Math.max(1, Math.ceil(widgetIds.length / cols));
   const hiddenAreaTop = LABEL_BLOCK;
   const widgetLabelTop = hiddenAreaTop + hiddenRows * CELL_H + 8;
@@ -96,7 +100,6 @@ export function PresetBoard(props: Props) {
     [hiddenIds, widgetIds],
   );
 
-  // floating tile shared values
   const startLeft = useSharedValue(0);
   const startTop = useSharedValue(0);
   const dragX = useSharedValue(0);
@@ -105,25 +108,24 @@ export function PresetBoard(props: Props) {
 
   const beginDrag = React.useCallback(
     (id: string) => {
-      if (!props.editMode) props.onEnterEdit();
       const loc = locate(id);
       const pos = cellPos(loc.area, loc.index);
       startLeft.value = pos.left;
       startTop.value = pos.top;
       dragX.value = 0;
       dragY.value = 0;
-      dragScale.value = withSpring(1.06, springs.snappy);
+      dragScale.value = withSpring(1.08, springs.snappy);
       setDraggingId(id);
+      props.onDragActiveChange(true);
       haptics.pickup();
     },
-    [props, locate, cellPos],
+    [locate, cellPos, props],
   );
 
   const moveDuringDrag = React.useCallback(
     (id: string, tx: number, ty: number) => {
-      const start = { left: startLeft.value, top: startTop.value };
-      const fx = start.left + TILE_SIZE / 2 + tx;
-      const fy = start.top + TILE_SIZE / 2 + ty;
+      const fx = startLeft.value + TILE_SIZE / 2 + tx;
+      const fy = startTop.value + TILE_SIZE / 2 + ty;
       const targetArea: Area = fy < widgetLabelTop ? 'hidden' : 'widget';
 
       const curHidden = hiddenIds.filter((x) => x !== id);
@@ -161,6 +163,7 @@ export function PresetBoard(props: Props) {
       setWidgetIds(props.widget.map((p) => p.id));
     }
     setDraggingId(null);
+    props.onDragActiveChange(false);
   }, [props, hiddenIds, widgetIds]);
 
   const floatingStyle = useAnimatedStyle(() => ({
@@ -184,14 +187,14 @@ export function PresetBoard(props: Props) {
     const pos = cellPos(loc.area, loc.index);
     const isDragging = id === draggingId;
     return (
-      <DragTile
+      <PresetCell
         key={id}
         preset={p}
         index={loc.index}
         left={pos.left}
         top={pos.top}
         theme={theme}
-        editMode={props.editMode}
+        editMode={editMode}
         isDragging={isDragging}
         onBegin={() => beginDrag(id)}
         onMove={(tx, ty) => {
@@ -200,24 +203,50 @@ export function PresetBoard(props: Props) {
           moveDuringDrag(id, tx, ty);
         }}
         onEnd={endDrag}
-        setDX={(v) => (dragX.value = v)}
-        setDY={(v) => (dragY.value = v)}
-        onTap={() => (props.editMode ? props.onEdit(p) : props.onLaunch(p))}
+        onTap={() => (editMode ? props.onEdit(p) : props.onLaunch(p))}
+        onDelete={() => props.onDelete(p)}
       />
     );
   };
 
   const draggingPreset = draggingId ? byId.get(draggingId) : null;
+  const addPos = cellPos('hidden', hiddenIds.length);
 
   return (
     <View onLayout={onLayout} style={{ height: totalHeight }}>
       <AreaLabel theme={theme} top={0} text={props.hiddenLabel} />
-      {hiddenIds.length === 0 && <EmptyHint theme={theme} top={hiddenAreaTop} />}
-
-      <AreaLabel theme={theme} top={widgetLabelTop} text={props.widgetLabel} right={props.widgetCountLabel} />
+      <AreaLabel
+        theme={theme}
+        top={widgetLabelTop}
+        text={props.widgetLabel}
+        right={props.widgetCountLabel}
+      />
       {widgetIds.length === 0 && <EmptyHint theme={theme} top={widgetAreaTop} />}
 
       {[...hiddenIds, ...widgetIds].map(renderTile)}
+
+      {editMode && (
+        <Pressable
+          onPress={props.onAdd}
+          accessibilityRole="button"
+          accessibilityLabel="プリセットを追加"
+          style={{
+            position: 'absolute',
+            left: addPos.left,
+            top: addPos.top,
+            width: TILE_SIZE,
+            height: TILE_SIZE,
+            borderRadius: 22,
+            borderWidth: 1.5,
+            borderStyle: 'dashed',
+            borderColor: c.textTertiary,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <PlusIcon color={c.textSecondary} size={26} />
+        </Pressable>
+      )}
 
       {draggingPreset && (
         <Animated.View style={floatingStyle} pointerEvents="none">
@@ -284,7 +313,7 @@ function EmptyHint({ theme, top }: { theme: Theme; top: number }) {
   );
 }
 
-interface DragTileProps {
+interface CellProps {
   preset: Preset;
   index: number;
   left: number;
@@ -295,12 +324,11 @@ interface DragTileProps {
   onBegin: () => void;
   onMove: (tx: number, ty: number) => void;
   onEnd: () => void;
-  setDX: (v: number) => void;
-  setDY: (v: number) => void;
   onTap: () => void;
+  onDelete: () => void;
 }
 
-function DragTile({
+function PresetCell({
   preset,
   index,
   left,
@@ -312,20 +340,20 @@ function DragTile({
   onMove,
   onEnd,
   onTap,
-}: DragTileProps) {
+  onDelete,
+}: CellProps) {
   const { c } = theme;
   const pressScale = useSharedValue(1);
   const jiggle = useSharedValue(0);
   const reduced = useReducedMotion();
 
-  // iOS ホーム画面風の「ぷるぷる」: 編集モードかつドラッグ中でない時だけ
   React.useEffect(() => {
     if (editMode && !isDragging && !reduced) {
       const phase = ((index % 5) - 2) * 18;
       jiggle.value = withRepeat(
         withSequence(
-          withTiming(1.1, { duration: 130 + phase }),
-          withTiming(-1.1, { duration: 130 + phase }),
+          withTiming(1, { duration: 130 + phase }),
+          withTiming(-1, { duration: 130 + phase }),
         ),
         -1,
         true,
@@ -336,23 +364,6 @@ function DragTile({
     }
     return () => cancelAnimation(jiggle);
   }, [editMode, isDragging, reduced, index, jiggle]);
-
-  const pan = React.useMemo(
-    () =>
-      Gesture.Pan()
-        .activateAfterLongPress(220)
-        .onStart(() => {
-          runOnJS(onBegin)();
-        })
-        .onUpdate((e) => {
-          runOnJS(onMove)(e.translationX, e.translationY);
-        })
-        .onEnd(() => {
-          runOnJS(onEnd)();
-        })
-        .onFinalize(() => {}),
-    [onBegin, onMove, onEnd],
-  );
 
   const tap = React.useMemo(
     () =>
@@ -370,7 +381,17 @@ function DragTile({
     [onTap],
   );
 
-  const gesture = React.useMemo(() => Gesture.Exclusive(pan, tap), [pan, tap]);
+  const pan = React.useMemo(
+    () =>
+      Gesture.Pan()
+        .activateAfterLongPress(150)
+        .onStart(() => runOnJS(onBegin)())
+        .onUpdate((e) => runOnJS(onMove)(e.translationX, e.translationY))
+        .onEnd(() => runOnJS(onEnd)()),
+    [onBegin, onMove, onEnd],
+  );
+
+  const gesture = editMode ? Gesture.Exclusive(pan, tap) : tap;
 
   const animStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pressScale.value }, { rotate: `${jiggle.value}deg` }],
@@ -393,11 +414,34 @@ function DragTile({
           style={animStyle}
           accessibilityRole="button"
           accessibilityLabel={`${formatDurationShort(preset.durationSec)}のタイマー`}
-          accessibilityHint={editMode ? '編集します。長押しで移動' : 'タップで起動。長押しで編集モード'}
+          accessibilityHint={editMode ? 'タップで編集。長押しで移動' : 'タップで起動'}
         >
           <PresetTileVisual icon={preset.icon} color={preset.color} glow={!isDragging} />
         </Animated.View>
       </GestureDetector>
+
+      {editMode && !isDragging && (
+        <Pressable
+          onPress={onDelete}
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel="削除"
+          style={{
+            position: 'absolute',
+            top: -6,
+            left: -6,
+            width: 24,
+            height: 24,
+            borderRadius: 12,
+            backgroundColor: c.danger,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <View style={{ width: 11, height: 2.4, borderRadius: 2, backgroundColor: '#FFFFFF' }} />
+        </Pressable>
+      )}
+
       <Text
         allowFontScaling={false}
         style={{

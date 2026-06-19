@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable, Alert } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { Redirect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -34,6 +34,7 @@ export default function MainScreen() {
   const isPro = useProStore((st) => st.isPro);
 
   const [editMode, setEditMode] = React.useState(false);
+  const [dragActive, setDragActive] = React.useState(false);
 
   if (!onboardingDone) {
     return <Redirect href="/onboarding" />;
@@ -54,6 +55,25 @@ export default function MainScreen() {
       router.push('/paywall');
     }
     return ok;
+  };
+
+  const onDeletePreset = (p: Preset) => {
+    Alert.alert(s.preset.delete, s.preset.deleteConfirm, [
+      { text: s.common.cancel, style: 'cancel' },
+      {
+        text: s.preset.delete,
+        style: 'destructive',
+        onPress: () => {
+          haptics.remove();
+          usePresetsStore.getState().remove(p.id);
+        },
+      },
+    ]);
+  };
+
+  const onAddPreset = () => {
+    haptics.light();
+    router.push('/preset');
   };
 
   const sortedTimers = [...timers].sort((a, b) => {
@@ -89,7 +109,7 @@ export default function MainScreen() {
             <Text style={{ color: c.accent, fontSize: 16, fontWeight: '700' }}>完了</Text>
           </Pressable>
         ) : (
-          <View style={{ flexDirection: 'row', gap: spacing.xl }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xl }}>
             <Pressable
               onPress={() => router.push('/analytics')}
               hitSlop={12}
@@ -106,11 +126,23 @@ export default function MainScreen() {
             >
               <GearIcon color={c.textPrimary} size={23} />
             </Pressable>
+            <Pressable
+              onPress={() => {
+                setEditMode(true);
+                haptics.light();
+              }}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel="編集"
+            >
+              <Text style={{ color: c.accent, fontSize: 16, fontWeight: '700' }}>編集</Text>
+            </Pressable>
           </View>
         )}
       </View>
 
       <ScrollView
+        scrollEnabled={!dragActive}
         contentContainerStyle={{
           paddingHorizontal: spacing.xl,
           paddingBottom: 160,
@@ -139,11 +171,13 @@ export default function MainScreen() {
             haptics.light();
             router.push({ pathname: '/preset', params: { id: p.id } });
           }}
-          onEnterEdit={() => setEditMode(true)}
+          onDelete={onDeletePreset}
+          onAdd={onAddPreset}
           onArrange={onArrange}
+          onDragActiveChange={setDragActive}
         />
 
-        {!editMode && (hidden.length > 0 || widget.length > 0) && (
+        {editMode && (
           <Text
             style={{
               color: c.textTertiary,

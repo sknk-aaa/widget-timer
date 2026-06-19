@@ -7,7 +7,7 @@ export const ja = {
     quickStart: '今すぐ',
     runningEmpty: 'プリセットをタップして開始',
     runningTitle: '実行中',
-    dragHint: '長押しで編集・並べ替え',
+    dragHint: 'タップで編集 ・ ドラッグで並べ替え（下＝ウィジェット表示）',
   },
   preset: {
     newTitle: 'プリセットを作成',
