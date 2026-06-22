@@ -16,10 +16,7 @@ import Foundation
 enum AlarmScheduler {
     static func schedule(durationSec: Int, metadata: TimerMetadata, tint: Color) async throws -> UUID {
         let id = UUID()
-        let stop = AlarmButton(text: "停止", textColor: .white, systemImageName: "stop.fill")
-        let alert = AlarmPresentation.Alert(title: "タイマー終了", stopButton: stop)
-        let presentation = AlarmPresentation(alert: alert)
-        let attributes = AlarmAttributes(presentation: presentation, metadata: metadata, tintColor: tint)
+        let attributes = makeAttributes(metadata: metadata, tint: tint)
         let configuration = AlarmManager.AlarmConfiguration.timer(
             duration: TimeInterval(durationSec),
             attributes: attributes
@@ -27,6 +24,19 @@ enum AlarmScheduler {
         _ = try await AlarmManager.shared.schedule(id: id, configuration: configuration)
         recordRunning(alarmID: id, presetID: metadata.presetID)
         return id
+    }
+
+    // alert(終了)＋countdown(一時停止)＋paused(再開) を宣言すると AlarmKit が
+    // ロック画面/Live Activity/Dynamic Island にボタンを自動描画する。
+    static func makeAttributes(metadata: TimerMetadata, tint: Color) -> AlarmAttributes<TimerMetadata> {
+        let stop = AlarmButton(text: "終了", textColor: .white, systemImageName: "stop.fill")
+        let pause = AlarmButton(text: "一時停止", textColor: .white, systemImageName: "pause.fill")
+        let resume = AlarmButton(text: "再開", textColor: .white, systemImageName: "play.fill")
+        let alert = AlarmPresentation.Alert(title: "タイマー終了", stopButton: stop)
+        let countdown = AlarmPresentation.Countdown(title: "カウントダウン", pauseButton: pause)
+        let paused = AlarmPresentation.Paused(title: "一時停止中", resumeButton: resume)
+        let presentation = AlarmPresentation(alert: alert, countdown: countdown, paused: paused)
+        return AlarmAttributes(presentation: presentation, metadata: metadata, tintColor: tint)
     }
 
     static func cancel(id: UUID) throws {

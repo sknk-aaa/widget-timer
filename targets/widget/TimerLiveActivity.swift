@@ -4,19 +4,23 @@ import SwiftUI
 import AlarmKit
 
 // AlarmKit が自動管理する Live Activity の表示テンプレート。
-// 注意: AlarmAttributes.metadata は Optional（TimerMetadata?）なので安全にアンラップする。
+// context.state.mode（.countdown / .paused / .alert）で実カウントダウン・終了時刻・一時停止を出す。
 
 struct TimerLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: AlarmAttributes<TimerMetadata>.self) { context in
             let icon = context.attributes.metadata?.icon ?? "timer"
             let colorID = context.attributes.metadata?.colorID ?? "blue"
-            // ロック画面
             HStack(spacing: 12) {
                 IconChip(icon: icon, colorID: colorID)
-                CountdownText(context: context)
-                    .font(.system(size: 30, weight: .bold, design: .rounded))
-                    .monospacedDigit()
+                VStack(alignment: .leading, spacing: 2) {
+                    remaining(context.state)
+                        .font(.system(size: 30, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                    endLabel(context.state)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
                 Spacer()
             }
             .padding()
@@ -29,31 +33,48 @@ struct TimerLiveActivity: Widget {
                     IconChip(icon: icon, colorID: colorID)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    CountdownText(context: context)
+                    remaining(context.state)
                         .font(.system(size: 22, weight: .bold, design: .rounded))
                         .monospacedDigit()
                 }
+                DynamicIslandExpandedRegion(.bottom) {
+                    endLabel(context.state).font(.caption).foregroundStyle(.secondary)
+                }
             } compactLeading: {
-                Image(systemName: iconToSymbol(icon))
-                    .foregroundStyle(paletteColor(colorID))
+                Image(systemName: iconToSymbol(icon)).foregroundStyle(paletteColor(colorID))
             } compactTrailing: {
-                CountdownText(context: context).monospacedDigit()
+                remaining(context.state).monospacedDigit()
             } minimal: {
-                Image(systemName: "timer")
-                    .foregroundStyle(paletteColor(colorID))
+                Image(systemName: "timer").foregroundStyle(paletteColor(colorID))
             }
             .keylineTint(paletteColor(colorID))
         }
     }
-}
 
-/// AlarmKit のカウントダウンを OS 描画で表示する。
-private struct CountdownText: View {
-    let context: ActivityViewContext<AlarmAttributes<TimerMetadata>>
+    @ViewBuilder
+    private func remaining(_ state: AlarmPresentationState) -> some View {
+        switch state.mode {
+        case .countdown(let countdown):
+            // システムが毎秒自動更新するライブ表示。fireDate が終了時刻。
+            Text(timerInterval: Date.now...countdown.fireDate, countsDown: true)
+        case .paused(let paused):
+            let left = max(0, paused.totalCountdownDuration - paused.previouslyElapsedDuration)
+            Text(Duration.seconds(left).formatted(.time(pattern: .minuteSecond)))
+        case .alert:
+            Text("終了")
+        }
+    }
 
-    var body: some View {
-        // TODO(実機): context.state からカウントダウンの終了日時を取り Text(timerInterval:) を使う。
-        Text(timerInterval: Date.now...Date.now.addingTimeInterval(60), countsDown: true)
+    @ViewBuilder
+    private func endLabel(_ state: AlarmPresentationState) -> some View {
+        switch state.mode {
+        case .countdown(let countdown):
+            Text("終了 \(countdown.fireDate.formatted(date: .omitted, time: .shortened))")
+        case .paused:
+            Text("一時停止中")
+        case .alert:
+            EmptyView()
+        }
     }
 }
 

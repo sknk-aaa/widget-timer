@@ -65,6 +65,10 @@ public class ImasuguNativeModule: Module {
       UserDefaults(suiteName: kAppGroup)?.set(json.data(using: .utf8), forKey: kPresetsKey)
     }
 
+    Function("setSharedRunning") { (json: String) in
+      UserDefaults(suiteName: kAppGroup)?.set(json.data(using: .utf8), forKey: "shared_running_v1")
+    }
+
     Function("runningAlarmIds") { () -> [String] in
       let map = (UserDefaults(suiteName: kAppGroup)?.dictionary(forKey: kRunningMapKey) as? [String: String]) ?? [:]
       return Array(map.keys)
@@ -87,9 +91,13 @@ public class ImasuguNativeModule: Module {
     // ---- アプリ内スケジューリング（※ AlarmKit API は実機要検証）----
     AsyncFunction("scheduleTimer") { (timerId: String, durationSec: Int, icon: String, colorID: String, presetId: String?) in
       let id = UUID(uuidString: timerId) ?? UUID()
-      let stop = AlarmButton(text: "停止", textColor: .white, systemImageName: "stop.fill")
+      let stop = AlarmButton(text: "終了", textColor: .white, systemImageName: "stop.fill")
+      let pause = AlarmButton(text: "一時停止", textColor: .white, systemImageName: "pause.fill")
+      let resume = AlarmButton(text: "再開", textColor: .white, systemImageName: "play.fill")
       let alert = AlarmPresentation.Alert(title: "タイマー終了", stopButton: stop)
-      let presentation = AlarmPresentation(alert: alert)
+      let countdown = AlarmPresentation.Countdown(title: "カウントダウン", pauseButton: pause)
+      let pausedP = AlarmPresentation.Paused(title: "一時停止中", resumeButton: resume)
+      let presentation = AlarmPresentation(alert: alert, countdown: countdown, paused: pausedP)
       let metadata = AppTimerMetadata(presetID: presetId, icon: icon, colorID: colorID)
       let attributes = AlarmAttributes(presentation: presentation, metadata: metadata, tintColor: tint(colorID))
       let config = AlarmManager.AlarmConfiguration.timer(duration: TimeInterval(durationSec), attributes: attributes)

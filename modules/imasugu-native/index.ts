@@ -3,6 +3,7 @@ import { requireOptionalNativeModule } from 'expo-modules-core';
 export interface ImasuguNativeModule {
   /** App Group にプリセットJSONをミラー（Control/ウィジェットが読む）。 */
   setSharedPresets(json: string): void;
+  setSharedRunning(json: string): void;
   runningAlarmIds(): string[];
   reloadWidgets(): void;
   getAuthorization(): Promise<'granted' | 'denied' | 'undetermined'>;

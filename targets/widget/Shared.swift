@@ -9,10 +9,32 @@ import AlarmKit
 enum Shared {
     static let appGroup = "group.com.sknk.imasugutimer"
     static let presetsKey = "shared_presets_v1" // JSON 配列（アプリ側がミラー）
+    static let runningKey = "shared_running_v1" // 実行中タイマー JSON 配列
     static let runningMapKey = "running_alarm_map_v1" // alarmID -> presetID
 
     static var defaults: UserDefaults? {
         UserDefaults(suiteName: appGroup)
+    }
+}
+
+/// 実行中タイマーの読み取りモデル（ホームウィジェットのカウントダウン用）。
+struct SharedRunning: Codable, Identifiable {
+    let id: String
+    let endAt: Double // epoch ms
+    let icon: String
+    let color: String
+    let state: String // running | paused | finished
+    let durationSec: Int
+    let pausedRemainingSec: Int?
+
+    var endDate: Date { Date(timeIntervalSince1970: endAt / 1000) }
+}
+
+extension Shared {
+    static func loadRunning() -> [SharedRunning] {
+        guard let data = defaults?.data(forKey: runningKey) else { return [] }
+        let all = (try? JSONDecoder().decode([SharedRunning].self, from: data)) ?? []
+        return all.filter { $0.state != "finished" }.sorted { $0.endAt < $1.endAt }
     }
 }
 
