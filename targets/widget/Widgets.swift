@@ -2,39 +2,26 @@ import WidgetKit
 import SwiftUI
 import AppIntents
 
-// ホーム画面ウィジェット＋ロック画面ウィジェット（accessory）。
-// 実行中タイマーがあれば残り時間をカウントダウン表示。ホームはプリセット起動ボタン、
-// ロック画面はタップでアプリを開く（accessory はモノクロ寄りレンダリング）。
+// ホーム画面ウィジェット＋ロック画面ウィジェット（accessory）。どちらもプリセット起動の
+// ランチャー専用。実行中の表示/操作は通知（Live Activity）とアプリ側に集約する
+// （ウィジェットへの状態反映は WidgetKit のリロードに遅延があり、即時性を担保できないため）。
 
 struct PresetEntry: TimelineEntry {
     let date: Date
     let presets: [SharedPreset]
-    let running: [SharedRunning]
 }
 
 struct PresetProvider: TimelineProvider {
     func placeholder(in context: Context) -> PresetEntry {
-        PresetEntry(date: Date(), presets: [], running: [])
+        PresetEntry(date: Date(), presets: [])
     }
     func getSnapshot(in context: Context, completion: @escaping (PresetEntry) -> Void) {
-        completion(PresetEntry(date: Date(), presets: Shared.widgetPresets(), running: Shared.loadRunning()))
+        completion(PresetEntry(date: Date(), presets: Shared.widgetPresets()))
     }
     func getTimeline(in context: Context, completion: @escaping (Timeline<PresetEntry>) -> Void) {
-        let running = Shared.loadRunning()
-        let presets = Shared.widgetPresets()
-        let now = Date()
-        // 現在＋各タイマーの終了直後にエントリを置き、終了時に idle 表示へ確実に戻す。
-        var dates: [Date] = [now]
-        for r in running where r.state == "running" && r.endDate > now {
-            dates.append(r.endDate.addingTimeInterval(1))
-        }
-        let entries = dates.sorted().map { PresetEntry(date: $0, presets: presets, running: running) }
-        completion(Timeline(entries: entries, policy: .never))
+        let entry = PresetEntry(date: Date(), presets: Shared.widgetPresets())
+        completion(Timeline(entries: [entry], policy: .never))
     }
-}
-
-private func activeRunning(_ running: [SharedRunning], asOf: Date) -> [SharedRunning] {
-    running.filter { $0.endDate > asOf || $0.state == "paused" }
 }
 
 struct PresetWidgetView: View {
@@ -47,92 +34,12 @@ struct PresetWidgetView: View {
             // ロック画面：タップでアプリを開かず無音起動（ロック解除不要）。
             AccessoryView(entry: entry)
         default:
-            HomeView(entry: entry, small: family == .systemSmall)
+            WaitingView(presets: entry.presets, small: family == .systemSmall)
         }
     }
 }
 
-// MARK: - ホーム画面
-
-private struct HomeView: View {
-    let entry: PresetEntry
-    let small: Bool
-    var body: some View {
-        let active = activeRunning(entry.running, asOf: entry.date)
-        if !active.isEmpty {
-            RunningView(running: active, small: small)
-        } else {
-            WaitingView(presets: entry.presets, small: small)
-        }
-    }
-}
-
-private struct RunningView: View {
-    let running: [SharedRunning]
-    let small: Bool
-    var body: some View {
-        VStack(spacing: 8) {
-            ForEach(Array(running.prefix(small ? 2 : 4))) { r in
-                HStack(spacing: 8) {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(paletteColor(r.color))
-                        .frame(width: 30, height: 30)
-                        .overlay(
-                            Image(systemName: iconToSymbol(r.icon))
-                                .foregroundStyle(.white)
-                                .font(.system(size: 14, weight: .semibold))
-                        )
-                    if r.state == "paused" {
-                        Text(Duration.seconds(Double(r.pausedRemainingSec ?? 0)).formatted(.time(pattern: .minuteSecond)))
-                            .font(.system(size: small ? 20 : 18, weight: .bold, design: .rounded))
-                            .monospacedDigit()
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.6)
-                    } else {
-                        Text(timerInterval: Date.now...r.endDate, countsDown: true)
-                            .font(.system(size: small ? 20 : 18, weight: .bold, design: .rounded))
-                            .monospacedDigit()
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.6)
-                    }
-                    Spacer(minLength: 4)
-                    // 正方形(small)はボタンを出さない。長方形(medium)のみ操作ボタンを表示。
-                    if !small {
-                        if r.state == "paused" {
-                            Button(intent: ResumeAlarmIntent(alarmID: r.id)) {
-                                WidgetGlyph(systemName: "play.fill")
-                            }
-                            .buttonStyle(.plain)
-                        } else {
-                            Button(intent: PauseAlarmIntent(alarmID: r.id)) {
-                                WidgetGlyph(systemName: "pause.fill")
-                            }
-                            .buttonStyle(.plain)
-                        }
-                        Button(intent: CancelAlarmIntent(alarmID: r.id)) {
-                            WidgetGlyph(systemName: "xmark")
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-            }
-            Spacer(minLength: 0)
-        }
-        .padding(4)
-    }
-}
-
-private struct WidgetGlyph: View {
-    let systemName: String
-    var body: some View {
-        Image(systemName: systemName)
-            .font(.system(size: 12, weight: .bold))
-            .foregroundStyle(.primary)
-            .frame(width: 28, height: 28)
-            .background(Circle().fill(.gray.opacity(0.25)))
-    }
-}
+// MARK: - ホーム画面（起動ランチャー）
 
 private struct WaitingView: View {
     let presets: [SharedPreset]
@@ -246,7 +153,7 @@ struct PresetWidget: Widget {
                 .containerBackground(.fill.tertiary, for: .widget)
         }
         .configurationDisplayName("今すぐタイマー")
-        .description("プリセット起動と実行中のカウントダウン")
+        .description("プリセットをワンタップで起動")
         .supportedFamilies([
             .systemSmall, .systemMedium,
             .accessoryRectangular, .accessoryCircular, .accessoryInline,
