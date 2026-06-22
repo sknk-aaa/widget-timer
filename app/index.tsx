@@ -14,7 +14,6 @@ import { RunningTimerRow } from '../src/ui/components/RunningTimerRow';
 import { PressableScale } from '../src/ui/components/PressableScale';
 import { Banner } from '../src/ui/components/common';
 import { GearIcon, PlusIcon } from '../src/ui/icons/ui';
-import { IconGlyph } from '../src/ui/icons/registry';
 import { haptics } from '../src/ui/haptics';
 import { enterItem, exitItem, listLayout } from '../src/ui/motion';
 import { openAppSettings } from '../src/native/settings';
@@ -23,7 +22,7 @@ import { t } from '../src/i18n';
 export default function MainScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { c, spacing, radius } = useTheme();
+  const { c, spacing } = useTheme();
   const s = t();
 
   const onboardingDone = useSettingsStore((st) => st.onboardingDone);
@@ -183,59 +182,29 @@ export default function MainScreen() {
           </Text>
         )}
 
-        <View style={{ marginTop: spacing.xl }}>
-          <Text
-            style={{
-              color: c.textSecondary,
-              fontSize: 13,
-              fontWeight: '700',
-              letterSpacing: 0.3,
-              marginBottom: spacing.md,
-            }}
-          >
-            {s.main.runningTitle}
-          </Text>
-          {sortedTimers.length === 0 ? (
-            <View
-              style={{
-                backgroundColor: c.surface,
-                borderRadius: radius.lg,
-                paddingVertical: spacing.xxl,
-                alignItems: 'center',
-                gap: spacing.md,
-              }}
-            >
-              <View style={{ opacity: 0.4 }}>
-                <IconGlyph id="timer" size={30} color={c.textSecondary} />
-              </View>
-              <Text style={{ color: c.textTertiary, fontSize: 14, fontWeight: '600' }}>
-                {s.main.runningEmpty}
-              </Text>
-            </View>
-          ) : (
-            <View style={{ gap: spacing.md }}>
-              {sortedTimers.map((timer) => (
-                <Animated.View
-                  key={timer.id}
-                  entering={enterItem}
-                  exiting={exitItem}
-                  layout={listLayout}
-                >
-                  <RunningTimerRow
-                    timer={timer}
-                    onPause={() => useTimersStore.getState().pause(timer.id)}
-                    onResume={() => useTimersStore.getState().resume(timer.id)}
-                    onCancel={() => {
-                      haptics.remove();
-                      void useTimersStore.getState().cancel(timer.id);
-                    }}
-                    onDismiss={() => useTimersStore.getState().dismiss(timer.id)}
-                  />
-                </Animated.View>
-              ))}
-            </View>
-          )}
-        </View>
+        {sortedTimers.length > 0 && (
+          <View style={{ marginTop: spacing.xl, gap: spacing.md }}>
+            {sortedTimers.map((timer) => (
+              <Animated.View
+                key={timer.id}
+                entering={enterItem}
+                exiting={exitItem}
+                layout={listLayout}
+              >
+                <RunningTimerRow
+                  timer={timer}
+                  onPause={() => useTimersStore.getState().pause(timer.id)}
+                  onResume={() => useTimersStore.getState().resume(timer.id)}
+                  onCancel={() => {
+                    haptics.remove();
+                    void useTimersStore.getState().cancel(timer.id);
+                  }}
+                  onDismiss={() => useTimersStore.getState().dismiss(timer.id)}
+                />
+              </Animated.View>
+            ))}
+          </View>
+        )}
       </ScrollView>
 
       {!editMode && (

@@ -5,8 +5,6 @@ export const ja = {
     areaWidget: 'ウィジェット表示',
     widgetSlots: (used: number, max: number | '∞') => `${used} / ${max}`,
     quickStart: '今すぐ',
-    runningEmpty: 'プリセットをタップして開始',
-    runningTitle: '実行中',
     dragHint: 'タップで編集 ・ ドラッグで並べ替え（下＝ウィジェット表示）',
   },
   preset: {
