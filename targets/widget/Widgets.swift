@@ -197,11 +197,12 @@ private struct AccessoryView: View {
                     Spacer()
                 }
             } else {
-                // アイドル時：先頭プリセットを等幅カラムで「アイコン＋設定時間」のボタン表示（無音起動）
-                HStack(spacing: 0) {
+                // アイドル時：先頭プリセットを角丸チップのボタンで表示（無音起動）。
+                // ロック画面はモノクロ寄りなので半透明チップで「押せる」感を出す。
+                HStack(spacing: 6) {
                     ForEach(Array(entry.presets.prefix(3))) { p in
                         Button(intent: StartPresetTimerIntent(presetID: p.id)) {
-                            VStack(spacing: 1) {
+                            VStack(spacing: 2) {
                                 Image(systemName: iconToSymbol(p.icon))
                                     .font(.system(size: 15, weight: .semibold))
                                 Text(durationLabel(p.durationSec))
@@ -211,6 +212,15 @@ private struct AccessoryView: View {
                                     .minimumScaleFactor(0.7)
                             }
                             .frame(maxWidth: .infinity)
+                            .padding(.vertical, 5)
+                            .background(
+                                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                                    .fill(.white.opacity(0.18))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                                    .strokeBorder(.white.opacity(0.25), lineWidth: 0.5)
+                            )
                         }
                         .buttonStyle(.plain)
                     }
