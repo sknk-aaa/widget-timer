@@ -84,8 +84,9 @@ npm start
 ### 法的URL（`src/domain/links.ts`）
 
 - **利用規約**: Apple 標準 EULA（`https://www.apple.com/legal/internet-services/itunes/dev/stdeula/`）。ホスト不要。
-- **プライバシーポリシー**: 本文は `legal/privacy.html`。**GitHub Pages 等で公開し、URLを `PRIVACY_URL` に一致させる**（既定値 `https://sknk-aaa.github.io/widget-timer/legal/privacy.html`）。
-  - GitHub Pages を使う場合: リポジトリ Settings → Pages → Source = `main` / root を有効化（公開リポ前提）。公開URLが既定値と異なる場合は `PRIVACY_URL` を更新。
+- **プライバシーポリシー**: 本文は `docs/privacy.html`。**GitHub Pages（main / `/docs`）で公開**。公開URL = `https://sknk-aaa.github.io/widget-timer/privacy.html`（`PRIVACY_URL` と一致）。
+  - Pages 設定: Settings → Pages → Source = `main` / `/docs`（設定済み）。`docs/.nojekyll` で静的配信。
+  - push 後、Pages の再ビルドが終われば URL が有効化される（数十秒〜数分）。
 - **問い合わせ**: `CONTACT_URL`（既定: 開発者メール）。変更可。
 
 ### リリース前チェック（外部設定）
