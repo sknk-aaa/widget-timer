@@ -2,8 +2,9 @@ import WidgetKit
 import SwiftUI
 import AppIntents
 
-// ホーム画面ウィジェット。
-// 実行中タイマーがあれば残り時間をカウントダウン表示、無ければプリセットのボタンを表示。
+// ホーム画面ウィジェット＋ロック画面ウィジェット（accessory）。
+// 実行中タイマーがあれば残り時間をカウントダウン表示。ホームはプリセット起動ボタン、
+// ロック画面はタップでアプリを開く（accessory はモノクロ寄りレンダリング）。
 
 struct PresetEntry: TimelineEntry {
     let date: Date
@@ -21,7 +22,6 @@ struct PresetProvider: TimelineProvider {
     func getTimeline(in context: Context, completion: @escaping (Timeline<PresetEntry>) -> Void) {
         let running = Shared.loadRunning()
         let entry = PresetEntry(date: Date(), presets: Shared.widgetPresets(), running: running)
-        // 最も早い終了時刻でタイムラインを更新（終了後は待機表示に戻す）。
         if let soonest = running.map({ $0.endDate }).min(), soonest > Date() {
             completion(Timeline(entries: [entry], policy: .after(soonest)))
         } else {
@@ -30,16 +30,36 @@ struct PresetProvider: TimelineProvider {
     }
 }
 
+private func activeRunning(_ running: [SharedRunning]) -> [SharedRunning] {
+    running.filter { $0.endDate > Date() || $0.state == "paused" }
+}
+
 struct PresetWidgetView: View {
     @Environment(\.widgetFamily) var family
     let entry: PresetEntry
 
     var body: some View {
-        let active = entry.running.filter { $0.endDate > Date() || $0.state == "paused" }
+        switch family {
+        case .accessoryRectangular, .accessoryCircular, .accessoryInline:
+            AccessoryView(entry: entry)
+                .widgetURL(URL(string: "imasugutimer://"))
+        default:
+            HomeView(entry: entry, small: family == .systemSmall)
+        }
+    }
+}
+
+// MARK: - ホーム画面
+
+private struct HomeView: View {
+    let entry: PresetEntry
+    let small: Bool
+    var body: some View {
+        let active = activeRunning(entry.running)
         if !active.isEmpty {
-            RunningView(running: active, small: family == .systemSmall)
+            RunningView(running: active, small: small)
         } else {
-            WaitingView(presets: entry.presets, small: family == .systemSmall)
+            WaitingView(presets: entry.presets, small: small)
         }
     }
 }
@@ -48,9 +68,8 @@ private struct RunningView: View {
     let running: [SharedRunning]
     let small: Bool
     var body: some View {
-        let items = Array(running.prefix(small ? 2 : 4))
         VStack(spacing: 8) {
-            ForEach(items) { r in
+            ForEach(Array(running.prefix(small ? 2 : 4))) { r in
                 HStack(spacing: 10) {
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .fill(paletteColor(r.color))
@@ -61,7 +80,7 @@ private struct RunningView: View {
                                 .font(.system(size: 14, weight: .semibold))
                         )
                     if r.state == "paused" {
-                        Text(Duration.seconds(r.pausedRemainingSec ?? 0).formatted(.time(pattern: .minuteSecond)))
+                        Text(Duration.seconds(Double(r.pausedRemainingSec ?? 0)).formatted(.time(pattern: .minuteSecond)))
                             .font(.system(size: 20, weight: .bold, design: .rounded))
                             .monospacedDigit()
                             .foregroundStyle(.secondary)
@@ -82,7 +101,6 @@ private struct RunningView: View {
 private struct WaitingView: View {
     let presets: [SharedPreset]
     let small: Bool
-
     var body: some View {
         let shown = Array(presets.prefix(small ? 4 : 8))
         if shown.isEmpty {
@@ -94,7 +112,7 @@ private struct WaitingView: View {
             let columns = Array(repeating: GridItem(.flexible(), spacing: 10), count: small ? 2 : 4)
             LazyVGrid(columns: columns, spacing: 10) {
                 ForEach(shown) { p in
-                    // タップでアプリを開き、アプリ側で起動（実行中ドック表示＆キャンセル可能にするため）
+                    // タップでアプリを開き、アプリ側で起動（ドック表示＆キャンセル可能のため）
                     Link(destination: URL(string: "imasugutimer://start?preset=\(p.id)")!) {
                         VStack(spacing: 3) {
                             RoundedRectangle(cornerRadius: 14, style: .continuous)
@@ -117,6 +135,60 @@ private struct WaitingView: View {
     }
 }
 
+// MARK: - ロック画面（accessory）
+
+private struct AccessoryView: View {
+    @Environment(\.widgetFamily) var family
+    let entry: PresetEntry
+
+    var body: some View {
+        let soonest = activeRunning(entry.running).first
+        switch family {
+        case .accessoryInline:
+            if let r = soonest, r.state != "paused" {
+                Text("残り ") + Text(timerInterval: Date.now...r.endDate, countsDown: true)
+            } else {
+                Text("今すぐタイマー")
+            }
+        case .accessoryCircular:
+            ZStack {
+                AccessoryWidgetBackground()
+                if let r = soonest, r.state != "paused" {
+                    Text(timerInterval: Date.now...r.endDate, countsDown: true)
+                        .font(.system(size: 12, weight: .bold))
+                        .monospacedDigit()
+                        .multilineTextAlignment(.center)
+                } else {
+                    Image(systemName: "timer").font(.title3)
+                }
+            }
+        default: // accessoryRectangular
+            if let r = soonest {
+                HStack(spacing: 8) {
+                    Image(systemName: iconToSymbol(r.icon)).font(.title3)
+                    if r.state == "paused" {
+                        Text("一時停止中").font(.headline)
+                    } else {
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(timerInterval: Date.now...r.endDate, countsDown: true)
+                                .font(.headline).monospacedDigit()
+                            Text("終了 \(r.endDate.formatted(date: .omitted, time: .shortened))")
+                                .font(.caption2).foregroundStyle(.secondary)
+                        }
+                    }
+                    Spacer()
+                }
+            } else {
+                HStack(spacing: 8) {
+                    Image(systemName: "timer").font(.title3)
+                    Text("今すぐタイマー").font(.headline)
+                    Spacer()
+                }
+            }
+        }
+    }
+}
+
 struct PresetWidget: Widget {
     static let kind = "com.sknk.imasugutimer.PresetWidget"
     var body: some WidgetConfiguration {
@@ -126,6 +198,9 @@ struct PresetWidget: Widget {
         }
         .configurationDisplayName("今すぐタイマー")
         .description("プリセット起動と実行中のカウントダウン")
-        .supportedFamilies([.systemSmall, .systemMedium])
+        .supportedFamilies([
+            .systemSmall, .systemMedium,
+            .accessoryRectangular, .accessoryCircular, .accessoryInline,
+        ])
     }
 }
