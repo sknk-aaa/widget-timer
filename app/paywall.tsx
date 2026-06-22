@@ -15,6 +15,7 @@ export default function PaywallScreen() {
   const insets = useSafeAreaInsets();
   const { c, spacing, radius } = useTheme();
   const s = t();
+  const price = useProStore((st) => st.price);
   const [loading, setLoading] = React.useState(false);
 
   const features = [
@@ -115,6 +116,11 @@ export default function PaywallScreen() {
 
         <View style={{ flex: 1 }} />
 
+        {price && (
+          <Text style={{ color: c.textPrimary, fontSize: 22, fontWeight: '800', textAlign: 'center', marginBottom: 2 }}>
+            {price}
+          </Text>
+        )}
         <Text style={{ color: c.textTertiary, fontSize: 12, fontWeight: '600', textAlign: 'center', marginBottom: spacing.md }}>
           {s.pro.oneTime}
         </Text>

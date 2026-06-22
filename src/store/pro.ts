@@ -1,8 +1,9 @@
 import { create } from 'zustand';
-import { purchaseService } from '../native/purchases';
+import { purchaseService, getProPrice } from '../native/purchases';
 
 interface ProState {
   isPro: boolean;
+  price: string | null;
   load: () => Promise<void>;
   purchase: () => Promise<boolean>;
   restore: () => Promise<boolean>;
@@ -10,9 +11,12 @@ interface ProState {
 
 export const useProStore = create<ProState>((set) => ({
   isPro: false,
+  price: null,
   load: async () => {
     const isPro = await purchaseService.isPro();
     set({ isPro });
+    const price = await getProPrice();
+    set({ price });
   },
   purchase: async () => {
     const ok = await purchaseService.purchasePro();

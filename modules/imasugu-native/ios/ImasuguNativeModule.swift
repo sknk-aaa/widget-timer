@@ -2,6 +2,17 @@ import ExpoModulesCore
 import AlarmKit
 import SwiftUI
 import WidgetKit
+import StoreKit
+
+@MainActor
+private func hasEntitlement(_ productId: String) async -> Bool {
+  for await result in Transaction.currentEntitlements {
+    if case .verified(let t) = result, t.productID == productId, t.revocationDate == nil {
+      return true
+    }
+  }
+  return false
+}
 
 // アプリ内から呼ぶネイティブブリッジ。
 // 1) App Group へプリセットをミラー（Control/ウィジェットが読む）
@@ -102,6 +113,39 @@ public class ImasuguNativeModule: Module {
         if let id = UUID(uuidString: key) { try? AlarmManager.shared.cancel(id: id) }
       }
       UserDefaults(suiteName: kAppGroup)?.removeObject(forKey: kRunningMapKey)
+    }
+
+    // ---- StoreKit 2（買い切り非消耗型）----
+    AsyncFunction("getProduct") { (productId: String) -> [String: Any]? in
+      let products = try await Product.products(for: [productId])
+      guard let p = products.first else { return nil }
+      return ["id": p.id, "displayPrice": p.displayPrice, "displayName": p.displayName, "description": p.description]
+    }
+
+    AsyncFunction("purchaseProduct") { (productId: String) -> String in
+      let products = try await Product.products(for: [productId])
+      guard let product = products.first else { return "unavailable" }
+      let result = try await product.purchase()
+      switch result {
+      case .success(let verification):
+        if case .verified(let transaction) = verification {
+          await transaction.finish()
+          return "purchased"
+        }
+        return "unverified"
+      case .userCancelled: return "cancelled"
+      case .pending: return "pending"
+      @unknown default: return "unknown"
+      }
+    }
+
+    AsyncFunction("restorePurchases") { (productId: String) -> Bool in
+      try? await AppStore.sync()
+      return await hasEntitlement(productId)
+    }
+
+    AsyncFunction("isProPurchased") { (productId: String) -> Bool in
+      await hasEntitlement(productId)
     }
   }
 }

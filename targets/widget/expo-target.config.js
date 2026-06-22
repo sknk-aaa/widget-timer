@@ -2,6 +2,7 @@
 module.exports = {
   type: 'widget',
   name: 'ImasuguWidget',
+  bundleIdentifier: '.widget', // → com.sknk.imasugutimer.widget
   deploymentTarget: '26.0',
   // ControlWidget / Live Activity / AlarmKit に必要なフレームワーク
   frameworks: ['SwiftUI', 'WidgetKit', 'AppIntents', 'ActivityKit', 'AlarmKit'],

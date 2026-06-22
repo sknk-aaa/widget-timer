@@ -1,13 +1,21 @@
 import type { PurchaseService } from './types';
 import { getMeta, setMeta } from '../db/repo';
+import { hasNativeModules } from './env';
+import { ImasuguNative } from '../../modules/imasugu-native';
 
+export const PRO_PRODUCT_ID = 'com.sknk.imasugutimer.pro';
 const PRO_KEY = 'pro_owned';
 
-/**
- * Phase1: meta テーブルに Pro 所有フラグを保存するモック（Expo Go で課金フローを試せる）。
- * Phase2: StoreKit 2（買い切り非消耗型）の実装に差し替える。
- */
-export const purchaseService: PurchaseService = {
+/** StoreKit 2 実装（TestFlight/本番）。 */
+const storeKit: PurchaseService = {
+  isPro: () => ImasuguNative!.isProPurchased(PRO_PRODUCT_ID),
+  purchasePro: async () =>
+    (await ImasuguNative!.purchaseProduct(PRO_PRODUCT_ID)) === 'purchased',
+  restore: () => ImasuguNative!.restorePurchases(PRO_PRODUCT_ID),
+};
+
+/** Expo Go 用モック（meta フラグ）。 */
+const mock: PurchaseService = {
   async isPro() {
     return getMeta(PRO_KEY) === '1';
   },
@@ -19,3 +27,13 @@ export const purchaseService: PurchaseService = {
     return getMeta(PRO_KEY) === '1';
   },
 };
+
+export const purchaseService: PurchaseService =
+  hasNativeModules && ImasuguNative ? storeKit : mock;
+
+/** ペイウォール表示用の価格（取得できなければ null）。 */
+export async function getProPrice(): Promise<string | null> {
+  if (!ImasuguNative) return null;
+  const product = await ImasuguNative.getProduct(PRO_PRODUCT_ID);
+  return product?.displayPrice ?? null;
+}

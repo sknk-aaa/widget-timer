@@ -14,6 +14,18 @@ com.sknk.imasugutimer
 group.com.sknk.imasugutimer
 ```
 
+- Widget 拡張 bundle id:
+
+```
+com.sknk.imasugutimer.widget
+```
+
+- 課金プロダクトID（買い切り・非消耗型）:
+
+```
+com.sknk.imasugutimer.pro
+```
+
 - Expo slug: `widget-timer` / アプリ表示名: 今すぐタイマー
 - GitHub: `sknk-aaa/widget-timer`
 - 対応OS: iOS 26+（`app.config.ts` の deploymentTarget=26.0）
@@ -50,6 +62,14 @@ npm start
 `APPLE_TEAM_ID` / `MATCH_GIT_URL` / `MATCH_PASSWORD` / `MATCH_GIT_BASIC_AUTHORIZATION` / `APP_STORE_CONNECT_API_KEY_ID` / `APP_STORE_CONNECT_API_ISSUER_ID` / `APP_STORE_CONNECT_API_KEY`
 
 > これらが未設定のうちは `ios.yml` を実行しない（手動 or タグ運用にしてあるため自動では走らない）。
+
+## App Store Connect 側の準備（Phase2/3）
+
+1. アプリを作成（bundle id 一致）。
+2. **App Group** `group.com.sknk.imasugutimer` を作成し、アプリ＋Widget拡張の両 App ID に付与。Widget の App ID `com.sknk.imasugutimer.widget` も登録。
+3. **買い切りIAP**（非消耗型）`com.sknk.imasugutimer.pro` を作成。
+4. `certs` レーンは app と widget 両方のプロビジョニングを match に作成・保存する（`fastlane ios certs` を1回）。
+5. `appleTeamId`（app.config の @bacons/apple-targets）と `WIDGET_TARGET`（Fastfile、既定 `ImasuguWidget`）を実際の生成物に合わせる。
 
 ## プライバシー / 課金
 
