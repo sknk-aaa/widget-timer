@@ -67,7 +67,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       '@bacons/apple-targets',
       {
-        appleTeamId: 'XXXXXXXXXX', // OPERATIONS.md 参照。実Team IDに置換する
+        appleTeamId: '3H2LBDNPMU',
       },
     ],
   ],
