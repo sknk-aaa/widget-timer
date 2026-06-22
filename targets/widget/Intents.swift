@@ -19,7 +19,7 @@ enum AlarmScheduler {
         let id = UUID()
         // Live Activity がボタンに渡す確実な alarmID をメタデータに埋め込む。
         let meta = TimerMetadata(presetID: metadata.presetID, icon: metadata.icon,
-                                 colorID: metadata.colorID, alarmID: id.uuidString)
+                                 colorID: metadata.colorID, alarmID: id.lower)
         let attributes = makeAttributes(metadata: meta, tint: tint)
         let configuration = AlarmManager.AlarmConfiguration.timer(
             duration: TimeInterval(durationSec),
@@ -36,9 +36,9 @@ enum AlarmScheduler {
 
     private static func appendRunning(id: UUID, endAt: Double, icon: String, colorID: String, durationSec: Int) {
         var list = Shared.loadRunning()
-        list.removeAll { $0.id == id.uuidString }
+        list.removeAll { $0.id.lowercased() == id.lower }
         list.append(SharedRunning(
-            id: id.uuidString, endAt: endAt, icon: icon, color: colorID,
+            id: id.lower, endAt: endAt, icon: icon, color: colorID,
             state: "running", durationSec: durationSec, pausedRemainingSec: nil
         ))
         if let data = try? JSONEncoder().encode(list) {
@@ -74,13 +74,13 @@ enum AlarmScheduler {
     // alarmID -> presetID マップを App Group に保持
     private static func recordRunning(alarmID: UUID, presetID: String?) {
         var map = (Shared.defaults?.dictionary(forKey: Shared.runningMapKey) as? [String: String]) ?? [:]
-        map[alarmID.uuidString] = presetID ?? ""
+        map[alarmID.lower] = presetID ?? ""
         Shared.defaults?.set(map, forKey: Shared.runningMapKey)
     }
 
     private static func removeRunning(alarmID: UUID) {
         var map = (Shared.defaults?.dictionary(forKey: Shared.runningMapKey) as? [String: String]) ?? [:]
-        map.removeValue(forKey: alarmID.uuidString)
+        map.removeValue(forKey: alarmID.lower)
         Shared.defaults?.set(map, forKey: Shared.runningMapKey)
     }
 
@@ -89,12 +89,12 @@ enum AlarmScheduler {
     static func cleanupRunning(id: UUID) {
         removeRunning(alarmID: id)
         var list = Shared.loadRunning()
-        list.removeAll { $0.id == id.uuidString }
+        list.removeAll { $0.id.lowercased() == id.lower }
         if let data = try? JSONEncoder().encode(list) {
             Shared.defaults?.set(data, forKey: Shared.runningKey)
         }
         var cancelled = (Shared.defaults?.array(forKey: Shared.cancelledKey) as? [String]) ?? []
-        cancelled.append(id.uuidString)
+        cancelled.append(id.lower)
         Shared.defaults?.set(cancelled, forKey: Shared.cancelledKey)
         WidgetCenter.shared.reloadAllTimelines()
     }
@@ -103,7 +103,7 @@ enum AlarmScheduler {
     static func markPaused(id: UUID) {
         let now = Date()
         let list = Shared.loadRunning().map { r -> SharedRunning in
-            guard r.id == id.uuidString, r.state == "running" else { return r }
+            guard r.id.lowercased() == id.lower, r.state == "running" else { return r }
             let remaining = max(0, Int(r.endDate.timeIntervalSince(now)))
             return SharedRunning(id: r.id, endAt: r.endAt, icon: r.icon, color: r.color,
                                  state: "paused", durationSec: r.durationSec, pausedRemainingSec: remaining)
@@ -118,7 +118,7 @@ enum AlarmScheduler {
     static func markResumed(id: UUID) {
         let now = Date()
         let list = Shared.loadRunning().map { r -> SharedRunning in
-            guard r.id == id.uuidString, r.state == "paused" else { return r }
+            guard r.id.lowercased() == id.lower, r.state == "paused" else { return r }
             let remaining = r.pausedRemainingSec ?? 0
             let endAt = now.addingTimeInterval(TimeInterval(remaining)).timeIntervalSince1970 * 1000
             return SharedRunning(id: r.id, endAt: endAt, icon: r.icon, color: r.color,

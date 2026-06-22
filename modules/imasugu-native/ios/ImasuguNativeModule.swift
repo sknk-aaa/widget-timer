@@ -117,7 +117,7 @@ public class ImasuguNativeModule: Module {
       let countdown = AlarmPresentation.Countdown(title: "カウントダウン", pauseButton: pause)
       let pausedP = AlarmPresentation.Paused(title: "一時停止中", resumeButton: resume)
       let presentation = AlarmPresentation(alert: alert, countdown: countdown, paused: pausedP)
-      let metadata = TimerMetadata(presetID: presetId, icon: icon, colorID: colorID, alarmID: id.uuidString)
+      let metadata = TimerMetadata(presetID: presetId, icon: icon, colorID: colorID, alarmID: id.uuidString.lowercased())
       let attributes = AlarmAttributes(presentation: presentation, metadata: metadata, tintColor: tint(colorID))
       let config = AlarmManager.AlarmConfiguration.timer(duration: TimeInterval(durationSec), attributes: attributes)
       do {
@@ -128,7 +128,7 @@ public class ImasuguNativeModule: Module {
         throw error
       }
       var map = (UserDefaults(suiteName: kAppGroup)?.dictionary(forKey: kRunningMapKey) as? [String: String]) ?? [:]
-      map[id.uuidString] = presetId ?? ""
+      map[id.uuidString.lowercased()] = presetId ?? ""
       UserDefaults(suiteName: kAppGroup)?.set(map, forKey: kRunningMapKey)
     }
 
@@ -146,7 +146,7 @@ public class ImasuguNativeModule: Module {
       guard let id = UUID(uuidString: timerId) else { return }
       try AlarmManager.shared.cancel(id: id)
       var map = (UserDefaults(suiteName: kAppGroup)?.dictionary(forKey: kRunningMapKey) as? [String: String]) ?? [:]
-      map.removeValue(forKey: id.uuidString)
+      map.removeValue(forKey: id.uuidString.lowercased())
       UserDefaults(suiteName: kAppGroup)?.set(map, forKey: kRunningMapKey)
     }
 

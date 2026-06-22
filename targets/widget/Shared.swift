@@ -6,6 +6,12 @@ import AlarmKit
 // 注意: iOS 26 / AlarmKit は新しく、本ファイルは TestFlight 実機での
 // コンパイル確認が前提（API 名は要検証。docs/NATIVE.md 参照）。
 
+// アプリ(JS)のタイマーIDは小文字UUID。Swift の uuidString は大文字なので、
+// App Group 上のID比較/書き込みは必ず小文字に正規化して一致させる。
+extension UUID {
+    var lower: String { uuidString.lowercased() }
+}
+
 enum Shared {
     static let appGroup = "group.com.sknk.imasugutimer"
     static let presetsKey = "shared_presets_v1" // JSON 配列（アプリ側がミラー）
