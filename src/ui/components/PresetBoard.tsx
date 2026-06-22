@@ -214,9 +214,26 @@ export function PresetBoard(props: Props) {
 
   const draggingPreset = draggingId ? byId.get(draggingId) : null;
   const addPos = { left: PAD + (hiddenIds.length % cols) * CELL_W, top: hiddenAreaTop + Math.floor(hiddenIds.length / cols) * CELL_H };
+  // 描画順は固定（並べ替えで子の順序を変えるとジェスチャが切れるため）。位置は left/top で表現。
+  const orderedIds = React.useMemo(() => [...byId.keys()], [byId]);
 
   return (
     <View onLayout={onLayout} style={{ height: totalHeight }}>
+      {/* ウィジェット欄をカード化して「ここがウィジェットに出る」と分かるように */}
+      <View
+        style={{
+          position: 'absolute',
+          left: -10,
+          right: -10,
+          top: widgetLabelTop - 10,
+          height: LABEL_BLOCK + widgetRows * CELL_H + 16,
+          borderRadius: 22,
+          backgroundColor: c.surface,
+          borderWidth: 1,
+          borderColor: c.hairline,
+        }}
+      />
+
       <AreaLabel theme={theme} top={0} text={props.hiddenLabel} />
       <AreaLabel
         theme={theme}
@@ -226,7 +243,7 @@ export function PresetBoard(props: Props) {
       />
       {widgetIds.length === 0 && <EmptyHint theme={theme} top={widgetAreaTop} />}
 
-      {[...hiddenIds, ...widgetIds].map((id) => {
+      {orderedIds.map((id) => {
         const p = byId.get(id);
         if (!p) return null;
         const pos = posOf(id);

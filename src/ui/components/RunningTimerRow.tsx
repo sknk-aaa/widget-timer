@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { View, Text, Pressable } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
+import Svg, { Rect } from 'react-native-svg';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -29,9 +29,11 @@ interface Props {
   onDismiss: () => void;
 }
 
-const RING = 56;
-const R = 25;
-const CIRC = 2 * Math.PI * R;
+const BOX = 56;
+const INSET = 2;
+const RW = BOX - INSET * 2; // 52
+const RR = 16; // 角丸半径
+const PERIM = 2 * (RW + RW) - 8 * RR + 2 * Math.PI * RR; // 角丸矩形の周長
 
 export function RunningTimerRow({ timer, onPause, onResume, onCancel, onDismiss }: Props) {
   const { c, radius, spacing } = useTheme();
@@ -83,19 +85,32 @@ export function RunningTimerRow({ timer, onPause, onResume, onCancel, onDismiss 
         borderColor: finished ? def.bg : 'transparent',
       }}
     >
-      <Animated.View style={[{ width: RING, height: RING, alignItems: 'center', justifyContent: 'center' }, pulseStyle]}>
-        <Svg width={RING} height={RING} style={{ position: 'absolute', transform: [{ rotate: '-90deg' }] }}>
-          <Circle cx={RING / 2} cy={RING / 2} r={R} stroke={c.hairline} strokeWidth={3} fill="none" />
-          <Circle
-            cx={RING / 2}
-            cy={RING / 2}
-            r={R}
+      <Animated.View style={[{ width: BOX, height: BOX, alignItems: 'center', justifyContent: 'center' }, pulseStyle]}>
+        <Svg width={BOX} height={BOX} style={{ position: 'absolute' }}>
+          <Rect
+            x={INSET}
+            y={INSET}
+            width={RW}
+            height={RW}
+            rx={RR}
+            ry={RR}
+            stroke={c.hairline}
+            strokeWidth={3}
+            fill="none"
+          />
+          <Rect
+            x={INSET}
+            y={INSET}
+            width={RW}
+            height={RW}
+            rx={RR}
+            ry={RR}
             stroke={def.bg}
             strokeWidth={3}
             fill="none"
             strokeLinecap="round"
-            strokeDasharray={CIRC}
-            strokeDashoffset={CIRC * (1 - frac)}
+            strokeDasharray={PERIM}
+            strokeDashoffset={PERIM * (1 - frac)}
           />
         </Svg>
         <View
