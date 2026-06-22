@@ -53,11 +53,14 @@ export interface LiveActivityService {
   end(timerId: string): Promise<void>;
 }
 
+/** 購入結果。pending=承認待ち（ファミリー共有等）、cancelled=ユーザー取消、failed=その他失敗。 */
+export type PurchaseResult = 'purchased' | 'pending' | 'cancelled' | 'failed';
+
 export interface PurchaseService {
   /** Pro 所有状態を返す。 */
   isPro(): Promise<boolean>;
-  /** Pro を購入する。成功で true。 */
-  purchasePro(): Promise<boolean>;
+  /** Pro を購入する。 */
+  purchasePro(): Promise<PurchaseResult>;
   /** 購入を復元する。Pro を所有していれば true。 */
   restore(): Promise<boolean>;
 }

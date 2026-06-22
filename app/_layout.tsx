@@ -17,6 +17,7 @@ TextWithDefaults.defaultProps = { ...TextWithDefaults.defaultProps, maxFontSizeM
 import { useClock } from '../src/store/clock';
 import { useTimersStore } from '../src/store/timers';
 import { useSettingsStore } from '../src/store/settings';
+import { useProStore } from '../src/store/pro';
 import { darkPalette, lightPalette } from '../src/ui/theme';
 import { nowMs } from '../src/domain/format';
 
@@ -63,6 +64,8 @@ export default function RootLayout() {
         useTimersStore.getState().importFromShared();
         useTimersStore.getState().reconcile();
         void useSettingsStore.getState().refreshPermission();
+        // 外部での購入/承認（Ask to Buy 等）を反映。
+        void useProStore.getState().refresh();
       }
     });
     return () => sub.remove();

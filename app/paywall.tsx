@@ -23,18 +23,29 @@ export default function PaywallScreen() {
     { title: s.pro.featureSupport, sub: s.pro.featureSupportSub },
   ];
 
+  const [restoring, setRestoring] = React.useState(false);
+
   const purchase = async () => {
+    if (loading) return;
     setLoading(true);
-    const ok = await useProStore.getState().purchase();
+    const result = await useProStore.getState().purchase();
     setLoading(false);
-    if (ok) {
+    if (result === 'purchased') {
       haptics.start();
       router.back();
+    } else if (result === 'pending') {
+      Alert.alert(s.pro.title, s.pro.pending);
+    } else if (result === 'failed') {
+      Alert.alert(s.pro.title, s.pro.purchaseFailed);
     }
+    // cancelled はユーザー操作なので何も出さない
   };
 
   const restore = async () => {
+    if (restoring) return;
+    setRestoring(true);
     const ok = await useProStore.getState().restore();
+    setRestoring(false);
     if (ok) {
       haptics.light();
       router.back();
@@ -127,12 +138,16 @@ export default function PaywallScreen() {
         <Button title={s.pro.cta} onPress={purchase} loading={loading} />
         <Pressable
           onPress={restore}
+          disabled={restoring}
           hitSlop={10}
           accessibilityRole="button"
           accessibilityLabel={s.pro.restore}
-          style={{ alignItems: 'center', marginTop: spacing.lg }}
+          accessibilityState={{ busy: restoring }}
+          style={{ alignItems: 'center', marginTop: spacing.lg, opacity: restoring ? 0.5 : 1 }}
         >
-          <Text style={{ color: c.textSecondary, fontSize: 14, fontWeight: '600' }}>{s.pro.restore}</Text>
+          <Text style={{ color: c.textSecondary, fontSize: 14, fontWeight: '600' }}>
+            {restoring ? s.pro.restoring : s.pro.restore}
+          </Text>
         </Pressable>
 
         <View style={{ flexDirection: 'row', justifyContent: 'center', gap: spacing.lg, marginTop: spacing.lg }}>

@@ -78,8 +78,21 @@ npm start
 ## プライバシー / 課金
 
 - 全データ端末内（SQLite）。外部送信なし。Privacy Nutrition Label は「データ収集なし」で申告できる構成を維持する（**分析SDK等を入れない**）。
-- 課金は StoreKit 2（買い切り非消耗型）を Phase2 で実装。RevenueCat 等は上記方針のため不採用。
+- 課金は StoreKit 2（買い切り非消耗型）を直実装済み。RevenueCat 等は上記方針のため不採用。
 - `NSAlarmKitUsageDescription` は `app.config.ts` の infoPlist に設定済み。
+
+### 法的URL（`src/domain/links.ts`）
+
+- **利用規約**: Apple 標準 EULA（`https://www.apple.com/legal/internet-services/itunes/dev/stdeula/`）。ホスト不要。
+- **プライバシーポリシー**: 本文は `legal/privacy.html`。**GitHub Pages 等で公開し、URLを `PRIVACY_URL` に一致させる**（既定値 `https://sknk-aaa.github.io/widget-timer/legal/privacy.html`）。
+  - GitHub Pages を使う場合: リポジトリ Settings → Pages → Source = `main` / root を有効化（公開リポ前提）。公開URLが既定値と異なる場合は `PRIVACY_URL` を更新。
+- **問い合わせ**: `CONTACT_URL`（既定: 開発者メール）。変更可。
+
+### リリース前チェック（外部設定）
+
+1. ASC で買い切りIAP `com.sknk.imasugutimer.pro` を作成し、価格設定・審査提出（アプリ本体と同時審査）。
+2. `legal/privacy.html` を公開し `PRIVACY_URL` と一致を確認。
+3. ペイウォールの規約/プライバシーリンクが実機で開けることを確認（審査要件）。
 
 ## 依存メモ
 

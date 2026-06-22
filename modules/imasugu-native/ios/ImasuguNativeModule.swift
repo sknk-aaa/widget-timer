@@ -60,8 +60,31 @@ private func authString(_ s: AlarmManager.AuthorizationState) -> String {
 }
 
 public class ImasuguNativeModule: Module {
+  private var updatesTask: Task<Void, Never>?
+
+  // StoreKit2: 直接の購入フロー外で届くトランザクション（中断・Ask to Buy 承認・
+  // 別端末・ファミリー共有）を監視して finish する。起動時に開始すること（審査要件）。
+  private func startTransactionListener() {
+    updatesTask?.cancel()
+    updatesTask = Task.detached {
+      for await update in Transaction.updates {
+        if case .verified(let transaction) = update {
+          await transaction.finish()
+        }
+      }
+    }
+  }
+
   public func definition() -> ModuleDefinition {
     Name("ImasuguNative")
+
+    OnCreate { [weak self] in
+      self?.startTransactionListener()
+    }
+
+    OnDestroy { [weak self] in
+      self?.updatesTask?.cancel()
+    }
 
     // ---- App Group ミラー ----
     Function("setSharedPresets") { (json: String) in

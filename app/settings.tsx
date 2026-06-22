@@ -127,6 +127,36 @@ export default function SettingsScreen() {
         </View>
 
         <SectionLabel>{s.settings.pro}</SectionLabel>
+        {isPro && (
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: spacing.md,
+              backgroundColor: c.surface,
+              borderRadius: radius.lg,
+              padding: spacing.lg,
+              marginBottom: spacing.md,
+            }}
+          >
+            <View
+              style={{
+                width: 30,
+                height: 30,
+                borderRadius: 15,
+                backgroundColor: c.accent,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <CheckIcon color="#FFFFFF" size={18} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: c.textPrimary, fontSize: 15, fontWeight: '700' }}>{s.pro.active}</Text>
+              <Text style={{ color: c.textSecondary, fontSize: 12, fontWeight: '500' }}>{s.pro.activeSub}</Text>
+            </View>
+          </View>
+        )}
         <View style={{ marginBottom: spacing.xl }}>
           <Button title={s.settings.restore} variant="secondary" onPress={restore} />
         </View>
