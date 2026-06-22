@@ -90,6 +90,7 @@ public class ImasuguNativeModule: Module {
 
     // ---- アプリ内スケジューリング（※ AlarmKit API は実機要検証）----
     AsyncFunction("scheduleTimer") { (timerId: String, durationSec: Int, icon: String, colorID: String, presetId: String?) in
+      NSLog("[Imasugu] scheduleTimer id=%@ dur=%d auth=%@", timerId, durationSec, "\(AlarmManager.shared.authorizationState)")
       let id = UUID(uuidString: timerId) ?? UUID()
       let stop = AlarmButton(text: "終了", textColor: .white, systemImageName: "stop.fill")
       let pause = AlarmButton(text: "一時停止", textColor: .white, systemImageName: "pause.fill")
@@ -101,7 +102,13 @@ public class ImasuguNativeModule: Module {
       let metadata = AppTimerMetadata(presetID: presetId, icon: icon, colorID: colorID)
       let attributes = AlarmAttributes(presentation: presentation, metadata: metadata, tintColor: tint(colorID))
       let config = AlarmManager.AlarmConfiguration.timer(duration: TimeInterval(durationSec), attributes: attributes)
-      _ = try await AlarmManager.shared.schedule(id: id, configuration: config)
+      do {
+        _ = try await AlarmManager.shared.schedule(id: id, configuration: config)
+        NSLog("[Imasugu] scheduleTimer OK id=%@", id.uuidString)
+      } catch {
+        NSLog("[Imasugu] scheduleTimer ERROR: %@", "\(error)")
+        throw error
+      }
       var map = (UserDefaults(suiteName: kAppGroup)?.dictionary(forKey: kRunningMapKey) as? [String: String]) ?? [:]
       map[id.uuidString] = presetId ?? ""
       UserDefaults(suiteName: kAppGroup)?.set(map, forKey: kRunningMapKey)

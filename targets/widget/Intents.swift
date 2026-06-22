@@ -102,15 +102,22 @@ struct StartPresetTimerIntent: AppIntent, LiveActivityIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult {
+        NSLog("[ImasuguWidget] StartPresetTimerIntent preset=%@", presetID)
         guard let preset = Shared.preset(id: presetID) else {
+            NSLog("[ImasuguWidget] preset not found (presets=%d)", Shared.loadPresets().count)
             return .result()
         }
         let metadata = TimerMetadata(presetID: preset.id, icon: preset.icon, colorID: preset.color)
-        _ = try await AlarmScheduler.schedule(
-            durationSec: preset.durationSec,
-            metadata: metadata,
-            tint: paletteColor(preset.color)
-        )
+        do {
+            let id = try await AlarmScheduler.schedule(
+                durationSec: preset.durationSec,
+                metadata: metadata,
+                tint: paletteColor(preset.color)
+            )
+            NSLog("[ImasuguWidget] scheduled OK id=%@", id.uuidString)
+        } catch {
+            NSLog("[ImasuguWidget] schedule ERROR: %@", "\(error)")
+        }
         return .result()
     }
 }
