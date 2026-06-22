@@ -91,9 +91,16 @@ npm start
 
 ### リリース前チェック（外部設定）
 
-1. ASC で買い切りIAP `com.sknk.imasugutimer.pro` を作成し、価格設定・審査提出（アプリ本体と同時審査）。
-2. `legal/privacy.html` を公開し `PRIVACY_URL` と一致を確認。
+1. ASC で買い切りIAP `com.sknk.imasugutimer.pro` を作成（¥500）し、価格設定・審査提出（アプリ本体と同時審査）。
+2. プライバシーポリシーは公開済み（`docs/privacy.html` → Pages /docs、`PRIVACY_URL` 一致）。
 3. ペイウォールの規約/プライバシーリンクが実機で開けることを確認（審査要件）。
+4. **App Store ID を設定**: ASC でアプリ作成後に割り当てられる数字IDを `src/domain/links.ts` の `APP_STORE_ID` に設定（未設定だと設定内「レビューして応援」がApp Storeを開けない）。
+5. 「ご意見・ご要望」は Tally フォーム（`CONTACT_URL`）に接続済み。
+
+### レビュー導線
+
+- **自動レビュー依頼**: Apple純正 `requestReview`（`expo-store-review`）。タイマー完了が**3回**到達で1回だけ（`src/native/review.ts` の `REVIEW_THRESHOLD`）。Apple側で年3回上限の自動制御。
+- **手動**: 設定「レビューして応援」→ App Store のレビュー作成画面（`REVIEW_URL` = `…?action=write-review`）。`APP_STORE_ID` 設定が前提。
 
 ## 依存メモ
 

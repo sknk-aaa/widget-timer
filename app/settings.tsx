@@ -11,6 +11,7 @@ import { Button } from '../src/ui/components/Button';
 import { CheckIcon, ChevronIcon, StarIcon } from '../src/ui/icons/ui';
 import { haptics } from '../src/ui/haptics';
 import { PRIVACY_URL, TERMS_URL, CONTACT_URL } from '../src/domain/links';
+import { openWriteReview } from '../src/native/review';
 import { t } from '../src/i18n';
 
 const SOUNDS: { id: string; label: string }[] = [
@@ -157,8 +158,11 @@ export default function SettingsScreen() {
             </View>
           </View>
         )}
-        <View style={{ marginBottom: spacing.xl }}>
+        <View style={{ marginBottom: spacing.md }}>
           <Button title={s.settings.restore} variant="secondary" onPress={restore} />
+        </View>
+        <View style={{ backgroundColor: c.surface, borderRadius: radius.lg, marginBottom: spacing.xl }}>
+          <Row first label={s.settings.review} chevron onPress={() => void openWriteReview()} />
         </View>
 
         <SectionLabel>{s.settings.about}</SectionLabel>

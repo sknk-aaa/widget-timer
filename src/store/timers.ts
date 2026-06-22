@@ -12,6 +12,7 @@ import { alarmService } from '../native/alarm';
 import { liveActivityService } from '../native/liveActivity';
 import { widgetService } from '../native/widget';
 import { readRunningFromAppGroup, takeCancelledFromAppGroup } from '../native/shared';
+import { bumpCompletionCount, maybeAskReview } from '../native/review';
 import { haptics } from '../ui/haptics';
 
 interface StartInput {
@@ -171,6 +172,9 @@ export const useTimersStore = create<TimersState>((set, get) => ({
     });
     haptics.finish();
     void widgetService.reloadTimelines();
+    // 満足度が高い瞬間（完了）にレビュー依頼の判定。
+    const completions = bumpCompletionCount(expired.length);
+    void maybeAskReview(completions);
   },
 
   importFromShared: () => {
