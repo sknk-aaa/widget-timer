@@ -2,6 +2,7 @@ import AppIntents
 import AlarmKit
 import SwiftUI
 import Foundation
+import WidgetKit
 
 // タイマー起動のコア。Control / ホームウィジェット / アプリ内のすべてが
 // この AlarmKit 呼び出しに集約される。
@@ -23,7 +24,23 @@ enum AlarmScheduler {
         )
         _ = try await AlarmManager.shared.schedule(id: id, configuration: configuration)
         recordRunning(alarmID: id, presetID: metadata.presetID)
+        // ウィジェットがカウントダウン表示できるよう実行中モデルを App Group に追記＋再読込
+        let endAt = Date().addingTimeInterval(TimeInterval(durationSec)).timeIntervalSince1970 * 1000
+        appendRunning(id: id, endAt: endAt, icon: metadata.icon, colorID: metadata.colorID, durationSec: durationSec)
+        WidgetCenter.shared.reloadAllTimelines()
         return id
+    }
+
+    private static func appendRunning(id: UUID, endAt: Double, icon: String, colorID: String, durationSec: Int) {
+        var list = Shared.loadRunning()
+        list.removeAll { $0.id == id.uuidString }
+        list.append(SharedRunning(
+            id: id.uuidString, endAt: endAt, icon: icon, color: colorID,
+            state: "running", durationSec: durationSec, pausedRemainingSec: nil
+        ))
+        if let data = try? JSONEncoder().encode(list) {
+            Shared.defaults?.set(data, forKey: Shared.runningKey)
+        }
     }
 
     // alert(終了)＋countdown(一時停止)＋paused(再開) を宣言すると AlarmKit が
