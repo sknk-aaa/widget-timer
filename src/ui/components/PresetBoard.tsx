@@ -67,12 +67,11 @@ export function PresetBoard(props: Props) {
   }, [props.hidden, props.widget]);
 
   React.useEffect(() => {
-    if (draggingId) return;
+    if (draggingRef.current) return;
     setHiddenIds(props.hidden.map((p) => p.id));
     setWidgetIds(props.widget.map((p) => p.id));
-  }, [props.hidden, props.widget, draggingId]);
+  }, [props.hidden, props.widget]);
 
-  // 編集モードでは追加タイル分を hidden 末尾に確保
   const hiddenSlots = hiddenIds.length + (editMode ? 1 : 0);
   const hiddenRows = Math.max(1, Math.ceil(hiddenSlots / cols));
   const widgetRows = Math.max(1, Math.ceil(widgetIds.length / cols));
@@ -83,23 +82,15 @@ export function PresetBoard(props: Props) {
 
   const areaTopOf = (area: Area) => (area === 'hidden' ? hiddenAreaTop : widgetAreaTop);
 
-  const cellPos = React.useCallback(
-    (area: Area, index: number) => {
-      const row = Math.floor(index / cols);
-      const col = index % cols;
-      return { left: PAD + col * CELL_W, top: areaTopOf(area) + row * CELL_H };
-    },
-    [cols, hiddenAreaTop, widgetAreaTop],
-  );
-
-  const locate = React.useCallback(
-    (id: string): { area: Area; index: number } => {
-      const hi = hiddenIds.indexOf(id);
-      if (hi >= 0) return { area: 'hidden', index: hi };
-      return { area: 'widget', index: widgetIds.indexOf(id) };
-    },
-    [hiddenIds, widgetIds],
-  );
+  // ---- ハンドラを安定化するための ref（再レンダーでジェスチャを作り直さない）----
+  const dataRef = React.useRef({ hiddenIds, widgetIds, cols, widgetLabelTop, hiddenAreaTop, widgetAreaTop });
+  dataRef.current = { hiddenIds, widgetIds, cols, widgetLabelTop, hiddenAreaTop, widgetAreaTop };
+  const cbRef = React.useRef(props);
+  cbRef.current = props;
+  const byIdRef = React.useRef(byId);
+  byIdRef.current = byId;
+  // ドラッグ中の作業配列（描画タイミングに依存せず即時更新）
+  const workRef = React.useRef<{ hidden: string[]; widget: string[] }>({ hidden: [], widget: [] });
 
   const startLeft = useSharedValue(0);
   const startTop = useSharedValue(0);
@@ -107,79 +98,96 @@ export function PresetBoard(props: Props) {
   const dragY = useSharedValue(0);
   const dragScale = useSharedValue(1);
 
-  const beginDrag = React.useCallback(
-    (id: string) => {
-      const loc = locate(id);
-      const pos = cellPos(loc.area, loc.index);
-      startLeft.value = pos.left;
-      startTop.value = pos.top;
-      dragX.value = 0;
-      dragY.value = 0;
-      dragScale.value = withSpring(1.08, springs.snappy);
-      draggingRef.current = id;
-      setDraggingId(id);
-      props.onDragActiveChange(true);
-      haptics.pickup();
-    },
-    [locate, cellPos, props],
-  );
+  const handleBegin = React.useCallback((id: string) => {
+    const d = dataRef.current;
+    const hi = d.hiddenIds.indexOf(id);
+    const area: Area = hi >= 0 ? 'hidden' : 'widget';
+    const index = hi >= 0 ? hi : d.widgetIds.indexOf(id);
+    const row = Math.floor(index / d.cols);
+    const col = index % d.cols;
+    startLeft.value = PAD + col * CELL_W;
+    startTop.value = (area === 'hidden' ? d.hiddenAreaTop : d.widgetAreaTop) + row * CELL_H;
+    dragX.value = 0;
+    dragY.value = 0;
+    dragScale.value = withSpring(1.08, springs.snappy);
+    workRef.current = { hidden: [...d.hiddenIds], widget: [...d.widgetIds] };
+    draggingRef.current = id;
+    setDraggingId(id);
+    cbRef.current.onDragActiveChange(true);
+    haptics.pickup();
+  }, []);
 
-  const moveDuringDrag = React.useCallback(
-    (id: string, tx: number, ty: number) => {
-      const fx = startLeft.value + TILE_SIZE / 2 + tx;
-      const fy = startTop.value + TILE_SIZE / 2 + ty;
-      const targetArea: Area = fy < widgetLabelTop ? 'hidden' : 'widget';
+  const handleMove = React.useCallback((id: string, tx: number, ty: number) => {
+    dragX.value = tx;
+    dragY.value = ty;
+    const d = dataRef.current;
+    const w = workRef.current;
+    const fx = startLeft.value + TILE_SIZE / 2 + tx;
+    const fy = startTop.value + TILE_SIZE / 2 + ty;
+    const targetArea: Area = fy < d.widgetLabelTop ? 'hidden' : 'widget';
+    const fromHidden = w.hidden.includes(id);
+    const srcArr = fromHidden ? w.hidden : w.widget;
+    const fromIdx = srcArr.indexOf(id);
+    if (fromIdx < 0) return;
+    const sameArea = (targetArea === 'hidden') === fromHidden;
+    const col = clamp(Math.round((fx - PAD) / CELL_W), 0, d.cols - 1);
+    const areaTop = targetArea === 'hidden' ? d.hiddenAreaTop : d.widgetAreaTop;
+    const row = Math.max(0, Math.floor((fy - areaTop) / CELL_H));
+    let j = row * d.cols + col;
 
-      const fromHidden = hiddenIds.includes(id);
-      const srcArr = fromHidden ? hiddenIds : widgetIds;
-      const fromIdx = srcArr.indexOf(id);
-      const sameArea = (targetArea === 'hidden') === fromHidden;
-
-      const col = clamp(Math.round((fx - PAD) / CELL_W), 0, cols - 1);
-      const row = Math.max(0, Math.floor((fy - areaTopOf(targetArea)) / CELL_H));
-      let j = row * cols + col;
-
-      if (sameArea) {
-        // 表示中の並び（id を含む）と同じ index 空間で比較。掴んだ位置なら動かさない。
-        j = clamp(j, 0, srcArr.length - 1);
-        if (j === fromIdx) return;
-        const arr = [...srcArr];
-        arr.splice(fromIdx, 1);
-        arr.splice(j, 0, id);
-        if (fromHidden) setHiddenIds(arr);
-        else setWidgetIds(arr);
+    if (sameArea) {
+      j = clamp(j, 0, srcArr.length - 1);
+      if (j === fromIdx) return;
+      const arr = [...srcArr];
+      arr.splice(fromIdx, 1);
+      arr.splice(j, 0, id);
+      if (fromHidden) w.hidden = arr;
+      else w.widget = arr;
+    } else {
+      const dstArr = targetArea === 'hidden' ? w.hidden : w.widget;
+      j = clamp(j, 0, dstArr.length);
+      const src = [...srcArr];
+      src.splice(fromIdx, 1);
+      const dst = [...dstArr];
+      dst.splice(j, 0, id);
+      if (targetArea === 'hidden') {
+        w.hidden = dst;
+        w.widget = src;
       } else {
-        const dstArr = targetArea === 'hidden' ? hiddenIds : widgetIds;
-        j = clamp(j, 0, dstArr.length);
-        const src = [...srcArr];
-        src.splice(fromIdx, 1);
-        const dst = [...dstArr];
-        dst.splice(j, 0, id);
-        if (targetArea === 'hidden') {
-          setHiddenIds(dst);
-          setWidgetIds(src);
-        } else {
-          setWidgetIds(dst);
-          setHiddenIds(src);
-        }
+        w.widget = dst;
+        w.hidden = src;
       }
-      haptics.swap();
-    },
-    [hiddenIds, widgetIds, cols, widgetLabelTop, areaTopOf],
-  );
+    }
+    setHiddenIds(w.hidden);
+    setWidgetIds(w.widget);
+    haptics.swap();
+  }, []);
 
-  const endDrag = React.useCallback(() => {
-    if (!draggingRef.current) return; // ドラッグ未開始（タップ等）では何もしない
+  const handleEnd = React.useCallback((id: string) => {
+    if (draggingRef.current !== id) return; // ドラッグ未開始（タップ等）は無視
     draggingRef.current = null;
     dragScale.value = withSpring(1, springs.snappy);
-    const ok = props.onArrange(hiddenIds, widgetIds);
+    const w = workRef.current;
+    const ok = cbRef.current.onArrange(w.hidden, w.widget);
     if (!ok) {
-      setHiddenIds(props.hidden.map((p) => p.id));
-      setWidgetIds(props.widget.map((p) => p.id));
+      setHiddenIds(cbRef.current.hidden.map((p) => p.id));
+      setWidgetIds(cbRef.current.widget.map((p) => p.id));
     }
     setDraggingId(null);
-    props.onDragActiveChange(false);
-  }, [props, hiddenIds, widgetIds]);
+    cbRef.current.onDragActiveChange(false);
+  }, []);
+
+  const handleTap = React.useCallback((id: string) => {
+    const p = byIdRef.current.get(id);
+    if (!p) return;
+    if (cbRef.current.editMode) cbRef.current.onEdit(p);
+    else cbRef.current.onLaunch(p);
+  }, []);
+
+  const handleDelete = React.useCallback((id: string) => {
+    const p = byIdRef.current.get(id);
+    if (p) cbRef.current.onDelete(p);
+  }, []);
 
   const floatingStyle = useAnimatedStyle(() => ({
     position: 'absolute',
@@ -195,37 +203,17 @@ export function PresetBoard(props: Props) {
 
   const onLayout = (e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width);
 
-  const renderTile = (id: string) => {
-    const p = byId.get(id);
-    if (!p) return null;
-    const loc = locate(id);
-    const pos = cellPos(loc.area, loc.index);
-    const isDragging = id === draggingId;
-    return (
-      <PresetCell
-        key={id}
-        preset={p}
-        index={loc.index}
-        left={pos.left}
-        top={pos.top}
-        theme={theme}
-        editMode={editMode}
-        isDragging={isDragging}
-        onBegin={() => beginDrag(id)}
-        onMove={(tx, ty) => {
-          dragX.value = tx;
-          dragY.value = ty;
-          moveDuringDrag(id, tx, ty);
-        }}
-        onEnd={endDrag}
-        onTap={() => (editMode ? props.onEdit(p) : props.onLaunch(p))}
-        onDelete={() => props.onDelete(p)}
-      />
-    );
+  const posOf = (id: string) => {
+    const hi = hiddenIds.indexOf(id);
+    const area: Area = hi >= 0 ? 'hidden' : 'widget';
+    const index = hi >= 0 ? hi : widgetIds.indexOf(id);
+    const row = Math.floor(index / cols);
+    const col = index % cols;
+    return { left: PAD + col * CELL_W, top: areaTopOf(area) + row * CELL_H, index };
   };
 
   const draggingPreset = draggingId ? byId.get(draggingId) : null;
-  const addPos = cellPos('hidden', hiddenIds.length);
+  const addPos = { left: PAD + (hiddenIds.length % cols) * CELL_W, top: hiddenAreaTop + Math.floor(hiddenIds.length / cols) * CELL_H };
 
   return (
     <View onLayout={onLayout} style={{ height: totalHeight }}>
@@ -238,7 +226,29 @@ export function PresetBoard(props: Props) {
       />
       {widgetIds.length === 0 && <EmptyHint theme={theme} top={widgetAreaTop} />}
 
-      {[...hiddenIds, ...widgetIds].map(renderTile)}
+      {[...hiddenIds, ...widgetIds].map((id) => {
+        const p = byId.get(id);
+        if (!p) return null;
+        const pos = posOf(id);
+        return (
+          <PresetCell
+            key={id}
+            id={id}
+            preset={p}
+            index={pos.index}
+            left={pos.left}
+            top={pos.top}
+            theme={theme}
+            editMode={editMode}
+            isDragging={id === draggingId}
+            onBegin={handleBegin}
+            onMove={handleMove}
+            onEnd={handleEnd}
+            onTap={handleTap}
+            onDelete={handleDelete}
+          />
+        );
+      })}
 
       {editMode && (
         <Pressable
@@ -329,6 +339,7 @@ function EmptyHint({ theme, top }: { theme: Theme; top: number }) {
 }
 
 interface CellProps {
+  id: string;
   preset: Preset;
   index: number;
   left: number;
@@ -336,16 +347,22 @@ interface CellProps {
   theme: Theme;
   editMode: boolean;
   isDragging: boolean;
-  onBegin: () => void;
-  onMove: (tx: number, ty: number) => void;
-  onEnd: () => void;
-  onTap: () => void;
-  onDelete: () => void;
+  onBegin: (id: string) => void;
+  onMove: (id: string, tx: number, ty: number) => void;
+  onEnd: (id: string) => void;
+  onTap: (id: string) => void;
+  onDelete: (id: string) => void;
+}
+
+function jigglePhase(id: string): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h + id.charCodeAt(i)) % 5;
+  return (h - 2) * 18;
 }
 
 function PresetCell({
+  id,
   preset,
-  index,
   left,
   top,
   theme,
@@ -364,7 +381,7 @@ function PresetCell({
 
   React.useEffect(() => {
     if (editMode && !isDragging && !reduced) {
-      const phase = ((index % 5) - 2) * 18;
+      const phase = jigglePhase(id);
       jiggle.value = withRepeat(
         withSequence(
           withTiming(1, { duration: 130 + phase }),
@@ -378,7 +395,7 @@ function PresetCell({
       jiggle.value = withTiming(0, { duration: 100 });
     }
     return () => cancelAnimation(jiggle);
-  }, [editMode, isDragging, reduced, index, jiggle]);
+  }, [editMode, isDragging, reduced, id, jiggle]);
 
   const tap = React.useMemo(
     () =>
@@ -391,23 +408,22 @@ function PresetCell({
           pressScale.value = withSpring(1, springs.pop);
         })
         .onEnd((_e, success) => {
-          if (success) runOnJS(onTap)();
+          if (success) runOnJS(onTap)(id);
         }),
-    [onTap],
+    [id, onTap],
   );
 
   const pan = React.useMemo(
     () =>
       Gesture.Pan()
         .activateAfterLongPress(220)
-        .onStart(() => runOnJS(onBegin)())
-        .onUpdate((e) => runOnJS(onMove)(e.translationX, e.translationY))
-        .onFinalize(() => runOnJS(onEnd)()),
-    [onBegin, onMove, onEnd],
+        .onStart(() => runOnJS(onBegin)(id))
+        .onUpdate((e) => runOnJS(onMove)(id, e.translationX, e.translationY))
+        .onFinalize(() => runOnJS(onEnd)(id)),
+    [id, onBegin, onMove, onEnd],
   );
 
-  // 通常モードでも長押しで並び替え可能（タップは起動、長押しはドラッグ）
-  const gesture = Gesture.Exclusive(pan, tap);
+  const gesture = React.useMemo(() => Gesture.Exclusive(pan, tap), [pan, tap]);
 
   const animStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pressScale.value }, { rotate: `${jiggle.value}deg` }],
@@ -430,7 +446,7 @@ function PresetCell({
           style={animStyle}
           accessibilityRole="button"
           accessibilityLabel={`${formatDurationShort(preset.durationSec)}のタイマー`}
-          accessibilityHint={editMode ? 'タップで編集。長押しで移動' : 'タップで起動'}
+          accessibilityHint={editMode ? 'タップで編集。長押しで移動' : 'タップで起動。長押しで並び替え'}
         >
           <PresetTileVisual icon={preset.icon} color={preset.color} glow={!isDragging} />
         </Animated.View>
@@ -438,7 +454,7 @@ function PresetCell({
 
       {editMode && !isDragging && (
         <Pressable
-          onPress={onDelete}
+          onPress={() => onDelete(id)}
           hitSlop={10}
           accessibilityRole="button"
           accessibilityLabel="削除"
