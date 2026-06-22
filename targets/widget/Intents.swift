@@ -1,0 +1,89 @@
+import AppIntents
+import AlarmKit
+import SwiftUI
+import Foundation
+
+// タイマー起動のコア。Control / ホームウィジェット / アプリ内のすべてが
+// この AlarmKit 呼び出しに集約される。
+//
+// 重要(設計): StartPresetTimerIntent は LiveActivityIntent に準拠させ、
+// かつソースをアプリ本体ターゲットにも含める。これで「アプリを前面に出さず
+// バックグラウンドのアプリプロセスで実行」され、AlarmKit/共有ストアに
+// アクセスできる。Live Activity は AlarmKit が自動生成するため
+// Activity.request は呼ばない。
+// ※ AlarmKit は iOS 26 の新API。シグネチャは実機(TestFlight)で要確認。
+
+enum AlarmScheduler {
+    static func schedule(durationSec: Int, metadata: TimerMetadata, tint: Color) async throws -> UUID {
+        let id = UUID()
+        let stop = AlarmButton(text: "停止", textColor: .white, systemImageName: "stop.fill")
+        let alert = AlarmPresentation.Alert(title: "タイマー終了", stopButton: stop)
+        let presentation = AlarmPresentation(alert: alert)
+        let attributes = AlarmAttributes(presentation: presentation, metadata: metadata, tintColor: tint)
+        let configuration = AlarmManager.AlarmConfiguration.timer(
+            duration: TimeInterval(durationSec),
+            attributes: attributes
+        )
+        _ = try await AlarmManager.shared.schedule(id: id, configuration: configuration)
+        recordRunning(alarmID: id, presetID: metadata.presetID)
+        return id
+    }
+
+    static func cancel(id: UUID) throws {
+        try AlarmManager.shared.cancel(id: id)
+        removeRunning(alarmID: id)
+    }
+
+    static func stopAll() throws {
+        for id in runningAlarmIDs() {
+            try? AlarmManager.shared.cancel(id: id)
+        }
+        Shared.defaults?.removeObject(forKey: Shared.runningMapKey)
+    }
+
+    // alarmID -> presetID マップを App Group に保持
+    private static func recordRunning(alarmID: UUID, presetID: String?) {
+        var map = (Shared.defaults?.dictionary(forKey: Shared.runningMapKey) as? [String: String]) ?? [:]
+        map[alarmID.uuidString] = presetID ?? ""
+        Shared.defaults?.set(map, forKey: Shared.runningMapKey)
+    }
+
+    private static func removeRunning(alarmID: UUID) {
+        var map = (Shared.defaults?.dictionary(forKey: Shared.runningMapKey) as? [String: String]) ?? [:]
+        map.removeValue(forKey: alarmID.uuidString)
+        Shared.defaults?.set(map, forKey: Shared.runningMapKey)
+    }
+
+    static func runningAlarmIDs() -> [UUID] {
+        let map = (Shared.defaults?.dictionary(forKey: Shared.runningMapKey) as? [String: String]) ?? [:]
+        return map.keys.compactMap { UUID(uuidString: $0) }
+    }
+}
+
+/// プリセット起動 Intent（Control・ウィジェット・アプリ内で共用）。
+struct StartPresetTimerIntent: AppIntent, LiveActivityIntent {
+    static var title: LocalizedStringResource = "タイマーを開始"
+    static var description = IntentDescription("プリセットのタイマーを開始します")
+    // アプリを前面に出さない
+    static var openAppWhenRun = false
+
+    @Parameter(title: "プリセットID")
+    var presetID: String
+
+    init() {}
+    init(presetID: String) { self.presetID = presetID }
+
+    @MainActor
+    func perform() async throws -> some IntentResult {
+        guard let preset = Shared.preset(id: presetID) else {
+            return .result()
+        }
+        let metadata = TimerMetadata(presetID: preset.id, icon: preset.icon, colorID: preset.color)
+        _ = try await AlarmScheduler.schedule(
+            durationSec: preset.durationSec,
+            metadata: metadata,
+            tint: paletteColor(preset.color)
+        )
+        return .result()
+    }
+}

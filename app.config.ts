@@ -63,6 +63,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         // Phase1: Expo Go モック用のローカル通知。Phase2 で AlarmKit に置換。
       },
     ],
+    // Phase2: Widget拡張（Control / ホームウィジェット / Live Activity / App Intents）
+    [
+      '@bacons/apple-targets',
+      {
+        appleTeamId: 'XXXXXXXXXX', // OPERATIONS.md 参照。実Team IDに置換する
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

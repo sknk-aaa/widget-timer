@@ -6,6 +6,8 @@ import { usePresetsStore } from './presets';
 import { useTimersStore } from './timers';
 import { useProStore } from './pro';
 import { useSettingsStore } from './settings';
+import { mirrorPresetsToAppGroup } from '../native/shared';
+import { widgetService } from '../native/widget';
 
 const SEEDED_KEY = 'seeded';
 
@@ -33,4 +35,12 @@ export async function bootstrap(): Promise<void> {
   useTimersStore.getState().reconcile();
   await useProStore.getState().load();
   await useSettingsStore.getState().refreshPermission();
+
+  // プリセットを App Group にミラー（Control/ウィジェット用）。変更時も追従。
+  mirrorPresetsToAppGroup(usePresetsStore.getState().presets);
+  void widgetService.reloadTimelines();
+  usePresetsStore.subscribe((state) => {
+    mirrorPresetsToAppGroup(state.presets);
+    void widgetService.reloadTimelines();
+  });
 }

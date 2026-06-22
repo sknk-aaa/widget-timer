@@ -16,4 +16,5 @@
 - SPEC.md … 製品要件（正）
 - docs/DESIGN.md … 実装設計
 - docs/OPERATIONS.md … 識別子・CI/CD・配信・プライバシー
+- docs/NATIVE.md … Phase2 ネイティブ（AlarmKit/ウィジェット/Control/Live Activity）のビルド・検証手順
 - docs/HANDOFF.md … 現状・残タスク
