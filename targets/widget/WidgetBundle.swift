@@ -5,7 +5,6 @@ import SwiftUI
 struct ImasuguWidgetBundle: WidgetBundle {
     var body: some Widget {
         PresetWidget()
-        TimerLiveActivity()
         if #available(iOS 18.0, *) {
             StartTimerControl()
         }
