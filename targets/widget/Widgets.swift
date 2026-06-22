@@ -84,34 +84,37 @@ private struct RunningView: View {
                         )
                     if r.state == "paused" {
                         Text(Duration.seconds(Double(r.pausedRemainingSec ?? 0)).formatted(.time(pattern: .minuteSecond)))
-                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                            .font(.system(size: small ? 20 : 18, weight: .bold, design: .rounded))
                             .monospacedDigit()
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.6)
                     } else {
                         Text(timerInterval: Date.now...r.endDate, countsDown: true)
-                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                            .font(.system(size: small ? 20 : 18, weight: .bold, design: .rounded))
                             .monospacedDigit()
                             .lineLimit(1)
                             .minimumScaleFactor(0.6)
                     }
                     Spacer(minLength: 4)
-                    if r.state == "paused" {
-                        Button(intent: ResumeAlarmIntent(alarmID: r.id)) {
-                            WidgetGlyph(systemName: "play.fill")
+                    // 正方形(small)はボタンを出さない。長方形(medium)のみ操作ボタンを表示。
+                    if !small {
+                        if r.state == "paused" {
+                            Button(intent: ResumeAlarmIntent(alarmID: r.id)) {
+                                WidgetGlyph(systemName: "play.fill")
+                            }
+                            .buttonStyle(.plain)
+                        } else {
+                            Button(intent: PauseAlarmIntent(alarmID: r.id)) {
+                                WidgetGlyph(systemName: "pause.fill")
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
-                    } else {
-                        Button(intent: PauseAlarmIntent(alarmID: r.id)) {
-                            WidgetGlyph(systemName: "pause.fill")
+                        Button(intent: CancelAlarmIntent(alarmID: r.id)) {
+                            WidgetGlyph(systemName: "xmark")
                         }
                         .buttonStyle(.plain)
                     }
-                    Button(intent: CancelAlarmIntent(alarmID: r.id)) {
-                        WidgetGlyph(systemName: "xmark")
-                    }
-                    .buttonStyle(.plain)
                 }
             }
             Spacer(minLength: 0)
@@ -174,25 +177,16 @@ private struct AccessoryView: View {
     @Environment(\.widgetFamily) var family
     let entry: PresetEntry
 
+    // ロック画面は常に「起動ランチャー」。実行中カウントは通知（Live Activity）に出るため
+    // 重複を避けて表示しない（押しても表示は変わらない）。
     var body: some View {
-        let soonest = activeRunning(entry.running, asOf: entry.date).first
         switch family {
         case .accessoryInline:
-            if let r = soonest, r.state != "paused" {
-                Text("残り ") + Text(timerInterval: Date.now...r.endDate, countsDown: true)
-            } else {
-                Text("今すぐタイマー")
-            }
+            Text("今すぐタイマー")
         case .accessoryCircular:
             ZStack {
                 AccessoryWidgetBackground()
-                if let r = soonest, r.state != "paused" {
-                    Text(timerInterval: Date.now...r.endDate, countsDown: true)
-                        .font(.system(size: 12, weight: .bold))
-                        .monospacedDigit()
-                        .multilineTextAlignment(.center)
-                } else if let p = entry.presets.first {
-                    // タップで先頭プリセットを無音起動
+                if let p = entry.presets.first {
                     Button(intent: StartPresetTimerIntent(presetID: p.id)) {
                         VStack(spacing: 0) {
                             Image(systemName: iconToSymbol(p.icon)).font(.caption)
@@ -205,30 +199,14 @@ private struct AccessoryView: View {
                 }
             }
         default: // accessoryRectangular
-            if let r = soonest {
-                HStack(spacing: 8) {
-                    Image(systemName: iconToSymbol(r.icon)).font(.title3)
-                    if r.state == "paused" {
-                        Text("一時停止中").font(.headline)
-                    } else {
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(timerInterval: Date.now...r.endDate, countsDown: true)
-                                .font(.headline).monospacedDigit()
-                            Text("終了 \(r.endDate.formatted(date: .omitted, time: .shortened))")
-                                .font(.caption2).foregroundStyle(.secondary)
-                        }
-                    }
-                    Spacer()
-                }
-            } else if entry.presets.isEmpty {
+            if entry.presets.isEmpty {
                 HStack(spacing: 8) {
                     Image(systemName: "timer").font(.title3)
                     Text("今すぐタイマー").font(.headline)
                     Spacer()
                 }
             } else {
-                // アイドル時：先頭プリセットを角丸チップのボタンで表示（無音起動）。
-                // ロック画面はモノクロ寄りなので半透明チップで「押せる」感を出す。
+                // 先頭プリセットを角丸チップのボタンで表示（無音起動）。
                 HStack(spacing: 6) {
                     ForEach(Array(entry.presets.prefix(3))) { p in
                         Button(intent: StartPresetTimerIntent(presetID: p.id)) {

@@ -47,6 +47,8 @@ export default function RootLayout() {
     if (!ready) return;
     const id = setInterval(() => {
       useClock.getState().set(nowMs());
+      // 通知/ウィジェットからの停止・一時停止を素早く反映（体感ラグ低減）。
+      useTimersStore.getState().importFromShared();
       useTimersStore.getState().reconcile();
     }, 1000);
     return () => clearInterval(id);
