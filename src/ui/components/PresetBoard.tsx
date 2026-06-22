@@ -72,7 +72,7 @@ export function PresetBoard(props: Props) {
     setWidgetIds(props.widget.map((p) => p.id));
   }, [props.hidden, props.widget]);
 
-  const hiddenSlots = hiddenIds.length + (editMode ? 1 : 0);
+  const hiddenSlots = hiddenIds.length + 1; // 末尾の追加タイル枠（常時表示）
   const hiddenRows = Math.max(1, Math.ceil(hiddenSlots / cols));
   const widgetRows = Math.max(1, Math.ceil(widgetIds.length / cols));
   const hiddenAreaTop = LABEL_BLOCK;
@@ -267,28 +267,26 @@ export function PresetBoard(props: Props) {
         );
       })}
 
-      {editMode && (
-        <Pressable
-          onPress={props.onAdd}
-          accessibilityRole="button"
-          accessibilityLabel="プリセットを追加"
-          style={{
-            position: 'absolute',
-            left: addPos.left,
-            top: addPos.top,
-            width: TILE_SIZE,
-            height: TILE_SIZE,
-            borderRadius: 22,
-            borderWidth: 1.5,
-            borderStyle: 'dashed',
-            borderColor: c.textTertiary,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <PlusIcon color={c.textSecondary} size={26} />
-        </Pressable>
-      )}
+      <Pressable
+        onPress={props.onAdd}
+        accessibilityRole="button"
+        accessibilityLabel="プリセットを追加"
+        style={{
+          position: 'absolute',
+          left: addPos.left,
+          top: addPos.top,
+          width: TILE_SIZE,
+          height: TILE_SIZE,
+          borderRadius: 22,
+          borderWidth: 1.5,
+          borderStyle: 'dashed',
+          borderColor: c.textTertiary,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <PlusIcon color={c.textSecondary} size={26} />
+      </Pressable>
 
       {draggingPreset && (
         <Animated.View style={floatingStyle} pointerEvents="none">

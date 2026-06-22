@@ -1,6 +1,13 @@
 import * as React from 'react';
-import { View, Text, Pressable } from 'react-native';
-import Animated from 'react-native-reanimated';
+import {
+  View,
+  Text,
+  Pressable,
+  ScrollView,
+  useWindowDimensions,
+  type NativeSyntheticEvent,
+  type NativeScrollEvent,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSettingsStore } from '../src/store/settings';
@@ -10,15 +17,26 @@ import { Button } from '../src/ui/components/Button';
 import { PresetTileVisual } from '../src/ui/components/PresetTile';
 import { PlusIcon, BellGlyph } from '../src/ui/icons/ui';
 import { haptics } from '../src/ui/haptics';
-import { fadeIn } from '../src/ui/motion';
 import { t } from '../src/i18n';
 
 export default function OnboardingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const { c, spacing } = useTheme();
   const s = t();
   const [page, setPage] = React.useState(0);
+  const scrollRef = React.useRef<ScrollView>(null);
+
+  const goTo = (p: number) => scrollRef.current?.scrollTo({ x: p * width, animated: true });
+
+  const onScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const p = Math.round(e.nativeEvent.contentOffset.x / width);
+    if (p !== page) {
+      setPage(p);
+      haptics.light();
+    }
+  };
 
   const finish = () => {
     useSettingsStore.getState().completeOnboarding();
@@ -29,35 +47,46 @@ export default function OnboardingScreen() {
     await alarmService.requestPermission();
     await useSettingsStore.getState().refreshPermission();
     haptics.start();
-    setPage(2);
+    goTo(2);
   };
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: insets.top }}>
       <View style={{ alignItems: 'flex-end', paddingHorizontal: spacing.xl, height: 44, justifyContent: 'center' }}>
         {page < 2 && (
-          <Pressable onPress={finish} hitSlop={10}>
+          <Pressable onPress={finish} hitSlop={10} accessibilityRole="button" accessibilityLabel={s.onboarding.skip}>
             <Text style={{ color: c.textSecondary, fontSize: 15, fontWeight: '600' }}>{s.onboarding.skip}</Text>
           </Pressable>
         )}
       </View>
 
-      <View style={{ flex: 1, paddingHorizontal: spacing.xxl, justifyContent: 'center' }}>
-        <Animated.View key={page} entering={fadeIn} style={{ width: '100%' }}>
-          {page === 0 && <ConceptPage />}
-          {page === 1 && <PermissionPage />}
-          {page === 2 && <WidgetPage />}
-        </Animated.View>
-      </View>
+      <ScrollView
+        ref={scrollRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onMomentumScrollEnd={onScrollEnd}
+        style={{ flex: 1 }}
+      >
+        <Page width={width}>
+          <ConceptPage />
+        </Page>
+        <Page width={width}>
+          <PermissionPage />
+        </Page>
+        <Page width={width}>
+          <WidgetPage />
+        </Page>
+      </ScrollView>
 
       <View style={{ paddingHorizontal: spacing.xxl, paddingBottom: insets.bottom + spacing.xl, gap: spacing.lg }}>
         <Dots count={3} active={page} />
-        {page === 0 && <Button title={s.onboarding.next} onPress={() => setPage(1)} />}
+        {page === 0 && <Button title={s.onboarding.next} onPress={() => goTo(1)} />}
         {page === 1 && (
           <>
             <Button title={s.onboarding.page2Cta} onPress={requestPermission} />
             <Pressable
-              onPress={() => setPage(2)}
+              onPress={() => goTo(2)}
               hitSlop={10}
               accessibilityRole="button"
               accessibilityLabel={s.onboarding.page2Later}
@@ -70,6 +99,13 @@ export default function OnboardingScreen() {
         {page === 2 && <Button title={s.onboarding.start} onPress={finish} />}
       </View>
     </View>
+  );
+}
+
+function Page({ width, children }: { width: number; children: React.ReactNode }) {
+  const { spacing } = useTheme();
+  return (
+    <View style={{ width, paddingHorizontal: spacing.xxl, justifyContent: 'center' }}>{children}</View>
   );
 }
 
