@@ -28,7 +28,9 @@ private let kAppGroup = "group.com.sknk.imasugutimer"
 private let kPresetsKey = "shared_presets_v1"
 private let kRunningMapKey = "running_alarm_map_v1"
 
-struct AppTimerMetadata: AlarmMetadata {
+// ★ 拡張側（targets/widget/Shared.swift）の TimerMetadata と完全一致させること。
+//   ActivityKit は型名＋構造で Live Activity を照合するため、ズレると一致しない。
+struct TimerMetadata: AlarmMetadata {
   let presetID: String?
   let icon: String
   let colorID: String
@@ -99,7 +101,7 @@ public class ImasuguNativeModule: Module {
       let countdown = AlarmPresentation.Countdown(title: "カウントダウン", pauseButton: pause)
       let pausedP = AlarmPresentation.Paused(title: "一時停止中", resumeButton: resume)
       let presentation = AlarmPresentation(alert: alert, countdown: countdown, paused: pausedP)
-      let metadata = AppTimerMetadata(presetID: presetId, icon: icon, colorID: colorID)
+      let metadata = TimerMetadata(presetID: presetId, icon: icon, colorID: colorID)
       let attributes = AlarmAttributes(presentation: presentation, metadata: metadata, tintColor: tint(colorID))
       let config = AlarmManager.AlarmConfiguration.timer(duration: TimeInterval(durationSec), attributes: attributes)
       do {

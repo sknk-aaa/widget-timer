@@ -78,15 +78,12 @@ func paletteColor(_ id: String) -> Color {
     }
 }
 
-/// AlarmKit のメタデータ（アプリ・拡張の両ターゲットに含める）。
+/// AlarmKit のメタデータ。
+/// ★ Expoモジュール側（modules/imasugu-native/ios/ImasuguNativeModule.swift）の
+///   TimerMetadata と「同名・同フィールド・同順」で完全一致させること。
+///   ActivityKit は型名＋構造で Live Activity を照合するため、ズレると一致しない。
 struct TimerMetadata: AlarmMetadata {
     let presetID: String?
     let icon: String
     let colorID: String
-
-    init(presetID: String?, icon: String, colorID: String) {
-        self.presetID = presetID
-        self.icon = icon
-        self.colorID = colorID
-    }
 }
