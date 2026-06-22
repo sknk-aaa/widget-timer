@@ -19,3 +19,4 @@ Expo Go で JS UI を確認（ネイティブ機能はモック動作）。Alarm
 - [docs/DESIGN.md](docs/DESIGN.md) — 実装設計（構成・データモデル・主要フロー）
 - [docs/OPERATIONS.md](docs/OPERATIONS.md) — 識別子・CI/CD・配信・プライバシー
 - [docs/HANDOFF.md](docs/HANDOFF.md) — 現状と残タスク
+# onetap-timer
