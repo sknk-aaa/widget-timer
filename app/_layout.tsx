@@ -58,6 +58,7 @@ export default function RootLayout() {
     const sub = AppState.addEventListener('change', (s) => {
       if (s === 'active') {
         useClock.getState().set(nowMs());
+        useTimersStore.getState().importFromShared();
         useTimersStore.getState().reconcile();
         void useSettingsStore.getState().refreshPermission();
       }

@@ -11,6 +11,7 @@ import { uuid } from '../domain/uuid';
 import { alarmService } from '../native/alarm';
 import { liveActivityService } from '../native/liveActivity';
 import { widgetService } from '../native/widget';
+import { readRunningFromAppGroup } from '../native/shared';
 import { haptics } from '../ui/haptics';
 
 interface StartInput {
@@ -33,6 +34,8 @@ interface TimersState {
   dismiss: (id: string) => Promise<void>;
   /** 残り0以下になった running タイマーを finished に遷移させる。 */
   reconcile: () => void;
+  /** ウィジェット/ロック画面から無音起動したぶんを App Group から取り込む。 */
+  importFromShared: () => void;
 }
 
 function liveParams(t: RunningTimer) {
@@ -167,5 +170,32 @@ export const useTimersStore = create<TimersState>((set, get) => ({
     });
     haptics.finish();
     void widgetService.reloadTimelines();
+  },
+
+  importFromShared: () => {
+    const entries = readRunningFromAppGroup();
+    if (entries.length === 0) return;
+    const known = new Set(get().timers.map((t) => t.id));
+    const now = nowMs();
+    const imported: RunningTimer[] = [];
+    for (const e of entries) {
+      if (known.has(e.id)) continue;
+      if (e.state === 'finished') continue;
+      if (e.state === 'running' && e.endAt <= now) continue;
+      imported.push({
+        id: e.id,
+        presetId: null,
+        icon: e.icon,
+        color: e.color,
+        durationSec: e.durationSec,
+        endAt: e.endAt,
+        state: e.state === 'paused' ? 'paused' : 'running',
+        pausedRemainingSec: e.state === 'paused' ? e.pausedRemainingSec : null,
+        createdAt: now,
+      });
+    }
+    if (imported.length === 0) return;
+    for (const t of imported) insertRunningTimer(t);
+    set({ timers: [...get().timers, ...imported] });
   },
 }));

@@ -71,6 +71,14 @@ public class ImasuguNativeModule: Module {
       UserDefaults(suiteName: kAppGroup)?.set(json.data(using: .utf8), forKey: "shared_running_v1")
     }
 
+    // ウィジェット/ロック画面から無音起動したぶんをアプリに取り込むため、
+    // App Group の実行中モデルJSONをそのまま返す。
+    Function("getSharedRunning") { () -> String in
+      guard let data = UserDefaults(suiteName: kAppGroup)?.data(forKey: "shared_running_v1"),
+            let json = String(data: data, encoding: .utf8) else { return "[]" }
+      return json
+    }
+
     Function("runningAlarmIds") { () -> [String] in
       let map = (UserDefaults(suiteName: kAppGroup)?.dictionary(forKey: kRunningMapKey) as? [String: String]) ?? [:]
       return Array(map.keys)

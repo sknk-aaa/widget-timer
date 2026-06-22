@@ -87,3 +87,36 @@ struct TimerMetadata: AlarmMetadata {
     let icon: String
     let colorID: String
 }
+
+func durationLabel(_ sec: Int) -> String {
+    let d = sec / 86400, h = (sec % 86400) / 3600, m = (sec % 3600) / 60, s = sec % 60
+    if d > 0 { return "\(d)日" }
+    if h > 0 { return m > 0 ? "\(h)時間\(m)分" : "\(h)時間" }
+    if m > 0 { return "\(m)分" }
+    return "\(s)秒"
+}
+
+/// 自作の白アイコンID → ウィジェット/Live Activity で使える SF Symbol の近似。
+func iconToSymbol(_ icon: String) -> String {
+    switch icon {
+    case "ramen", "pot", "rice": return "fork.knife"
+    case "coffee", "tea", "kettle": return "cup.and.saucer.fill"
+    case "egg", "toast": return "frying.pan.fill"
+    case "bed", "moon", "nap": return "bed.double.fill"
+    case "alarm": return "alarm.fill"
+    case "book", "pencil": return "book.fill"
+    case "laptop": return "laptopcomputer"
+    case "hourglass": return "hourglass"
+    case "briefcase": return "briefcase.fill"
+    case "dumbbell", "run", "yoga", "bike": return "figure.run"
+    case "washer", "broom", "dishes", "iron": return "washer.fill"
+    case "plant": return "leaf.fill"
+    case "bath": return "shower.fill"
+    case "pill": return "pills.fill"
+    case "dog": return "pawprint.fill"
+    case "car": return "car.fill"
+    case "music": return "music.note"
+    case "bell": return "bell.fill"
+    default: return "timer"
+    }
+}

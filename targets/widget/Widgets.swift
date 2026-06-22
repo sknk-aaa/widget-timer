@@ -41,8 +41,8 @@ struct PresetWidgetView: View {
     var body: some View {
         switch family {
         case .accessoryRectangular, .accessoryCircular, .accessoryInline:
+            // ロック画面：タップでアプリを開かず無音起動（ロック解除不要）。
             AccessoryView(entry: entry)
-                .widgetURL(URL(string: "imasugutimer://"))
         default:
             HomeView(entry: entry, small: family == .systemSmall)
         }
@@ -158,6 +158,15 @@ private struct AccessoryView: View {
                         .font(.system(size: 12, weight: .bold))
                         .monospacedDigit()
                         .multilineTextAlignment(.center)
+                } else if let p = entry.presets.first {
+                    // タップで先頭プリセットを無音起動
+                    Button(intent: StartPresetTimerIntent(presetID: p.id)) {
+                        VStack(spacing: 0) {
+                            Image(systemName: iconToSymbol(p.icon)).font(.caption)
+                            Text(durationLabel(p.durationSec)).font(.system(size: 9, weight: .semibold))
+                        }
+                    }
+                    .buttonStyle(.plain)
                 } else {
                     Image(systemName: "timer").font(.title3)
                 }
@@ -185,15 +194,18 @@ private struct AccessoryView: View {
                     Spacer()
                 }
             } else {
-                // アイドル時：先頭プリセットを「アイコン＋設定時間」で表示
-                HStack(spacing: 14) {
+                // アイドル時：先頭プリセットを「アイコン＋設定時間」のボタンで表示（無音起動）
+                HStack(spacing: 16) {
                     ForEach(Array(entry.presets.prefix(3))) { p in
-                        VStack(spacing: 1) {
-                            Image(systemName: iconToSymbol(p.icon)).font(.title3)
-                            Text(durationLabel(p.durationSec))
-                                .font(.caption2)
-                                .monospacedDigit()
+                        Button(intent: StartPresetTimerIntent(presetID: p.id)) {
+                            VStack(spacing: 1) {
+                                Image(systemName: iconToSymbol(p.icon)).font(.title3)
+                                Text(durationLabel(p.durationSec))
+                                    .font(.caption2)
+                                    .monospacedDigit()
+                            }
                         }
+                        .buttonStyle(.plain)
                     }
                     Spacer()
                 }

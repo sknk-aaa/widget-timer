@@ -33,6 +33,8 @@ export async function bootstrap(): Promise<void> {
   usePresetsStore.getState().load();
   useTimersStore.getState().load();
   useTimersStore.getState().reconcile();
+  // ウィジェット/ロック画面から無音起動したぶんを取り込む（ミラー前に行い消えないようにする）。
+  useTimersStore.getState().importFromShared();
   await useProStore.getState().load();
   await useSettingsStore.getState().refreshPermission();
 
