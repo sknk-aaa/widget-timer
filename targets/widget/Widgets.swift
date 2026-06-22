@@ -178,10 +178,23 @@ private struct AccessoryView: View {
                     }
                     Spacer()
                 }
-            } else {
+            } else if entry.presets.isEmpty {
                 HStack(spacing: 8) {
                     Image(systemName: "timer").font(.title3)
                     Text("今すぐタイマー").font(.headline)
+                    Spacer()
+                }
+            } else {
+                // アイドル時：先頭プリセットを「アイコン＋設定時間」で表示
+                HStack(spacing: 14) {
+                    ForEach(Array(entry.presets.prefix(3))) { p in
+                        VStack(spacing: 1) {
+                            Image(systemName: iconToSymbol(p.icon)).font(.title3)
+                            Text(durationLabel(p.durationSec))
+                                .font(.caption2)
+                                .monospacedDigit()
+                        }
+                    }
                     Spacer()
                 }
             }
