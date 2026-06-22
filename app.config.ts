@@ -66,6 +66,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         appleTeamId: '3H2LBDNPMU',
       },
     ],
+    // 最後に実行して aps-environment を除去する（expo-notifications が自動付与するため）
+    './plugins/withoutApsEnvironment',
   ],
   experiments: {
     typedRoutes: true,

@@ -39,3 +39,7 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# apple-targets 生成物（prebuild で再生成）
+targets/**/generated.entitlements
+targets/**/Info.plist
