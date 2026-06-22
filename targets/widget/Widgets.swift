@@ -94,7 +94,8 @@ private struct WaitingView: View {
             let columns = Array(repeating: GridItem(.flexible(), spacing: 10), count: small ? 2 : 4)
             LazyVGrid(columns: columns, spacing: 10) {
                 ForEach(shown) { p in
-                    Button(intent: StartPresetTimerIntent(presetID: p.id)) {
+                    // タップでアプリを開き、アプリ側で起動（実行中ドック表示＆キャンセル可能にするため）
+                    Link(destination: URL(string: "imasugutimer://start?preset=\(p.id)")!) {
                         VStack(spacing: 3) {
                             RoundedRectangle(cornerRadius: 14, style: .continuous)
                                 .fill(paletteColor(p.color))
@@ -109,7 +110,6 @@ private struct WaitingView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
-                    .buttonStyle(.plain)
                 }
             }
             .padding(4)

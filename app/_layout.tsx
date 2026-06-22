@@ -91,6 +91,7 @@ export default function RootLayout() {
           }}
         >
           <Stack.Screen name="index" />
+          <Stack.Screen name="start" options={{ animation: 'none' }} />
           <Stack.Screen
             name="onboarding"
             options={{ presentation: 'fullScreenModal', gestureEnabled: false }}
