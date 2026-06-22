@@ -197,20 +197,23 @@ private struct AccessoryView: View {
                     Spacer()
                 }
             } else {
-                // アイドル時：先頭プリセットを「アイコン＋設定時間」のボタンで表示（無音起動）
-                HStack(spacing: 16) {
+                // アイドル時：先頭プリセットを等幅カラムで「アイコン＋設定時間」のボタン表示（無音起動）
+                HStack(spacing: 0) {
                     ForEach(Array(entry.presets.prefix(3))) { p in
                         Button(intent: StartPresetTimerIntent(presetID: p.id)) {
                             VStack(spacing: 1) {
-                                Image(systemName: iconToSymbol(p.icon)).font(.title3)
+                                Image(systemName: iconToSymbol(p.icon))
+                                    .font(.system(size: 15, weight: .semibold))
                                 Text(durationLabel(p.durationSec))
-                                    .font(.caption2)
+                                    .font(.system(size: 9, weight: .semibold))
                                     .monospacedDigit()
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.7)
                             }
+                            .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.plain)
                     }
-                    Spacer()
                 }
             }
         }
