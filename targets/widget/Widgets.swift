@@ -21,17 +21,20 @@ struct PresetProvider: TimelineProvider {
     }
     func getTimeline(in context: Context, completion: @escaping (Timeline<PresetEntry>) -> Void) {
         let running = Shared.loadRunning()
-        let entry = PresetEntry(date: Date(), presets: Shared.widgetPresets(), running: running)
-        if let soonest = running.map({ $0.endDate }).min(), soonest > Date() {
-            completion(Timeline(entries: [entry], policy: .after(soonest)))
-        } else {
-            completion(Timeline(entries: [entry], policy: .never))
+        let presets = Shared.widgetPresets()
+        let now = Date()
+        // 現在＋各タイマーの終了直後にエントリを置き、終了時に idle 表示へ確実に戻す。
+        var dates: [Date] = [now]
+        for r in running where r.state == "running" && r.endDate > now {
+            dates.append(r.endDate.addingTimeInterval(1))
         }
+        let entries = dates.sorted().map { PresetEntry(date: $0, presets: presets, running: running) }
+        completion(Timeline(entries: entries, policy: .never))
     }
 }
 
-private func activeRunning(_ running: [SharedRunning]) -> [SharedRunning] {
-    running.filter { $0.endDate > Date() || $0.state == "paused" }
+private func activeRunning(_ running: [SharedRunning], asOf: Date) -> [SharedRunning] {
+    running.filter { $0.endDate > asOf || $0.state == "paused" }
 }
 
 struct PresetWidgetView: View {
@@ -55,7 +58,7 @@ private struct HomeView: View {
     let entry: PresetEntry
     let small: Bool
     var body: some View {
-        let active = activeRunning(entry.running)
+        let active = activeRunning(entry.running, asOf: entry.date)
         if !active.isEmpty {
             RunningView(running: active, small: small)
         } else {
@@ -112,8 +115,8 @@ private struct WaitingView: View {
             let columns = Array(repeating: GridItem(.flexible(), spacing: 10), count: small ? 2 : 4)
             LazyVGrid(columns: columns, spacing: 10) {
                 ForEach(shown) { p in
-                    // タップでアプリを開き、アプリ側で起動（ドック表示＆キャンセル可能のため）
-                    Link(destination: URL(string: "imasugutimer://start?preset=\(p.id)")!) {
+                    // タップでアプリを開き、メイン画面のまま起動（別画面を挟まない）
+                    Link(destination: URL(string: "imasugutimer://?start=\(p.id)")!) {
                         VStack(spacing: 3) {
                             RoundedRectangle(cornerRadius: 14, style: .continuous)
                                 .fill(paletteColor(p.color))
@@ -142,7 +145,7 @@ private struct AccessoryView: View {
     let entry: PresetEntry
 
     var body: some View {
-        let soonest = activeRunning(entry.running).first
+        let soonest = activeRunning(entry.running, asOf: entry.date).first
         switch family {
         case .accessoryInline:
             if let r = soonest, r.state != "paused" {

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { View, Text, ScrollView, Pressable, Alert } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { Redirect, useRouter } from 'expo-router';
+import { Redirect, useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePresetsStore, selectHidden, selectWidget } from '../src/store/presets';
 import { useTimersStore } from '../src/store/timers';
@@ -34,6 +34,22 @@ export default function MainScreen() {
 
   const [editMode, setEditMode] = React.useState(false);
   const [dragActive, setDragActive] = React.useState(false);
+
+  // ホームウィジェットのディープリンク（imasugutimer://?start=ID）の受け口。
+  // 別画面を作らずメイン画面のまま起動するので、画面遷移も戻る履歴も発生しない。
+  const params = useLocalSearchParams<{ start?: string }>();
+  React.useEffect(() => {
+    const id = params.start;
+    if (!id) return;
+    if (!useSettingsStore.getState().onboardingDone) return;
+    const p = usePresetsStore.getState().presets.find((x) => x.id === id);
+    if (p) {
+      haptics.start();
+      void useTimersStore.getState().startFromPreset(p, 'widget');
+    }
+    router.setParams({ start: '' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.start]);
 
   if (!onboardingDone) {
     return <Redirect href="/onboarding" />;
