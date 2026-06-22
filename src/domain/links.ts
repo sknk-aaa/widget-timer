@@ -11,9 +11,8 @@ export const TERMS_URL = 'https://www.apple.com/legal/internet-services/itunes/d
 // ご意見・ご要望フォーム（Tally）。
 export const CONTACT_URL = 'https://tally.so/r/rjgJYL';
 
-// ★ App Store でアプリを作成後、数字の App Store ID に置き換えること（ASCのアプリ情報に表示）。
-//   未設定のままだと「レビューして応援」はApp Storeを開けない。
-export const APP_STORE_ID = '0000000000';
+// App Store ID（ASC → App情報 → Apple ID）。
+export const APP_STORE_ID = '6782746504';
 
 // レビュー作成画面（文章を書ける）を直接開く。
 export const REVIEW_URL = `itms-apps://apps.apple.com/app/id${APP_STORE_ID}?action=write-review`;
