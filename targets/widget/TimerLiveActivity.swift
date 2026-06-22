@@ -3,9 +3,8 @@ import WidgetKit
 import SwiftUI
 import AlarmKit
 
-// AlarmKit が自動管理する Live Activity の表示テンプレート。
-// アプリ内起動でも、Expoモジュール側が同名の TimerMetadata で予約するので、
-// この ActivityConfiguration（AlarmAttributes<TimerMetadata>）に一致して描画される。
+// AlarmKit の Live Activity（カスタム）。カスタムUIを出すと AlarmKit の自動ボタンは
+// 出ないため、終了/一時停止/再開ボタンは自前で Button(intent:) として配置する。
 
 struct TimerLiveActivity: Widget {
     var body: some WidgetConfiguration {
@@ -17,13 +16,14 @@ struct TimerLiveActivity: Widget {
                 )
                 VStack(alignment: .leading, spacing: 2) {
                     remaining(context.state)
-                        .font(.system(size: 30, weight: .bold, design: .rounded))
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
                         .monospacedDigit()
                     endLabel(context.state)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
+                ControlButtons(state: context.state)
             }
             .padding()
             .activityBackgroundTint(Color.black.opacity(0.25))
@@ -41,7 +41,7 @@ struct TimerLiveActivity: Widget {
                         .monospacedDigit()
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    endLabel(context.state).font(.caption).foregroundStyle(.secondary)
+                    ControlButtons(state: context.state)
                 }
             } compactLeading: {
                 Image(systemName: iconToSymbol(context.attributes.metadata?.icon ?? "timer"))
@@ -81,6 +81,42 @@ struct TimerLiveActivity: Widget {
         default:
             EmptyView()
         }
+    }
+}
+
+private struct ControlButtons: View {
+    let state: AlarmPresentationState
+    var body: some View {
+        let id = state.alarmID.uuidString
+        HStack(spacing: 10) {
+            switch state.mode {
+            case .countdown:
+                Button(intent: PauseAlarmIntent(alarmID: id)) {
+                    GlyphCircle(systemName: "pause.fill")
+                }
+            case .paused:
+                Button(intent: ResumeAlarmIntent(alarmID: id)) {
+                    GlyphCircle(systemName: "play.fill")
+                }
+            default:
+                EmptyView()
+            }
+            Button(intent: CancelAlarmIntent(alarmID: id)) {
+                GlyphCircle(systemName: "xmark")
+            }
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+private struct GlyphCircle: View {
+    let systemName: String
+    var body: some View {
+        Image(systemName: systemName)
+            .font(.system(size: 14, weight: .bold))
+            .foregroundStyle(.white)
+            .frame(width: 34, height: 34)
+            .background(Circle().fill(.white.opacity(0.22)))
     }
 }
 

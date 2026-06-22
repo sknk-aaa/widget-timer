@@ -81,6 +81,17 @@ enum AlarmScheduler {
         Shared.defaults?.set(map, forKey: Shared.runningMapKey)
     }
 
+    /// キャンセル時の後始末：App Group の実行中モデルから除去しウィジェット再読込。
+    static func cleanupRunning(id: UUID) {
+        removeRunning(alarmID: id)
+        var list = Shared.loadRunning()
+        list.removeAll { $0.id == id.uuidString }
+        if let data = try? JSONEncoder().encode(list) {
+            Shared.defaults?.set(data, forKey: Shared.runningKey)
+        }
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+
     static func runningAlarmIDs() -> [UUID] {
         let map = (Shared.defaults?.dictionary(forKey: Shared.runningMapKey) as? [String: String]) ?? [:]
         return map.keys.compactMap { UUID(uuidString: $0) }
@@ -118,6 +129,43 @@ struct StartPresetTimerIntent: AppIntent, LiveActivityIntent {
         } catch {
             NSLog("[ImasuguWidget] schedule ERROR: %@", "\(error)")
         }
+        return .result()
+    }
+}
+
+// Live Activity / Dynamic Island のボタン用（アプリプロセスで実行）。
+struct CancelAlarmIntent: LiveActivityIntent {
+    static var title: LocalizedStringResource = "タイマーを終了"
+    @Parameter(title: "Alarm ID") var alarmID: String
+    init() {}
+    init(alarmID: String) { self.alarmID = alarmID }
+    func perform() async throws -> some IntentResult {
+        if let id = UUID(uuidString: alarmID) {
+            try? AlarmManager.shared.cancel(id: id)
+            AlarmScheduler.cleanupRunning(id: id)
+        }
+        return .result()
+    }
+}
+
+struct PauseAlarmIntent: LiveActivityIntent {
+    static var title: LocalizedStringResource = "一時停止"
+    @Parameter(title: "Alarm ID") var alarmID: String
+    init() {}
+    init(alarmID: String) { self.alarmID = alarmID }
+    func perform() async throws -> some IntentResult {
+        if let id = UUID(uuidString: alarmID) { try? AlarmManager.shared.pause(id: id) }
+        return .result()
+    }
+}
+
+struct ResumeAlarmIntent: LiveActivityIntent {
+    static var title: LocalizedStringResource = "再開"
+    @Parameter(title: "Alarm ID") var alarmID: String
+    init() {}
+    init(alarmID: String) { self.alarmID = alarmID }
+    func perform() async throws -> some IntentResult {
+        if let id = UUID(uuidString: alarmID) { try? AlarmManager.shared.resume(id: id) }
         return .result()
     }
 }
