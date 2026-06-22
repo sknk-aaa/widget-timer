@@ -84,6 +84,13 @@ public class ImasuguNativeModule: Module {
       return Array(map.keys)
     }
 
+    // ウィジェット/通知で終了されたIDを取り出してクリア（アプリがドックから消す）。
+    Function("takeCancelledIds") { () -> [String] in
+      let ids = (UserDefaults(suiteName: kAppGroup)?.array(forKey: "cancelled_ids_v1") as? [String]) ?? []
+      UserDefaults(suiteName: kAppGroup)?.removeObject(forKey: "cancelled_ids_v1")
+      return ids
+    }
+
     Function("reloadWidgets") {
       WidgetCenter.shared.reloadAllTimelines()
     }

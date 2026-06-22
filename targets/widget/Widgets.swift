@@ -73,7 +73,7 @@ private struct RunningView: View {
     var body: some View {
         VStack(spacing: 8) {
             ForEach(Array(running.prefix(small ? 2 : 4))) { r in
-                HStack(spacing: 10) {
+                HStack(spacing: 8) {
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .fill(paletteColor(r.color))
                         .frame(width: 30, height: 30)
@@ -84,20 +84,50 @@ private struct RunningView: View {
                         )
                     if r.state == "paused" {
                         Text(Duration.seconds(Double(r.pausedRemainingSec ?? 0)).formatted(.time(pattern: .minuteSecond)))
-                            .font(.system(size: 20, weight: .bold, design: .rounded))
+                            .font(.system(size: 18, weight: .bold, design: .rounded))
                             .monospacedDigit()
                             .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
                     } else {
                         Text(timerInterval: Date.now...r.endDate, countsDown: true)
-                            .font(.system(size: 20, weight: .bold, design: .rounded))
+                            .font(.system(size: 18, weight: .bold, design: .rounded))
                             .monospacedDigit()
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
                     }
-                    Spacer()
+                    Spacer(minLength: 4)
+                    if r.state == "paused" {
+                        Button(intent: ResumeAlarmIntent(alarmID: r.id)) {
+                            WidgetGlyph(systemName: "play.fill")
+                        }
+                        .buttonStyle(.plain)
+                    } else {
+                        Button(intent: PauseAlarmIntent(alarmID: r.id)) {
+                            WidgetGlyph(systemName: "pause.fill")
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    Button(intent: CancelAlarmIntent(alarmID: r.id)) {
+                        WidgetGlyph(systemName: "xmark")
+                    }
+                    .buttonStyle(.plain)
                 }
             }
             Spacer(minLength: 0)
         }
         .padding(4)
+    }
+}
+
+private struct WidgetGlyph: View {
+    let systemName: String
+    var body: some View {
+        Image(systemName: systemName)
+            .font(.system(size: 12, weight: .bold))
+            .foregroundStyle(.primary)
+            .frame(width: 28, height: 28)
+            .background(Circle().fill(.gray.opacity(0.25)))
     }
 }
 

@@ -70,3 +70,12 @@ export function readRunningFromAppGroup(): SharedRunningEntry[] {
   if (!Array.isArray(parsed)) return [];
   return parsed.filter(isSharedRunningEntry);
 }
+
+/**
+ * ウィジェット/通知で終了されたIDを取り出す（取り出すとクリアされる）。
+ * Expo Go / 非対応環境では空配列。
+ */
+export function takeCancelledFromAppGroup(): string[] {
+  if (!ImasuguNative) return [];
+  return ImasuguNative.takeCancelledIds();
+}

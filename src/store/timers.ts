@@ -11,7 +11,7 @@ import { uuid } from '../domain/uuid';
 import { alarmService } from '../native/alarm';
 import { liveActivityService } from '../native/liveActivity';
 import { widgetService } from '../native/widget';
-import { readRunningFromAppGroup } from '../native/shared';
+import { readRunningFromAppGroup, takeCancelledFromAppGroup } from '../native/shared';
 import { haptics } from '../ui/haptics';
 
 interface StartInput {
@@ -173,13 +173,36 @@ export const useTimersStore = create<TimersState>((set, get) => ({
   },
 
   importFromShared: () => {
+    // ウィジェット/通知で終了されたぶんをドックから消す（明示IDのみ＝誤消し防止）。
+    const removeSet = new Set(
+      takeCancelledFromAppGroup().filter((id) => get().timers.some((t) => t.id === id)),
+    );
+
     const entries = readRunningFromAppGroup();
-    if (entries.length === 0) return;
-    const known = new Set(get().timers.map((t) => t.id));
+    const current = get().timers;
+    const byId = new Map(current.map((t) => [t.id, t]));
     const now = nowMs();
     const imported: RunningTimer[] = [];
+    const updates: { id: string; patch: Partial<Omit<RunningTimer, 'id'>> }[] = [];
+
     for (const e of entries) {
-      if (known.has(e.id)) continue;
+      if (removeSet.has(e.id)) continue;
+      const wantState: 'running' | 'paused' = e.state === 'paused' ? 'paused' : 'running';
+      const existing = byId.get(e.id);
+      if (existing) {
+        // ウィジェット/通知側で一時停止/再開された状態を取り込む。
+        if (existing.state !== 'finished' && existing.state !== wantState) {
+          updates.push({
+            id: e.id,
+            patch: {
+              state: wantState,
+              endAt: e.endAt,
+              pausedRemainingSec: wantState === 'paused' ? e.pausedRemainingSec : null,
+            },
+          });
+        }
+        continue;
+      }
       if (e.state === 'finished') continue;
       if (e.state === 'running' && e.endAt <= now) continue;
       imported.push({
@@ -189,13 +212,27 @@ export const useTimersStore = create<TimersState>((set, get) => ({
         color: e.color,
         durationSec: e.durationSec,
         endAt: e.endAt,
-        state: e.state === 'paused' ? 'paused' : 'running',
-        pausedRemainingSec: e.state === 'paused' ? e.pausedRemainingSec : null,
+        state: wantState,
+        pausedRemainingSec: wantState === 'paused' ? e.pausedRemainingSec : null,
         createdAt: now,
       });
     }
-    if (imported.length === 0) return;
+
+    if (removeSet.size === 0 && imported.length === 0 && updates.length === 0) return;
+
+    for (const id of removeSet) deleteRunningTimer(id);
+    for (const u of updates) updateRunningTimer(u.id, u.patch);
     for (const t of imported) insertRunningTimer(t);
-    set({ timers: [...get().timers, ...imported] });
+
+    let next = current.filter((t) => !removeSet.has(t.id));
+    if (updates.length > 0) {
+      const patchById = new Map(updates.map((u) => [u.id, u.patch]));
+      next = next.map((t) => {
+        const patch = patchById.get(t.id);
+        return patch ? { ...t, ...patch } : t;
+      });
+    }
+    if (imported.length > 0) next = [...next, ...imported];
+    set({ timers: next });
   },
 }));

@@ -81,11 +81,46 @@ enum AlarmScheduler {
         Shared.defaults?.set(map, forKey: Shared.runningMapKey)
     }
 
-    /// キャンセル時の後始末：App Group の実行中モデルから除去しウィジェット再読込。
+    /// キャンセル時の後始末：App Group の実行中モデルから除去し、
+    /// アプリがドックから消すための取消IDを記録、ウィジェット再読込。
     static func cleanupRunning(id: UUID) {
         removeRunning(alarmID: id)
         var list = Shared.loadRunning()
         list.removeAll { $0.id == id.uuidString }
+        if let data = try? JSONEncoder().encode(list) {
+            Shared.defaults?.set(data, forKey: Shared.runningKey)
+        }
+        var cancelled = (Shared.defaults?.array(forKey: Shared.cancelledKey) as? [String]) ?? []
+        cancelled.append(id.uuidString)
+        Shared.defaults?.set(cancelled, forKey: Shared.cancelledKey)
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+
+    /// 一時停止：shared_running を paused 状態へ更新（ホーム表示とアプリを揃える）。
+    static func markPaused(id: UUID) {
+        let now = Date()
+        let list = Shared.loadRunning().map { r -> SharedRunning in
+            guard r.id == id.uuidString, r.state == "running" else { return r }
+            let remaining = max(0, Int(r.endDate.timeIntervalSince(now)))
+            return SharedRunning(id: r.id, endAt: r.endAt, icon: r.icon, color: r.color,
+                                 state: "paused", durationSec: r.durationSec, pausedRemainingSec: remaining)
+        }
+        if let data = try? JSONEncoder().encode(list) {
+            Shared.defaults?.set(data, forKey: Shared.runningKey)
+        }
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+
+    /// 再開：shared_running を running 状態へ更新（残り秒から終了時刻を再計算）。
+    static func markResumed(id: UUID) {
+        let now = Date()
+        let list = Shared.loadRunning().map { r -> SharedRunning in
+            guard r.id == id.uuidString, r.state == "paused" else { return r }
+            let remaining = r.pausedRemainingSec ?? 0
+            let endAt = now.addingTimeInterval(TimeInterval(remaining)).timeIntervalSince1970 * 1000
+            return SharedRunning(id: r.id, endAt: endAt, icon: r.icon, color: r.color,
+                                 state: "running", durationSec: r.durationSec, pausedRemainingSec: nil)
+        }
         if let data = try? JSONEncoder().encode(list) {
             Shared.defaults?.set(data, forKey: Shared.runningKey)
         }
@@ -154,7 +189,10 @@ struct PauseAlarmIntent: LiveActivityIntent {
     init() {}
     init(alarmID: String) { self.alarmID = alarmID }
     func perform() async throws -> some IntentResult {
-        if let id = UUID(uuidString: alarmID) { try? AlarmManager.shared.pause(id: id) }
+        if let id = UUID(uuidString: alarmID) {
+            try? AlarmManager.shared.pause(id: id)
+            AlarmScheduler.markPaused(id: id)
+        }
         return .result()
     }
 }
@@ -165,7 +203,10 @@ struct ResumeAlarmIntent: LiveActivityIntent {
     init() {}
     init(alarmID: String) { self.alarmID = alarmID }
     func perform() async throws -> some IntentResult {
-        if let id = UUID(uuidString: alarmID) { try? AlarmManager.shared.resume(id: id) }
+        if let id = UUID(uuidString: alarmID) {
+            try? AlarmManager.shared.resume(id: id)
+            AlarmScheduler.markResumed(id: id)
+        }
         return .result()
     }
 }

@@ -11,6 +11,7 @@ enum Shared {
     static let presetsKey = "shared_presets_v1" // JSON 配列（アプリ側がミラー）
     static let runningKey = "shared_running_v1" // 実行中タイマー JSON 配列
     static let runningMapKey = "running_alarm_map_v1" // alarmID -> presetID
+    static let cancelledKey = "cancelled_ids_v1" // ウィジェット/通知で終了したID（アプリが取り込んでドックから消す）
 
     static var defaults: UserDefaults? {
         UserDefaults(suiteName: appGroup)

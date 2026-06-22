@@ -6,6 +6,8 @@ export interface ImasuguNativeModule {
   setSharedRunning(json: string): void;
   /** App Group の実行中タイマーJSONを返す（ウィジェット無音起動ぶんの取り込み用）。 */
   getSharedRunning(): string;
+  /** ウィジェット/通知で終了されたIDを取り出してクリアする。 */
+  takeCancelledIds(): string[];
   runningAlarmIds(): string[];
   reloadWidgets(): void;
   getAuthorization(): Promise<'granted' | 'denied' | 'undetermined'>;
