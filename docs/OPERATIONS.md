@@ -55,6 +55,10 @@ npm start
 - `.github/workflows/ios.yml`: `v*` タグ or 手動実行で prebuild→fastlane→TestFlight（`runs-on: macos-26`）。
 - `.github/workflows/ios-certs.yml`: 証明書作成（初回1回だけ手動実行）。
 
+### `gp` デプロイショートカット
+
+ユーザーが `gp` と打ったら、エージェントが `git push` → `gh workflow run ios.yml --ref main` → 実行URL返却を行う（`/project/AGENTS.md` §5）。`gh` は `sknk-aaa` 認証済み。通常の「push はユーザー」原則の唯一の例外。
+
 汎用手順・ハマりどころ・Secrets の作り方は `~/.claude/docs/IOS_CICD_RECIPE.md` に集約。本リポでは `Gemfile` / `fastlane/{Appfile,Matchfile,Fastfile}` を配置済み。
 
 ### 必要な GitHub Secrets（TestFlight 配信時）
@@ -65,11 +69,11 @@ npm start
 
 ## App Store Connect 側の準備（Phase2/3）
 
-1. アプリを作成（bundle id 一致）。
-2. **App Group** `group.com.sknk.imasugutimer` を作成し、アプリ＋Widget拡張の両 App ID に付与。Widget の App ID `com.sknk.imasugutimer.widget` も登録。
-3. **買い切りIAP**（非消耗型）`com.sknk.imasugutimer.pro` を作成。
-4. `certs` レーンは app と widget 両方のプロビジョニングを match に作成・保存する（`fastlane ios certs` を1回）。
-5. `appleTeamId`（app.config の @bacons/apple-targets）と `WIDGET_TARGET`（Fastfile、既定 `ImasuguWidget`）を実際の生成物に合わせる。
+1. アプリを作成（bundle id 一致）。✅ 済
+2. **App Group** `group.com.sknk.imasugutimer` を作成し、アプリ＋Widget拡張の両 App ID に付与。Widget の App ID `com.sknk.imasugutimer.widget` も登録。✅ 済
+3. **買い切りIAP**（非消耗型）`com.sknk.imasugutimer.pro` を作成。⬜ **未（課金実装時の残タスク）**
+4. `certs` レーンは app と widget 両方のプロビジョニングを match に作成・保存する（`fastlane ios certs` を1回）。✅ 済
+5. `appleTeamId`（app.config）= `3H2LBDNPMU`、`WIDGET_TARGET`（Fastfile）= `ImasuguWidget`。✅ 設定済
 
 ## プライバシー / 課金
 
