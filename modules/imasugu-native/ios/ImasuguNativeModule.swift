@@ -34,6 +34,7 @@ struct TimerMetadata: AlarmMetadata {
   let presetID: String?
   let icon: String
   let colorID: String
+  let alarmID: String
 }
 
 private func tint(_ id: String) -> Color {
@@ -116,7 +117,7 @@ public class ImasuguNativeModule: Module {
       let countdown = AlarmPresentation.Countdown(title: "カウントダウン", pauseButton: pause)
       let pausedP = AlarmPresentation.Paused(title: "一時停止中", resumeButton: resume)
       let presentation = AlarmPresentation(alert: alert, countdown: countdown, paused: pausedP)
-      let metadata = TimerMetadata(presetID: presetId, icon: icon, colorID: colorID)
+      let metadata = TimerMetadata(presetID: presetId, icon: icon, colorID: colorID, alarmID: id.uuidString)
       let attributes = AlarmAttributes(presentation: presentation, metadata: metadata, tintColor: tint(colorID))
       let config = AlarmManager.AlarmConfiguration.timer(duration: TimeInterval(durationSec), attributes: attributes)
       do {

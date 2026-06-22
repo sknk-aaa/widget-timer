@@ -87,6 +87,7 @@ struct TimerMetadata: AlarmMetadata {
     let presetID: String?
     let icon: String
     let colorID: String
+    let alarmID: String
 }
 
 func durationLabel(_ sec: Int) -> String {

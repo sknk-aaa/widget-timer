@@ -17,16 +17,19 @@ import WidgetKit
 enum AlarmScheduler {
     static func schedule(durationSec: Int, metadata: TimerMetadata, tint: Color) async throws -> UUID {
         let id = UUID()
-        let attributes = makeAttributes(metadata: metadata, tint: tint)
+        // Live Activity がボタンに渡す確実な alarmID をメタデータに埋め込む。
+        let meta = TimerMetadata(presetID: metadata.presetID, icon: metadata.icon,
+                                 colorID: metadata.colorID, alarmID: id.uuidString)
+        let attributes = makeAttributes(metadata: meta, tint: tint)
         let configuration = AlarmManager.AlarmConfiguration.timer(
             duration: TimeInterval(durationSec),
             attributes: attributes
         )
         _ = try await AlarmManager.shared.schedule(id: id, configuration: configuration)
-        recordRunning(alarmID: id, presetID: metadata.presetID)
+        recordRunning(alarmID: id, presetID: meta.presetID)
         // ウィジェットがカウントダウン表示できるよう実行中モデルを App Group に追記＋再読込
         let endAt = Date().addingTimeInterval(TimeInterval(durationSec)).timeIntervalSince1970 * 1000
-        appendRunning(id: id, endAt: endAt, icon: metadata.icon, colorID: metadata.colorID, durationSec: durationSec)
+        appendRunning(id: id, endAt: endAt, icon: meta.icon, colorID: meta.colorID, durationSec: durationSec)
         WidgetCenter.shared.reloadAllTimelines()
         return id
     }
@@ -153,7 +156,8 @@ struct StartPresetTimerIntent: AppIntent, LiveActivityIntent {
             NSLog("[ImasuguWidget] preset not found (presets=%d)", Shared.loadPresets().count)
             return .result()
         }
-        let metadata = TimerMetadata(presetID: preset.id, icon: preset.icon, colorID: preset.color)
+        // alarmID は schedule 内で確定IDに差し替えられるためここでは空でよい。
+        let metadata = TimerMetadata(presetID: preset.id, icon: preset.icon, colorID: preset.color, alarmID: "")
         do {
             let id = try await AlarmScheduler.schedule(
                 durationSec: preset.durationSec,
@@ -176,6 +180,8 @@ struct CancelAlarmIntent: LiveActivityIntent {
     init(alarmID: String) { self.alarmID = alarmID }
     func perform() async throws -> some IntentResult {
         if let id = UUID(uuidString: alarmID) {
+            // running countdown / alerting どちらでも確実に止めるため両方呼ぶ。
+            try? AlarmManager.shared.stop(id: id)
             try? AlarmManager.shared.cancel(id: id)
             AlarmScheduler.cleanupRunning(id: id)
         }

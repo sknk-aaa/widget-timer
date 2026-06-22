@@ -23,7 +23,7 @@ struct TimerLiveActivity: Widget {
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                ControlButtons(state: context.state)
+                ControlButtons(state: context.state, alarmID: context.attributes.metadata?.alarmID ?? "")
             }
             .padding()
             .activityBackgroundTint(Color.black.opacity(0.25))
@@ -41,7 +41,7 @@ struct TimerLiveActivity: Widget {
                         .monospacedDigit()
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    ControlButtons(state: context.state)
+                    ControlButtons(state: context.state, alarmID: context.attributes.metadata?.alarmID ?? "")
                 }
             } compactLeading: {
                 Image(systemName: iconToSymbol(context.attributes.metadata?.icon ?? "timer"))
@@ -86,8 +86,9 @@ struct TimerLiveActivity: Widget {
 
 private struct ControlButtons: View {
     let state: AlarmPresentationState
+    let alarmID: String
     var body: some View {
-        let id = state.alarmID.uuidString
+        let id = alarmID
         HStack(spacing: 10) {
             switch state.mode {
             case .countdown:
