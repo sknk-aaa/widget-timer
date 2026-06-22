@@ -57,12 +57,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         },
       },
     ],
-    [
-      'expo-notifications',
-      {
-        // Phase1: Expo Go モック用のローカル通知。Phase2 で AlarmKit に置換。
-      },
-    ],
+    // expo-notifications の config プラグインは付けない（aps-environment を付与してしまうため）。
+    // 本アプリはリモートプッシュ未使用。Expo Go のローカル通知モックはパッケージのみで動く。
     // Phase2: Widget拡張（Control / ホームウィジェット / Live Activity / App Intents）
     [
       '@bacons/apple-targets',
