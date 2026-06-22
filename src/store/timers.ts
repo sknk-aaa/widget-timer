@@ -102,7 +102,8 @@ export const useTimersStore = create<TimersState>((set, get) => ({
     const next = { ...timer, ...patch };
     set({ timers: get().timers.map((t) => (t.id === id ? next : t)) });
 
-    await alarmService.cancel(id);
+    // AlarmKit の pause を使う（cancel すると Live Activity が消えるため）。
+    await alarmService.pause(id);
     await liveActivityService.update(liveParams(next));
     await widgetService.reloadTimelines();
   },
@@ -121,7 +122,7 @@ export const useTimersStore = create<TimersState>((set, get) => ({
     const next = { ...timer, ...patch };
     set({ timers: get().timers.map((t) => (t.id === id ? next : t)) });
 
-    await alarmService.schedule({
+    await alarmService.resume({
       timerId: next.id,
       durationSec: remaining,
       endAt,

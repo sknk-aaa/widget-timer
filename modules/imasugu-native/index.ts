@@ -19,6 +19,8 @@ export interface ImasuguNativeModule {
     colorID: string,
     presetId: string | null,
   ): Promise<void>;
+  pauseTimer(timerId: string): Promise<void>;
+  resumeTimer(timerId: string): Promise<void>;
   cancel(timerId: string): Promise<void>;
   stopAll(): Promise<void>;
   getProduct(

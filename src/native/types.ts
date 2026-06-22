@@ -25,6 +25,10 @@ export interface AlarmService {
   getPermission(): Promise<PermissionStatus>;
   requestPermission(): Promise<PermissionStatus>;
   schedule(params: AlarmScheduleParams): Promise<void>;
+  /** 一時停止（ネイティブは AlarmKit pause＝同じアラーム/通知を維持）。 */
+  pause(timerId: string): Promise<void>;
+  /** 再開（残り時間で続行）。 */
+  resume(params: AlarmScheduleParams): Promise<void>;
   cancel(timerId: string): Promise<void>;
 }
 

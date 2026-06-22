@@ -33,22 +33,34 @@ export const mockAlarmService: AlarmService = {
   },
 
   async schedule(params: AlarmScheduleParams) {
-    await Notifications.scheduleNotificationAsync({
-      identifier: params.timerId,
-      content: {
-        title: 'タイマー終了',
-        body: '時間になりました',
-        sound: true,
-        interruptionLevel: 'timeSensitive',
-      },
-      trigger: {
-        type: SchedulableTriggerInputTypes.DATE,
-        date: params.endAt,
-      },
-    });
+    await scheduleAlarmNotification(params);
+  },
+
+  async pause(timerId: string) {
+    await Notifications.cancelScheduledNotificationAsync(timerId).catch(() => {});
+  },
+
+  async resume(params: AlarmScheduleParams) {
+    await scheduleAlarmNotification(params);
   },
 
   async cancel(timerId: string) {
     await Notifications.cancelScheduledNotificationAsync(timerId).catch(() => {});
   },
 };
+
+async function scheduleAlarmNotification(params: AlarmScheduleParams) {
+  await Notifications.scheduleNotificationAsync({
+    identifier: params.timerId,
+    content: {
+      title: 'タイマー終了',
+      body: '時間になりました',
+      sound: true,
+      interruptionLevel: 'timeSensitive',
+    },
+    trigger: {
+      type: SchedulableTriggerInputTypes.DATE,
+      date: params.endAt,
+    },
+  });
+}

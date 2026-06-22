@@ -132,6 +132,16 @@ public class ImasuguNativeModule: Module {
       UserDefaults(suiteName: kAppGroup)?.set(map, forKey: kRunningMapKey)
     }
 
+    AsyncFunction("pauseTimer") { (timerId: String) in
+      guard let id = UUID(uuidString: timerId) else { return }
+      try AlarmManager.shared.pause(id: id)
+    }
+
+    AsyncFunction("resumeTimer") { (timerId: String) in
+      guard let id = UUID(uuidString: timerId) else { return }
+      try AlarmManager.shared.resume(id: id)
+    }
+
     AsyncFunction("cancel") { (timerId: String) in
       guard let id = UUID(uuidString: timerId) else { return }
       try AlarmManager.shared.cancel(id: id)
