@@ -35,6 +35,12 @@ export function mirrorRunningToAppGroup(timers: RunningTimer[]): void {
   ImasuguNative.setSharedRunning(JSON.stringify(model));
 }
 
+/** アラート音IDを App Group にミラー（ウィジェット無音起動時に AlarmKit で使う）。 */
+export function mirrorSoundToAppGroup(sound: string): void {
+  if (!ImasuguNative) return;
+  ImasuguNative.setSharedSound(sound);
+}
+
 interface SharedRunningEntry {
   id: string;
   endAt: number;

@@ -69,7 +69,7 @@ export function RunningTimerRow({ timer, onPause, onResume, onCancel, onDismiss 
   const pulseStyle = useAnimatedStyle(() => ({ transform: [{ scale: pulse.value }] }));
 
   const label = `${formatRemaining(remaining)} ${
-    finished ? '終了' : paused ? '一時停止中' : `${s.timer.ends} ${formatEndClock(timer.endAt, now)}`
+    finished ? s.timer.finished : paused ? s.timer.pausedNow : `${s.timer.ends} ${formatEndClock(timer.endAt, now)}`
   }`;
 
   const body = (
@@ -143,9 +143,9 @@ export function RunningTimerRow({ timer, onPause, onResume, onCancel, onDismiss 
         </Text>
         <Text style={{ color: finished ? def.bg : c.textTertiary, fontSize: 12, fontWeight: '700', marginTop: 1 }}>
           {finished
-            ? '終了 ・ タップで消去'
+            ? s.timer.finishedHint
             : paused
-              ? '一時停止中'
+              ? s.timer.pausedNow
               : `${s.timer.ends} ${formatEndClock(timer.endAt, now)}`}
         </Text>
       </View>
@@ -188,7 +188,7 @@ export function RunningTimerRow({ timer, onPause, onResume, onCancel, onDismiss 
           onDismiss();
         }}
         accessibilityRole="button"
-        accessibilityLabel={`${label}。タップで消去`}
+        accessibilityLabel={`${label} ${s.timer.tapToClear}`}
       >
         {body}
       </Pressable>

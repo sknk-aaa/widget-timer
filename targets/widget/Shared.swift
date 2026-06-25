@@ -18,10 +18,36 @@ enum Shared {
     static let runningKey = "shared_running_v1" // 実行中タイマー JSON 配列
     static let runningMapKey = "running_alarm_map_v1" // alarmID -> presetID
     static let cancelledKey = "cancelled_ids_v1" // ウィジェット/通知で終了したID（アプリが取り込んでドックから消す）
+    static let soundKey = "alert_sound_v1" // アラート音ID（default / bell / chime / marimba）
 
     static var defaults: UserDefaults? {
         UserDefaults(suiteName: appGroup)
     }
+
+    static func alertSound() -> String {
+        defaults?.string(forKey: soundKey) ?? "default"
+    }
+}
+
+// 端末ロケールに応じた文言（ja / それ以外=en）。AlarmKit/Live Activity 用。
+enum LX {
+    static var isJa: Bool { Locale.current.language.languageCode?.identifier == "ja" }
+    static var stop: String { isJa ? "終了" : "Stop" }
+    static var pause: String { isJa ? "一時停止" : "Pause" }
+    static var resume: String { isJa ? "再開" : "Resume" }
+    static var alertTitle: String { isJa ? "タイマー終了" : "Time's up" }
+    static var countdownTitle: String { isJa ? "カウントダウン" : "Timer" }
+    static var pausedTitle: String { isJa ? "一時停止中" : "Paused" }
+    static var finished: String { isJa ? "終了" : "Done" }
+    static func endsAt(_ time: String) -> String { isJa ? "終了 \(time)" : "Ends \(time)" }
+}
+
+func lsr(_ s: String) -> LocalizedStringResource { LocalizedStringResource(stringLiteral: s) }
+
+/// 指定音IDがバンドルに存在するか（無ければ .default を使う側で判定）。
+func hasBundledSound(_ name: String) -> Bool {
+    name != "default" && !name.isEmpty &&
+        Bundle.main.url(forResource: name, withExtension: "wav") != nil
 }
 
 /// 実行中タイマーの読み取りモデル（ホームウィジェットのカウントダウン用）。

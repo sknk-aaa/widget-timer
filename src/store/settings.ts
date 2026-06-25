@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { getMeta, setMeta } from '../db/repo';
 import { alarmService } from '../native/alarm';
+import { mirrorSoundToAppGroup } from '../native/shared';
 import { setHapticsEnabled } from '../ui/haptics';
 import type { PermissionStatus } from '../native/types';
 
@@ -30,9 +31,11 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   load: () => {
     const haptics = getMeta(HAPTICS_KEY) !== '0';
     setHapticsEnabled(haptics);
+    const sound = getMeta(SOUND_KEY) ?? DEFAULT_SOUND;
+    mirrorSoundToAppGroup(sound);
     set({
       onboardingDone: getMeta(ONBOARDING_KEY) === '1',
-      alertSound: getMeta(SOUND_KEY) ?? DEFAULT_SOUND,
+      alertSound: sound,
       hapticsEnabled: haptics,
     });
   },
@@ -42,6 +45,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   },
   setAlertSound: (sound) => {
     setMeta(SOUND_KEY, sound);
+    mirrorSoundToAppGroup(sound);
     set({ alertSound: sound });
   },
   setHapticsEnabled: (v) => {

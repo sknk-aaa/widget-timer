@@ -14,12 +14,8 @@ import { PRIVACY_URL, TERMS_URL, CONTACT_URL } from '../src/domain/links';
 import { openWriteReview } from '../src/native/review';
 import { t } from '../src/i18n';
 
-const SOUNDS: { id: string; label: string }[] = [
-  { id: 'default', label: 'デフォルト' },
-  { id: 'bell', label: 'ベル' },
-  { id: 'chime', label: 'チャイム' },
-  { id: 'radar', label: 'レーダー' },
-];
+// AlarmKit に渡す音ID。'default' はシステム標準、その他はバンドル音源（assets/sounds/<id>.wav）。
+const SOUND_IDS = ['default', 'bell', 'chime', 'marimba'] as const;
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -77,16 +73,16 @@ export default function SettingsScreen() {
 
         <SectionLabel>{s.settings.sound}</SectionLabel>
         <View style={{ backgroundColor: c.surface, borderRadius: radius.lg, marginBottom: spacing.xl }}>
-          {SOUNDS.map((snd, i) => (
+          {SOUND_IDS.map((id, i) => (
             <Pressable
-              key={snd.id}
+              key={id}
               onPress={() => {
-                useSettingsStore.getState().setAlertSound(snd.id);
+                useSettingsStore.getState().setAlertSound(id);
                 haptics.light();
               }}
               accessibilityRole="button"
-              accessibilityState={{ selected: alertSound === snd.id }}
-              accessibilityLabel={snd.label}
+              accessibilityState={{ selected: alertSound === id }}
+              accessibilityLabel={s.sounds[id]}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -97,8 +93,8 @@ export default function SettingsScreen() {
                 borderTopColor: c.hairline,
               }}
             >
-              <Text style={{ color: c.textPrimary, fontSize: 15, fontWeight: '500' }}>{snd.label}</Text>
-              {alertSound === snd.id && <CheckIcon color={c.accent} size={20} />}
+              <Text style={{ color: c.textPrimary, fontSize: 15, fontWeight: '500' }}>{s.sounds[id]}</Text>
+              {alertSound === id && <CheckIcon color={c.accent} size={20} />}
             </Pressable>
           ))}
         </View>

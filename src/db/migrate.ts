@@ -26,6 +26,13 @@ CREATE TABLE IF NOT EXISTS \`meta\` (
   \`key\` text PRIMARY KEY NOT NULL,
   \`value\` text NOT NULL
 );
+CREATE TABLE IF NOT EXISTS \`launch_history\` (
+  \`id\` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+  \`preset_id\` text,
+  \`duration_sec\` integer NOT NULL,
+  \`started_at\` integer NOT NULL,
+  \`source\` text NOT NULL
+);
 `;
 
 export function runMigrations(): void {

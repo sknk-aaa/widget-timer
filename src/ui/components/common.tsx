@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { View, Text, Pressable, type StyleProp, type ViewStyle } from 'react-native';
 import { useTheme } from '../theme';
+import { t } from '../../i18n';
 
 export function SheetHeader({
   title,
@@ -12,6 +13,7 @@ export function SheetHeader({
   right?: React.ReactNode;
 }) {
   const { c, spacing } = useTheme();
+  const s = t();
   return (
     <View
       style={{
@@ -23,8 +25,8 @@ export function SheetHeader({
     >
       <View style={{ width: 60 }}>
         {onClose && (
-          <Pressable onPress={onClose} hitSlop={12} accessibilityRole="button" accessibilityLabel="閉じる">
-            <Text style={{ color: c.accent, fontSize: 16, fontWeight: '600' }}>閉じる</Text>
+          <Pressable onPress={onClose} hitSlop={12} accessibilityRole="button" accessibilityLabel={s.common.close}>
+            <Text style={{ color: c.accent, fontSize: 16, fontWeight: '600' }}>{s.common.close}</Text>
           </Pressable>
         )}
       </View>

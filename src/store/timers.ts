@@ -4,6 +4,7 @@ import {
   insertRunningTimer,
   updateRunningTimer,
   deleteRunningTimer,
+  insertLaunchHistory,
 } from '../db/repo';
 import type { Preset, RunningTimer, TimerSource } from '../domain/types';
 import { nowMs, remainingSecOf } from '../domain/format';
@@ -13,6 +14,7 @@ import { liveActivityService } from '../native/liveActivity';
 import { widgetService } from '../native/widget';
 import { readRunningFromAppGroup, takeCancelledFromAppGroup } from '../native/shared';
 import { bumpCompletionCount, maybeAskReview } from '../native/review';
+import { useSettingsStore } from './settings';
 import { haptics } from '../ui/haptics';
 
 interface StartInput {
@@ -25,12 +27,21 @@ interface StartInput {
 
 interface TimersState {
   timers: RunningTimer[];
+  /** Undo 待ちのキャンセル（スナックバー表示用）。確定するまでアラームは生きている。 */
+  pendingCancel: RunningTimer | null;
   load: () => void;
   start: (input: StartInput) => Promise<RunningTimer>;
   startFromPreset: (preset: Preset, source: TimerSource) => Promise<RunningTimer>;
   pause: (id: string) => Promise<void>;
   resume: (id: string) => Promise<void>;
-  cancel: (id: string) => Promise<void>;
+  /** キャンセルを保留にしてドックから隠す（Undo 可能）。確定は finalizeCancel。 */
+  cancel: (id: string) => void;
+  /** 保留中のキャンセルを取り消して復帰。 */
+  undoCancel: () => void;
+  /** 保留中のキャンセルを確定（アラーム取消・LA終了・DB削除）。 */
+  finalizeCancel: (id: string) => void;
+  /** 保留中があれば即確定（バックグラウンド遷移・復帰時）。 */
+  flushPendingCancel: () => void;
   /** 完了表示のタイマーを消す。 */
   dismiss: (id: string) => Promise<void>;
   /** 残り0以下になった running タイマーを finished に遷移させる。 */
@@ -50,8 +61,13 @@ function liveParams(t: RunningTimer) {
   };
 }
 
+// Undo 用の保留タイマー（モジュールスコープ：シリアライズ不要なため state には置かない）。
+const CANCEL_UNDO_MS = 4500;
+let cancelTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
 export const useTimersStore = create<TimersState>((set, get) => ({
   timers: [],
+  pendingCancel: null,
 
   load: () => {
     set({ timers: listRunningTimers() });
@@ -71,6 +87,13 @@ export const useTimersStore = create<TimersState>((set, get) => ({
       createdAt: now,
     };
     insertRunningTimer(timer);
+    // 起動履歴を記録（「最近使った」「統計」の土台）。
+    insertLaunchHistory({
+      presetId: input.presetId,
+      durationSec: input.durationSec,
+      startedAt: now,
+      source: input.source,
+    });
     set({ timers: [...get().timers, timer] });
 
     await alarmService.schedule({
@@ -79,6 +102,7 @@ export const useTimersStore = create<TimersState>((set, get) => ({
       endAt: timer.endAt,
       icon: timer.icon,
       color: timer.color,
+      sound: useSettingsStore.getState().alertSound,
     });
     await liveActivityService.start(liveParams(timer));
     await widgetService.reloadTimelines();
@@ -129,20 +153,54 @@ export const useTimersStore = create<TimersState>((set, get) => ({
       endAt,
       icon: next.icon,
       color: next.color,
+      sound: useSettingsStore.getState().alertSound,
     });
     await liveActivityService.update(liveParams(next));
     await widgetService.reloadTimelines();
   },
 
-  cancel: async (id) => {
-    const exists = get().timers.some((t) => t.id === id);
-    if (!exists) return;
-    deleteRunningTimer(id);
-    set({ timers: get().timers.filter((t) => t.id !== id) });
+  cancel: (id) => {
+    const target = get().timers.find((t) => t.id === id);
+    if (!target) return;
+    // 既存の保留があれば先に確定（保留は同時に1件）。
+    if (get().pendingCancel) get().finalizeCancel(get().pendingCancel!.id);
+    // ドックから隠し、保留に積む（アラームはまだ生きている＝Undoで復帰可能）。
+    set({
+      timers: get().timers.filter((t) => t.id !== id),
+      pendingCancel: target,
+    });
+    if (cancelTimeoutId) clearTimeout(cancelTimeoutId);
+    cancelTimeoutId = setTimeout(() => get().finalizeCancel(id), CANCEL_UNDO_MS);
+  },
 
-    await alarmService.cancel(id);
-    await liveActivityService.end(id);
-    await widgetService.reloadTimelines();
+  undoCancel: () => {
+    if (cancelTimeoutId) {
+      clearTimeout(cancelTimeoutId);
+      cancelTimeoutId = null;
+    }
+    const p = get().pendingCancel;
+    if (!p) return;
+    set({ timers: [...get().timers, p], pendingCancel: null });
+  },
+
+  finalizeCancel: (id) => {
+    if (cancelTimeoutId) {
+      clearTimeout(cancelTimeoutId);
+      cancelTimeoutId = null;
+    }
+    deleteRunningTimer(id);
+    set({
+      timers: get().timers.filter((t) => t.id !== id),
+      pendingCancel: get().pendingCancel?.id === id ? null : get().pendingCancel,
+    });
+    void alarmService.cancel(id);
+    void liveActivityService.end(id);
+    void widgetService.reloadTimelines();
+  },
+
+  flushPendingCancel: () => {
+    const p = get().pendingCancel;
+    if (p) get().finalizeCancel(p.id);
   },
 
   dismiss: async (id) => {

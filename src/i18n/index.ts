@@ -1,7 +1,19 @@
+import { getLocales } from 'expo-localization';
 import { ja, type Strings } from './ja';
+import { en } from './en';
 
-// v1 は日本語のみ。将来ロケール追加時はここで切り替える。
-const strings: Strings = ja;
+// 端末のロケールで言語を決定（日本語=ja、それ以外=en）。
+// iOS の「アプリごとの言語」設定（CFBundleLocalizations: ja/en）も getLocales が反映する。
+function pickStrings(): Strings {
+  try {
+    const code = getLocales()?.[0]?.languageCode;
+    return code === 'ja' ? ja : en;
+  } catch {
+    return en;
+  }
+}
+
+const strings: Strings = pickStrings();
 
 export function t(): Strings {
   return strings;

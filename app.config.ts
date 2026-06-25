@@ -12,6 +12,19 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   icon: './assets/icon.png',
   scheme: 'imasugutimer',
   userInterfaceStyle: 'automatic',
+  // ロケール別のInfo.plist（ホーム画面のアプリ名・権限文言）。日本語以外は英語にフォールバック。
+  locales: {
+    en: {
+      CFBundleDisplayName: 'Imasugu Timer',
+      NSAlarmKitUsageDescription:
+        'Used to reliably sound the alarm when a timer ends, even in Silent or Focus mode.',
+    },
+    ja: {
+      CFBundleDisplayName: '今すぐタイマー',
+      NSAlarmKitUsageDescription:
+        'タイマー終了時に、消音モードや集中モード中でも確実にアラームを鳴らすために使用します。',
+    },
+  },
   ios: {
     supportsTablet: false,
     bundleIdentifier: BUNDLE_ID,
@@ -19,8 +32,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       usesNonExemptEncryption: false,
     },
     infoPlist: {
+      // 非ja/enデバイスの既定（開発リージョン）を英語に。
+      CFBundleDevelopmentRegion: 'en',
+      CFBundleLocalizations: ['en', 'ja'],
       NSAlarmKitUsageDescription:
-        'タイマー終了時に、消音モードや集中モード中でも確実にアラームを鳴らすために使用します。',
+        'Used to reliably sound the alarm when a timer ends, even in Silent or Focus mode.',
       ITSAppUsesNonExemptEncryption: false,
     },
     entitlements: {
@@ -66,6 +82,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         appleTeamId: '3H2LBDNPMU',
       },
     ],
+    // アラート音(.wav)をアプリ本体ターゲットにバンドル
+    './plugins/withAlarmSounds',
     // 最後に実行して aps-environment を除去する（expo-notifications が自動付与するため）
     './plugins/withoutApsEnvironment',
   ],

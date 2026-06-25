@@ -65,7 +65,7 @@ struct TimerLiveActivity: Widget {
             Text(Duration.seconds(max(0, paused.totalCountdownDuration - paused.previouslyElapsedDuration))
                 .formatted(.time(pattern: .minuteSecond)))
         case .alert:
-            Text("終了")
+            Text(LX.finished)
         @unknown default:
             Text("")
         }
@@ -75,9 +75,9 @@ struct TimerLiveActivity: Widget {
     private func endLabel(_ state: AlarmPresentationState) -> some View {
         switch state.mode {
         case .countdown(let countdown):
-            Text("終了 \(countdown.fireDate.formatted(date: .omitted, time: .shortened))")
+            Text(LX.endsAt(countdown.fireDate.formatted(date: .omitted, time: .shortened)))
         case .paused:
-            Text("一時停止中")
+            Text(LX.pausedTitle)
         default:
             EmptyView()
         }

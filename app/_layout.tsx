@@ -61,11 +61,15 @@ export default function RootLayout() {
     const sub = AppState.addEventListener('change', (s) => {
       if (s === 'active') {
         useClock.getState().set(nowMs());
+        useTimersStore.getState().flushPendingCancel();
         useTimersStore.getState().importFromShared();
         useTimersStore.getState().reconcile();
         void useSettingsStore.getState().refreshPermission();
         // 外部での購入/承認（Ask to Buy 等）を反映。
         void useProStore.getState().refresh();
+      } else {
+        // バックグラウンドへ抜ける前に保留キャンセルを確定（鳴り残し防止）。
+        useTimersStore.getState().flushPendingCancel();
       }
     });
     return () => sub.remove();

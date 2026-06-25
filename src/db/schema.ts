@@ -27,3 +27,14 @@ export const meta = sqliteTable('meta', {
   key: text('key').primaryKey(),
   value: text('value').notNull(),
 });
+
+// 起動履歴（「最近使った」「統計」の土台）。タイマー起動のたびに1行。
+export const launchHistory = sqliteTable('launch_history', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  presetId: text('preset_id'),
+  durationSec: integer('duration_sec').notNull(),
+  startedAt: integer('started_at').notNull(),
+  source: text('source', {
+    enum: ['app', 'widget', 'liveactivity', 'quick'],
+  }).notNull(),
+});

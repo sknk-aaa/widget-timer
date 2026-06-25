@@ -1,4 +1,6 @@
-/** 残り秒数を「○日 HH:MM:SS」「H:MM:SS」「MM:SS」形式に整形する。 */
+import { t } from '../i18n';
+
+/** 残り秒数を「○日 HH:MM:SS」「H:MM:SS」「MM:SS」形式に整形する（日表記はロケール対応）。 */
 export function formatRemaining(totalSec: number): string {
   const sec = Math.max(0, Math.floor(totalSec));
   const days = Math.floor(sec / 86400);
@@ -9,7 +11,7 @@ export function formatRemaining(totalSec: number): string {
   const p2 = (n: number) => n.toString().padStart(2, '0');
 
   if (days > 0) {
-    return `${days}日 ${p2(hours)}:${p2(minutes)}:${p2(seconds)}`;
+    return `${t().duration.remainingDayPrefix(days)}${p2(hours)}:${p2(minutes)}:${p2(seconds)}`;
   }
   if (hours > 0) {
     return `${hours}:${p2(minutes)}:${p2(seconds)}`;
@@ -17,21 +19,14 @@ export function formatRemaining(totalSec: number): string {
   return `${p2(minutes)}:${p2(seconds)}`;
 }
 
-/** プリセットボタン等で使う、短い長さ表記（例: 3分 / 1時間30分 / 2日）。 */
+/** プリセットボタン等で使う、短い長さ表記（例: 3分 / 1時間30分 / 2日 / 3 min）。 */
 export function formatDurationShort(totalSec: number): string {
   const sec = Math.max(0, Math.floor(totalSec));
   const days = Math.floor(sec / 86400);
   const hours = Math.floor((sec % 86400) / 3600);
   const minutes = Math.floor((sec % 3600) / 60);
   const seconds = sec % 60;
-
-  const parts: string[] = [];
-  if (days > 0) parts.push(`${days}日`);
-  if (hours > 0) parts.push(`${hours}時間`);
-  if (minutes > 0) parts.push(`${minutes}分`);
-  if (seconds > 0 && days === 0 && hours === 0) parts.push(`${seconds}秒`);
-  if (parts.length === 0) return '0秒';
-  return parts.join('');
+  return t().duration.short(days, hours, minutes, seconds);
 }
 
 /** 終了予定時刻（エポックms）を「HH:MM」または日付付きで返す。 */

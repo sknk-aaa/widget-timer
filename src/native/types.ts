@@ -7,6 +7,8 @@ export interface AlarmScheduleParams {
   endAt: number;
   icon: string;
   color: string;
+  /** アラート音ID（'default' またはバンドル音名 bell/chime/marimba）。 */
+  sound: string;
 }
 
 export interface AlarmCapabilities {

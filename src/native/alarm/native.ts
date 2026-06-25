@@ -26,6 +26,7 @@ export const nativeAlarmService: AlarmService = {
       params.icon,
       params.color,
       null,
+      params.sound,
     );
   },
 

@@ -19,6 +19,7 @@ import { springs, listLayout } from '../motion';
 import { haptics } from '../haptics';
 import type { Preset } from '../../domain/types';
 import { useTheme, type Theme } from '../theme';
+import { t } from '../../i18n';
 
 const PAD = 2;
 const GAP = 16;
@@ -270,7 +271,7 @@ export function PresetBoard(props: Props) {
       <Pressable
         onPress={props.onAdd}
         accessibilityRole="button"
-        accessibilityLabel="プリセットを追加"
+        accessibilityLabel={t().board.addPreset}
         style={{
           position: 'absolute',
           left: addPos.left,
@@ -460,8 +461,8 @@ function PresetCell({
         <Animated.View
           style={animStyle}
           accessibilityRole="button"
-          accessibilityLabel={`${formatDurationShort(preset.durationSec)}のタイマー`}
-          accessibilityHint={editMode ? 'タップで編集。長押しで移動' : 'タップで起動。長押しで並び替え'}
+          accessibilityLabel={t().board.timerOf(formatDurationShort(preset.durationSec))}
+          accessibilityHint={editMode ? t().board.editHint : t().board.launchHint}
         >
           <PresetTileVisual icon={preset.icon} color={preset.color} glow={!isDragging} />
         </Animated.View>
@@ -472,7 +473,7 @@ function PresetCell({
           onPress={() => onDelete(id)}
           hitSlop={10}
           accessibilityRole="button"
-          accessibilityLabel="削除"
+          accessibilityLabel={t().common.delete}
           style={{
             position: 'absolute',
             top: -6,

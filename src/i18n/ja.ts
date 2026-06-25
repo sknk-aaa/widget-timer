@@ -1,12 +1,27 @@
+// 日本語。型の基準（Strings = typeof ja）。en.ts は同一構造で実装する。
 export const ja = {
   appName: '今すぐタイマー',
+
+  common: {
+    close: '閉じる',
+    cancel: 'キャンセル',
+    ok: 'OK',
+    delete: '削除',
+    undo: '元に戻す',
+  },
+
   main: {
     areaHidden: 'その他のプリセット',
     areaWidget: 'ウィジェット表示',
     widgetSlots: (used: number, max: number | '∞') => `${used} / ${max}`,
     quickStart: '今すぐ',
     dragHint: 'タップで編集 ・ ドラッグで並べ替え（下＝ウィジェット表示）',
+    edit: '編集',
+    editDone: '完了',
+    editExit: '編集を終了',
+    settings: '設定',
   },
+
   preset: {
     newTitle: 'プリセットを作成',
     editTitle: 'プリセットを編集',
@@ -18,18 +33,41 @@ export const ja = {
     delete: '削除',
     deleteConfirm: 'このプリセットを削除しますか？実行中のタイマーは継続します。',
   },
+
+  board: {
+    addPreset: 'プリセットを追加',
+    timerOf: (dur: string) => `${dur}のタイマー`,
+    editHint: 'タップで編集。長押しで移動',
+    launchHint: 'タップで起動。長押しで並び替え',
+  },
+
   quick: {
     title: '今すぐタイマー',
     start: 'スタート',
     byDuration: '時間で指定',
     byClock: '時刻で指定',
+    clockSummary: (clock: string, remaining: string) => `${clock} まで ・ あと ${remaining}`,
   },
+
+  wheel: {
+    day: '日',
+    hour: '時',
+    minute: '分',
+    second: '秒',
+  },
+
   timer: {
     pause: '一時停止',
     resume: '再開',
     cancel: 'キャンセル',
     ends: '終了',
+    finished: '終了',
+    pausedNow: '一時停止中',
+    finishedHint: '終了 ・ タップで消去',
+    tapToClear: 'タップで消去',
+    cancelled: 'タイマーを削除しました',
   },
+
   settings: {
     title: '設定',
     sound: 'アラート音',
@@ -45,6 +83,14 @@ export const ja = {
     privacy: 'プライバシーポリシー',
     terms: '利用規約',
   },
+
+  sounds: {
+    default: '標準',
+    bell: 'ベル',
+    chime: 'チャイム',
+    marimba: 'マリンバ',
+  },
+
   pro: {
     title: 'Pro にアップグレード',
     subtitle: '買い切り・サブスクリプションではありません',
@@ -65,6 +111,7 @@ export const ja = {
     activeSub: 'ご購入ありがとうございます',
     widgetLimit: '無料ではウィジェット枠は3つまでです。Pro で無制限になります。',
   },
+
   onboarding: {
     next: '次へ',
     start: 'はじめる',
@@ -78,16 +125,24 @@ export const ja = {
     page3Title: 'ウィジェットを追加',
     page3Body: 'ホーム画面を長押し →「＋」→「今すぐタイマー」を選ぶと、ワンタップで起動できます。',
   },
+
   alarm: {
     permissionDenied: 'アラームを鳴らせません',
     permissionDeniedBody: '通知が許可されていないため、タイマー終了時に音が鳴りません。',
     openSettings: '設定を開く',
   },
-  common: {
-    close: '閉じる',
-    cancel: 'キャンセル',
-    ok: 'OK',
+
+  duration: {
+    short: (d: number, h: number, m: number, s: number): string => {
+      const parts: string[] = [];
+      if (d > 0) parts.push(`${d}日`);
+      if (h > 0) parts.push(`${h}時間`);
+      if (m > 0) parts.push(`${m}分`);
+      if (s > 0 && d === 0 && h === 0) parts.push(`${s}秒`);
+      return parts.length ? parts.join('') : '0秒';
+    },
+    remainingDayPrefix: (days: number) => `${days}日 `,
   },
-} as const;
+};
 
 export type Strings = typeof ja;

@@ -21,9 +21,11 @@ enum AlarmScheduler {
         let meta = TimerMetadata(presetID: metadata.presetID, icon: metadata.icon,
                                  colorID: metadata.colorID, alarmID: id.lower)
         let attributes = makeAttributes(metadata: meta, tint: tint)
+        let soundName = Shared.alertSound()
         let configuration = AlarmManager.AlarmConfiguration.timer(
             duration: TimeInterval(durationSec),
-            attributes: attributes
+            attributes: attributes,
+            sound: hasBundledSound(soundName) ? .named("\(soundName).wav") : .default
         )
         _ = try await AlarmManager.shared.schedule(id: id, configuration: configuration)
         recordRunning(alarmID: id, presetID: meta.presetID)
@@ -49,12 +51,12 @@ enum AlarmScheduler {
     // alert(終了)＋countdown(一時停止)＋paused(再開) を宣言すると AlarmKit が
     // ロック画面/Live Activity/Dynamic Island にボタンを自動描画する。
     static func makeAttributes(metadata: TimerMetadata, tint: Color) -> AlarmAttributes<TimerMetadata> {
-        let stop = AlarmButton(text: "終了", textColor: .white, systemImageName: "stop.fill")
-        let pause = AlarmButton(text: "一時停止", textColor: .white, systemImageName: "pause.fill")
-        let resume = AlarmButton(text: "再開", textColor: .white, systemImageName: "play.fill")
-        let alert = AlarmPresentation.Alert(title: "タイマー終了", stopButton: stop)
-        let countdown = AlarmPresentation.Countdown(title: "カウントダウン", pauseButton: pause)
-        let paused = AlarmPresentation.Paused(title: "一時停止中", resumeButton: resume)
+        let stop = AlarmButton(text: lsr(LX.stop), textColor: .white, systemImageName: "stop.fill")
+        let pause = AlarmButton(text: lsr(LX.pause), textColor: .white, systemImageName: "pause.fill")
+        let resume = AlarmButton(text: lsr(LX.resume), textColor: .white, systemImageName: "play.fill")
+        let alert = AlarmPresentation.Alert(title: lsr(LX.alertTitle), stopButton: stop)
+        let countdown = AlarmPresentation.Countdown(title: lsr(LX.countdownTitle), pauseButton: pause)
+        let paused = AlarmPresentation.Paused(title: lsr(LX.pausedTitle), resumeButton: resume)
         let presentation = AlarmPresentation(alert: alert, countdown: countdown, paused: paused)
         return AlarmAttributes(presentation: presentation, metadata: metadata, tintColor: tint)
     }

@@ -11,6 +11,7 @@ import { FREE_WIDGET_SLOTS, type Preset } from '../src/domain/types';
 import { useTheme } from '../src/ui/theme';
 import { PresetBoard } from '../src/ui/components/PresetBoard';
 import { RunningTimerRow } from '../src/ui/components/RunningTimerRow';
+import { Snackbar } from '../src/ui/components/Snackbar';
 import { PressableScale } from '../src/ui/components/PressableScale';
 import { Banner } from '../src/ui/components/common';
 import { GearIcon, PlusIcon } from '../src/ui/icons/ui';
@@ -30,6 +31,7 @@ export default function MainScreen() {
   const presets = usePresetsStore((st) => st.presets);
   const applyArrangement = usePresetsStore((st) => st.applyArrangement);
   const timers = useTimersStore((st) => st.timers);
+  const pendingCancel = useTimersStore((st) => st.pendingCancel);
   const isPro = useProStore((st) => st.isPro);
 
   const [editMode, setEditMode] = React.useState(false);
@@ -119,9 +121,9 @@ export default function MainScreen() {
             }}
             hitSlop={12}
             accessibilityRole="button"
-            accessibilityLabel="編集を終了"
+            accessibilityLabel={s.main.editExit}
           >
-            <Text style={{ color: c.accent, fontSize: 16, fontWeight: '700' }}>完了</Text>
+            <Text style={{ color: c.accent, fontSize: 16, fontWeight: '700' }}>{s.main.editDone}</Text>
           </Pressable>
         ) : (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xl }}>
@@ -129,7 +131,7 @@ export default function MainScreen() {
               onPress={() => router.push('/settings')}
               hitSlop={12}
               accessibilityRole="button"
-              accessibilityLabel="設定"
+              accessibilityLabel={s.main.settings}
             >
               <GearIcon color={c.textPrimary} size={23} />
             </Pressable>
@@ -140,9 +142,9 @@ export default function MainScreen() {
               }}
               hitSlop={12}
               accessibilityRole="button"
-              accessibilityLabel="編集"
+              accessibilityLabel={s.main.edit}
             >
-              <Text style={{ color: c.accent, fontSize: 16, fontWeight: '700' }}>編集</Text>
+              <Text style={{ color: c.accent, fontSize: 16, fontWeight: '700' }}>{s.main.edit}</Text>
             </Pressable>
           </View>
         )}
@@ -252,6 +254,13 @@ export default function MainScreen() {
           </Text>
         </PressableScale>
       )}
+
+      <Snackbar
+        visible={!!pendingCancel}
+        message={s.timer.cancelled}
+        actionLabel={s.common.undo}
+        onAction={() => useTimersStore.getState().undoCancel()}
+      />
     </View>
   );
 }

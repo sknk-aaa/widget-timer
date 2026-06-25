@@ -111,7 +111,7 @@ export default function QuickScreen() {
                   marginTop: spacing.lg,
                 }}
               >
-                {p2(clock.h)}:{p2(clock.m)} まで ・ あと {formatRemaining(effectiveSec)}
+                {s.quick.clockSummary(`${p2(clock.h)}:${p2(clock.m)}`, formatRemaining(effectiveSec))}
               </Text>
             </View>
           )}

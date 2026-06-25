@@ -51,6 +51,15 @@ private func tint(_ id: String) -> Color {
   }
 }
 
+// 端末ロケール（ja / それ以外=en）に応じた文言。AlarmKit 用。
+private var isJaLocale: Bool { Locale.current.language.languageCode?.identifier == "ja" }
+private func tx(_ ja: String, _ en: String) -> String { isJaLocale ? ja : en }
+private func mlsr(_ s: String) -> LocalizedStringResource { LocalizedStringResource(stringLiteral: s) }
+private func moduleHasBundledSound(_ name: String) -> Bool {
+  name != "default" && !name.isEmpty &&
+    Bundle.main.url(forResource: name, withExtension: "wav") != nil
+}
+
 private func authString(_ s: AlarmManager.AuthorizationState) -> String {
   switch s {
   case .authorized: return "granted"
@@ -95,6 +104,10 @@ public class ImasuguNativeModule: Module {
       UserDefaults(suiteName: kAppGroup)?.set(json.data(using: .utf8), forKey: "shared_running_v1")
     }
 
+    Function("setSharedSound") { (sound: String) in
+      UserDefaults(suiteName: kAppGroup)?.set(sound, forKey: "alert_sound_v1")
+    }
+
     // ウィジェット/ロック画面から無音起動したぶんをアプリに取り込むため、
     // App Group の実行中モデルJSONをそのまま返す。
     Function("getSharedRunning") { () -> String in
@@ -130,19 +143,23 @@ public class ImasuguNativeModule: Module {
     }
 
     // ---- アプリ内スケジューリング（※ AlarmKit API は実機要検証）----
-    AsyncFunction("scheduleTimer") { (timerId: String, durationSec: Int, icon: String, colorID: String, presetId: String?) in
+    AsyncFunction("scheduleTimer") { (timerId: String, durationSec: Int, icon: String, colorID: String, presetId: String?, sound: String) in
       NSLog("[Imasugu] scheduleTimer id=%@ dur=%d auth=%@", timerId, durationSec, "\(AlarmManager.shared.authorizationState)")
       let id = UUID(uuidString: timerId) ?? UUID()
-      let stop = AlarmButton(text: "終了", textColor: .white, systemImageName: "stop.fill")
-      let pause = AlarmButton(text: "一時停止", textColor: .white, systemImageName: "pause.fill")
-      let resume = AlarmButton(text: "再開", textColor: .white, systemImageName: "play.fill")
-      let alert = AlarmPresentation.Alert(title: "タイマー終了", stopButton: stop)
-      let countdown = AlarmPresentation.Countdown(title: "カウントダウン", pauseButton: pause)
-      let pausedP = AlarmPresentation.Paused(title: "一時停止中", resumeButton: resume)
+      let stop = AlarmButton(text: mlsr(tx("終了", "Stop")), textColor: .white, systemImageName: "stop.fill")
+      let pause = AlarmButton(text: mlsr(tx("一時停止", "Pause")), textColor: .white, systemImageName: "pause.fill")
+      let resume = AlarmButton(text: mlsr(tx("再開", "Resume")), textColor: .white, systemImageName: "play.fill")
+      let alert = AlarmPresentation.Alert(title: mlsr(tx("タイマー終了", "Time's up")), stopButton: stop)
+      let countdown = AlarmPresentation.Countdown(title: mlsr(tx("カウントダウン", "Timer")), pauseButton: pause)
+      let pausedP = AlarmPresentation.Paused(title: mlsr(tx("一時停止中", "Paused")), resumeButton: resume)
       let presentation = AlarmPresentation(alert: alert, countdown: countdown, paused: pausedP)
       let metadata = TimerMetadata(presetID: presetId, icon: icon, colorID: colorID, alarmID: id.uuidString.lowercased())
       let attributes = AlarmAttributes(presentation: presentation, metadata: metadata, tintColor: tint(colorID))
-      let config = AlarmManager.AlarmConfiguration.timer(duration: TimeInterval(durationSec), attributes: attributes)
+      let config = AlarmManager.AlarmConfiguration.timer(
+        duration: TimeInterval(durationSec),
+        attributes: attributes,
+        sound: moduleHasBundledSound(sound) ? .named("\(sound).wav") : .default
+      )
       do {
         _ = try await AlarmManager.shared.schedule(id: id, configuration: config)
         NSLog("[Imasugu] scheduleTimer OK id=%@", id.uuidString)
