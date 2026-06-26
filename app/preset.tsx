@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, Text, ScrollView, Switch, Alert, Pressable } from 'react-native';
+import { View, Text, ScrollView, Alert, Pressable } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAudioPlayer } from 'expo-audio';
@@ -14,6 +14,7 @@ import { ColorPicker, IconPicker } from '../src/ui/components/Pickers';
 import { Button } from '../src/ui/components/Button';
 import { PresetTileVisual } from '../src/ui/components/PresetTile';
 import { SheetHeader, SectionLabel } from '../src/ui/components/common';
+import { ClockIcon, DropletIcon, ShapesIcon, BellGlyph } from '../src/ui/icons/ui';
 import { haptics } from '../src/ui/haptics';
 import { t } from '../src/i18n';
 
@@ -33,7 +34,8 @@ export default function PresetScreen() {
   const [icon, setIcon] = React.useState(existing?.icon ?? DEFAULT_ICON_ID);
   const [color, setColor] = React.useState(existing?.color ?? DEFAULT_COLOR_ID);
   const [sound, setSound] = React.useState(existing?.sound ?? 'default');
-  const [inWidget, setInWidget] = React.useState(existing?.inWidget ?? false);
+  // ウィジェット表示はメイン画面のドラッグで切り替える（編集画面にはトグルを置かない）。
+  const inWidget = existing?.inWidget ?? false;
   const [dialActive, setDialActive] = React.useState(false);
 
   // 音プレビュー（'default' は iPhone 標準音なので試聴対象外）。
@@ -139,21 +141,30 @@ export default function PresetScreen() {
         </View>
 
         <View style={{ marginBottom: spacing.xl }}>
+          <SectionLabel icon={<ClockIcon color={c.textSecondary} size={15} />}>
+            {s.preset.duration}
+          </SectionLabel>
           <WheelPicker valueSec={durationSec} onChange={setDurationSec} onActiveChange={setDialActive} />
         </View>
 
         <View style={{ marginBottom: spacing.xl }}>
-          <SectionLabel>{s.preset.color}</SectionLabel>
+          <SectionLabel icon={<DropletIcon color={c.textSecondary} size={15} />}>
+            {s.preset.color}
+          </SectionLabel>
           <ColorPicker value={color} onChange={setColor} />
         </View>
 
         <View style={{ marginBottom: spacing.xl }}>
-          <SectionLabel>{s.preset.icon}</SectionLabel>
+          <SectionLabel icon={<ShapesIcon color={c.textSecondary} size={15} />}>
+            {s.preset.icon}
+          </SectionLabel>
           <IconPicker value={icon} color={color} onChange={setIcon} />
         </View>
 
         <View style={{ marginBottom: spacing.xl }}>
-          <SectionLabel>{s.preset.sound}</SectionLabel>
+          <SectionLabel icon={<BellGlyph color={c.textSecondary} size={15} />}>
+            {s.preset.sound}
+          </SectionLabel>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
             {SOUND_IDS.map((id) => {
               const selected = sound === id;
@@ -184,23 +195,6 @@ export default function PresetScreen() {
               );
             })}
           </View>
-        </View>
-
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            backgroundColor: c.surface,
-            borderRadius: radius.md,
-            padding: spacing.lg,
-            marginBottom: spacing.xl,
-          }}
-        >
-          <Text style={{ color: c.textPrimary, fontSize: 15, fontWeight: '600' }}>
-            {s.preset.showInWidget}
-          </Text>
-          <Switch value={inWidget} onValueChange={setInWidget} />
         </View>
 
         {isEdit && (

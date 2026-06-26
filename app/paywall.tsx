@@ -16,6 +16,8 @@ export default function PaywallScreen() {
   const { c, spacing, radius } = useTheme();
   const s = t();
   const price = useProStore((st) => st.price);
+  const isPro = useProStore((st) => st.isPro);
+  const supportPrice = useProStore((st) => st.supportPrice);
   const [loading, setLoading] = React.useState(false);
 
   const features = [
@@ -51,6 +53,16 @@ export default function PaywallScreen() {
       router.back();
     } else {
       Alert.alert(s.pro.title, s.pro.notRestored);
+    }
+  };
+
+  const support = async () => {
+    const r = await useProStore.getState().support();
+    if (r === 'purchased') {
+      haptics.start();
+      Alert.alert(s.pro.title, s.settings.supportThanks);
+    } else if (r === 'failed') {
+      Alert.alert(s.pro.title, s.pro.purchaseFailed);
     }
   };
 
@@ -127,28 +139,47 @@ export default function PaywallScreen() {
 
         <View style={{ flex: 1 }} />
 
-        {price && (
-          <Text style={{ color: c.textPrimary, fontSize: 22, fontWeight: '800', textAlign: 'center', marginBottom: 2 }}>
-            {price}
-          </Text>
+        {isPro ? (
+          <View style={{ alignItems: 'center', marginBottom: spacing.md }}>
+            <Text style={{ color: c.accent, fontSize: 17, fontWeight: '900' }}>{s.pro.active}</Text>
+            <Text style={{ color: c.textSecondary, fontSize: 13, fontWeight: '600', marginTop: 2 }}>
+              {s.pro.activeSub}
+            </Text>
+          </View>
+        ) : (
+          <>
+            {price && (
+              <Text style={{ color: c.textPrimary, fontSize: 22, fontWeight: '800', textAlign: 'center', marginBottom: 2 }}>
+                {price}
+              </Text>
+            )}
+            <Text style={{ color: c.textTertiary, fontSize: 12, fontWeight: '600', textAlign: 'center', marginBottom: spacing.md }}>
+              {s.pro.oneTime}
+            </Text>
+            <Button title={s.pro.cta} onPress={purchase} loading={loading} />
+            <Pressable
+              onPress={restore}
+              disabled={restoring}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel={s.pro.restore}
+              accessibilityState={{ busy: restoring }}
+              style={{ alignItems: 'center', marginTop: spacing.lg, opacity: restoring ? 0.5 : 1 }}
+            >
+              <Text style={{ color: c.textSecondary, fontSize: 14, fontWeight: '600' }}>
+                {restoring ? s.pro.restoring : s.pro.restore}
+              </Text>
+            </Pressable>
+          </>
         )}
-        <Text style={{ color: c.textTertiary, fontSize: 12, fontWeight: '600', textAlign: 'center', marginBottom: spacing.md }}>
-          {s.pro.oneTime}
-        </Text>
-        <Button title={s.pro.cta} onPress={purchase} loading={loading} />
-        <Pressable
-          onPress={restore}
-          disabled={restoring}
-          hitSlop={10}
-          accessibilityRole="button"
-          accessibilityLabel={s.pro.restore}
-          accessibilityState={{ busy: restoring }}
-          style={{ alignItems: 'center', marginTop: spacing.lg, opacity: restoring ? 0.5 : 1 }}
-        >
-          <Text style={{ color: c.textSecondary, fontSize: 14, fontWeight: '600' }}>
-            {restoring ? s.pro.restoring : s.pro.restore}
-          </Text>
-        </Pressable>
+
+        <View style={{ marginTop: spacing.lg }}>
+          <Button
+            title={supportPrice ? `${s.settings.support} ${supportPrice}` : s.settings.support}
+            variant="secondary"
+            onPress={() => void support()}
+          />
+        </View>
 
         <View style={{ flexDirection: 'row', justifyContent: 'center', gap: spacing.lg, marginTop: spacing.lg }}>
           <Pressable onPress={() => Linking.openURL(PRIVACY_URL)} hitSlop={8}>

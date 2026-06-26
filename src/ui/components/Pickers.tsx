@@ -74,7 +74,7 @@ export function IconPicker({
   const { c, radius, spacing } = useTheme();
   const def = colorOf(color);
   return (
-    <ScrollView style={{ maxHeight: 320 }} showsVerticalScrollIndicator={false}>
+    <ScrollView style={{ maxHeight: 320 }} showsVerticalScrollIndicator={true} indicatorStyle="default">
       {ICON_CATEGORIES.map((cat) => (
         <View key={cat.key} style={{ marginBottom: spacing.lg }}>
           <Text

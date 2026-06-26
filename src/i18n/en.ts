@@ -22,6 +22,7 @@ export const en: Strings = {
     editDone: 'Done',
     editExit: 'Finish editing',
     settings: 'Settings',
+    menu: 'Menu',
   },
 
   preset: {
@@ -81,12 +82,52 @@ export const en: Strings = {
     restore: 'Restore purchase',
     support: 'Support the developer',
     supportThanks: 'Thank you for your support!',
+    replayTutorial: 'Replay the tutorial',
+    faq: 'FAQ',
     about: 'About',
     version: 'Version',
     contact: 'Feedback & requests',
     review: 'Rate & support',
     privacy: 'Privacy Policy',
     terms: 'Terms of Use',
+  },
+
+  faq: {
+    title: 'FAQ',
+    items: [
+      {
+        q: 'Does it ring in Silent or Focus mode?',
+        a: 'Yes. It uses AlarmKit, so it alerts you with sound and screen even in Silent or Focus mode (alert permission required).',
+      },
+      {
+        q: 'How do I add the widget?',
+        a: 'Long-press an empty spot on your Home Screen → "+" → choose "Imasugu Timer" to add it.',
+      },
+      {
+        q: 'How do I show a preset on the widget?',
+        a: 'On the main screen, drag the preset into the lower "On widget" area.',
+      },
+      {
+        q: 'Can I run multiple timers at once?',
+        a: 'Yes. You can run as many as you like simultaneously.',
+      },
+      {
+        q: 'Can each preset have its own sound?',
+        a: 'Yes. Choose the "Alert sound" in the preset edit screen.',
+      },
+      {
+        q: 'What does Pro do?',
+        a: 'It removes the limit on how many presets you can show on the widget (unlimited).',
+      },
+      {
+        q: 'Where is my data stored?',
+        a: 'Everything stays on your device and is never sent anywhere (no data collected).',
+      },
+      {
+        q: 'What happens if I swipe the notification away?',
+        a: 'The alarm still rings (an iOS behavior). To stop it, use the "Stop" button on the notification or control it in the app.',
+      },
+    ],
   },
 
   sounds: {

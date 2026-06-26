@@ -14,7 +14,7 @@ import { RunningTimerRow } from '../src/ui/components/RunningTimerRow';
 import { Snackbar } from '../src/ui/components/Snackbar';
 import { PressableScale } from '../src/ui/components/PressableScale';
 import { Banner } from '../src/ui/components/common';
-import { GearIcon, PlusIcon } from '../src/ui/icons/ui';
+import { MenuIcon, PlusIcon } from '../src/ui/icons/ui';
 import { haptics } from '../src/ui/haptics';
 import { enterItem, exitItem, listLayout } from '../src/ui/motion';
 import { openAppSettings } from '../src/native/settings';
@@ -128,14 +128,6 @@ export default function MainScreen() {
         ) : (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xl }}>
             <Pressable
-              onPress={() => router.push('/settings')}
-              hitSlop={12}
-              accessibilityRole="button"
-              accessibilityLabel={s.main.settings}
-            >
-              <GearIcon color={c.textPrimary} size={23} />
-            </Pressable>
-            <Pressable
               onPress={() => {
                 setEditMode(true);
                 haptics.light();
@@ -145,6 +137,14 @@ export default function MainScreen() {
               accessibilityLabel={s.main.edit}
             >
               <Text style={{ color: c.accent, fontSize: 16, fontWeight: '700' }}>{s.main.edit}</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => router.push('/settings')}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel={s.main.menu}
+            >
+              <MenuIcon color={c.textPrimary} size={24} />
             </Pressable>
           </View>
         )}

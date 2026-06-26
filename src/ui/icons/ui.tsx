@@ -64,3 +64,30 @@ export const BellGlyph = wrap(() => (
     <Line x1="12" y1="3" x2="12" y2="5" />
   </>
 ));
+
+export const MenuIcon = wrap(() => (
+  <>
+    <Line x1="4" y1="7" x2="20" y2="7" />
+    <Line x1="4" y1="12" x2="20" y2="12" />
+    <Line x1="4" y1="17" x2="20" y2="17" />
+  </>
+), 2.1);
+
+export const ClockIcon = wrap(() => (
+  <>
+    <Circle cx="12" cy="12" r="8" />
+    <Path d="M12 7.6V12l3 1.8" />
+  </>
+));
+
+export const DropletIcon = wrap(() => (
+  <Path d="M12 3.5c3.4 3.9 5.4 6.5 5.4 9.3a5.4 5.4 0 0 1-10.8 0C6.6 10 8.6 7.4 12 3.5z" />
+));
+
+export const ShapesIcon = wrap(() => (
+  <>
+    <Rect x="4" y="4.5" width="6.8" height="6.8" rx="1.6" />
+    <Circle cx="16.6" cy="7.9" r="3.4" />
+    <Path d="M8 20.2l-3.4-6h6.8z" />
+  </>
+));

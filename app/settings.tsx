@@ -22,21 +22,10 @@ export default function SettingsScreen() {
 
   const isPro = useProStore((st) => st.isPro);
   const hapticsEnabled = useSettingsStore((st) => st.hapticsEnabled);
-  const supportPrice = useProStore((st) => st.supportPrice);
 
   const restore = async () => {
     const ok = await useProStore.getState().restore();
     Alert.alert(ok ? s.pro.restored : s.pro.title, ok ? '' : s.pro.notRestored);
-  };
-
-  const support = async () => {
-    const r = await useProStore.getState().support();
-    if (r === 'purchased') {
-      haptics.start();
-      Alert.alert(s.pro.title, s.settings.supportThanks);
-    } else if (r === 'failed') {
-      Alert.alert(s.pro.title, s.pro.purchaseFailed);
-    }
   };
 
   return (
@@ -104,7 +93,10 @@ export default function SettingsScreen() {
 
         <SectionLabel>{s.settings.pro}</SectionLabel>
         {isPro && (
-          <View
+          <Pressable
+            onPress={() => router.push('/paywall')}
+            accessibilityRole="button"
+            accessibilityLabel={s.pro.active}
             style={{
               flexDirection: 'row',
               alignItems: 'center',
@@ -131,14 +123,16 @@ export default function SettingsScreen() {
               <Text style={{ color: c.textPrimary, fontSize: 15, fontWeight: '700' }}>{s.pro.active}</Text>
               <Text style={{ color: c.textSecondary, fontSize: 12, fontWeight: '500' }}>{s.pro.activeSub}</Text>
             </View>
-          </View>
+            <ChevronIcon color={c.textTertiary} size={18} />
+          </Pressable>
         )}
         <View style={{ marginBottom: spacing.md }}>
           <Button title={s.settings.restore} variant="secondary" onPress={restore} />
         </View>
         <View style={{ backgroundColor: c.surface, borderRadius: radius.lg, marginBottom: spacing.xl }}>
           <Row first label={s.settings.review} chevron onPress={() => void openWriteReview()} />
-          <Row label={s.settings.support} value={supportPrice ?? undefined} chevron onPress={() => void support()} />
+          <Row label={s.settings.replayTutorial} chevron onPress={() => router.push('/onboarding')} />
+          <Row label={s.settings.faq} chevron onPress={() => router.push('/faq')} />
         </View>
 
         <SectionLabel>{s.settings.about}</SectionLabel>

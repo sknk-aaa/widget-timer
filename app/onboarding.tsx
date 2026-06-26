@@ -40,7 +40,9 @@ export default function OnboardingScreen() {
 
   const finish = () => {
     useSettingsStore.getState().completeOnboarding();
-    router.replace('/');
+    // 設定からの再表示は戻る、初回（スタックなし）はメインへ。
+    if (router.canGoBack()) router.back();
+    else router.replace('/');
   };
 
   const requestPermission = async () => {

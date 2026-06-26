@@ -38,21 +38,28 @@ export function SheetHeader({
   );
 }
 
-export function SectionLabel({ children }: { children: React.ReactNode }) {
+export function SectionLabel({
+  children,
+  icon,
+}: {
+  children: React.ReactNode;
+  icon?: React.ReactNode;
+}) {
   const { c, spacing } = useTheme();
-  return (
-    <Text
-      style={{
-        color: c.textSecondary,
-        fontSize: 12,
-        fontWeight: '700',
-        letterSpacing: 0.4,
-        marginBottom: spacing.sm,
-      }}
-    >
+  const label = (
+    <Text style={{ color: c.textSecondary, fontSize: 12, fontWeight: '700', letterSpacing: 0.4 }}>
       {children}
     </Text>
   );
+  if (icon) {
+    return (
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: spacing.sm }}>
+        {icon}
+        {label}
+      </View>
+    );
+  }
+  return <View style={{ marginBottom: spacing.sm }}>{label}</View>;
 }
 
 export function Banner({
