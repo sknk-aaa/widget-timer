@@ -42,11 +42,16 @@ private func tint(_ id: String) -> Color {
   case "red": return Color(red: 0.898, green: 0.282, blue: 0.302)
   case "orange": return Color(red: 0.925, green: 0.416, blue: 0.035)
   case "amber": return Color(red: 0.737, green: 0.455, blue: 0.0)
+  case "lime": return Color(red: 0.435, green: 0.659, blue: 0.059)
   case "green": return Color(red: 0.118, green: 0.620, blue: 0.400)
   case "teal": return Color(red: 0.043, green: 0.557, blue: 0.557)
+  case "cyan": return Color(red: 0.082, green: 0.576, blue: 0.753)
   case "blue": return Color(red: 0.231, green: 0.510, blue: 0.965)
   case "indigo": return Color(red: 0.388, green: 0.400, blue: 0.945)
+  case "violet": return Color(red: 0.545, green: 0.361, blue: 0.965)
+  case "fuchsia": return Color(red: 0.788, green: 0.169, blue: 0.808)
   case "pink": return Color(red: 0.859, green: 0.310, blue: 0.592)
+  case "brown": return Color(red: 0.541, green: 0.353, blue: 0.169)
   default: return Color(red: 0.231, green: 0.510, blue: 0.965)
   }
 }

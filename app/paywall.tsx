@@ -1,11 +1,11 @@
 import * as React from 'react';
-import { View, Text, ScrollView, Pressable, Alert, Linking } from 'react-native';
+import { View, Text, Image, ScrollView, Pressable, Alert, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProStore } from '../src/store/pro';
 import { useTheme } from '../src/ui/theme';
 import { Button } from '../src/ui/components/Button';
-import { CheckIcon, StarIcon } from '../src/ui/icons/ui';
+import { CheckIcon } from '../src/ui/icons/ui';
 import { haptics } from '../src/ui/haptics';
 import { PRIVACY_URL, TERMS_URL } from '../src/domain/links';
 import { t } from '../src/i18n';
@@ -19,13 +19,13 @@ export default function PaywallScreen() {
   const isPro = useProStore((st) => st.isPro);
   const supportPrice = useProStore((st) => st.supportPrice);
   const [loading, setLoading] = React.useState(false);
+  const [restoring, setRestoring] = React.useState(false);
 
-  const features = [
+  const benefits = [
     { title: s.pro.featureWidget, sub: s.pro.featureWidgetSub },
     { title: s.pro.featureSupport, sub: s.pro.featureSupportSub },
   ];
-
-  const [restoring, setRestoring] = React.useState(false);
+  const pills = [s.pro.pillOnce, s.pro.pillNoAds, s.pro.pillNoData];
 
   const purchase = async () => {
     if (loading) return;
@@ -40,7 +40,6 @@ export default function PaywallScreen() {
     } else if (result === 'failed') {
       Alert.alert(s.pro.title, s.pro.purchaseFailed);
     }
-    // cancelled はユーザー操作なので何も出さない
   };
 
   const restore = async () => {
@@ -75,6 +74,7 @@ export default function PaywallScreen() {
           paddingBottom: insets.bottom + spacing.lg,
           flexGrow: 1,
         }}
+        showsVerticalScrollIndicator={false}
       >
         <Pressable
           onPress={() => router.back()}
@@ -86,35 +86,60 @@ export default function PaywallScreen() {
           <Text style={{ color: c.textSecondary, fontSize: 16, fontWeight: '600' }}>{s.common.close}</Text>
         </Pressable>
 
-        <View style={{ alignItems: 'center', marginBottom: spacing.xxl, marginTop: spacing.lg }}>
+        {/* ヒーロー */}
+        <View style={{ alignItems: 'center', marginBottom: spacing.xl, marginTop: spacing.lg }}>
           <View
             style={{
-              width: 76,
-              height: 76,
-              borderRadius: 23,
-              backgroundColor: c.accent,
-              alignItems: 'center',
-              justifyContent: 'center',
-              shadowColor: c.accent,
-              shadowOpacity: 0.5,
-              shadowRadius: 16,
-              shadowOffset: { width: 0, height: 8 },
+              borderRadius: 24,
               marginBottom: spacing.lg,
+              shadowColor: c.accent,
+              shadowOpacity: 0.45,
+              shadowRadius: 22,
+              shadowOffset: { width: 0, height: 10 },
             }}
           >
-            <StarIcon color="#FFFFFF" size={38} />
+            <Image
+              source={require('../assets/icon.png')}
+              style={{ width: 92, height: 92, borderRadius: 24 }}
+            />
           </View>
-          <Text style={{ color: c.textPrimary, fontSize: 25, fontWeight: '900', letterSpacing: 0.2 }}>
-            {s.pro.title}
+          <Text
+            style={{
+              color: c.textPrimary,
+              fontSize: 26,
+              fontWeight: '900',
+              letterSpacing: 0.2,
+              textAlign: 'center',
+            }}
+          >
+            {s.pro.headline}
           </Text>
-          <Text style={{ color: c.textSecondary, fontSize: 14, fontWeight: '600', marginTop: 5, textAlign: 'center' }}>
+          <Text
+            style={{
+              color: c.textSecondary,
+              fontSize: 14,
+              fontWeight: '600',
+              marginTop: 6,
+              textAlign: 'center',
+              lineHeight: 20,
+            }}
+          >
             {s.pro.subtitle}
           </Text>
         </View>
 
-        <View style={{ gap: spacing.lg, marginBottom: spacing.xxl }}>
-          {features.map((f) => (
-            <View key={f.title} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+        {/* 特典カード */}
+        <View
+          style={{
+            backgroundColor: c.surface,
+            borderRadius: radius.lg,
+            padding: spacing.lg,
+            gap: spacing.lg,
+            marginBottom: spacing.lg,
+          }}
+        >
+          {benefits.map((b) => (
+            <View key={b.title} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md }}>
               <View
                 style={{
                   width: 30,
@@ -123,22 +148,41 @@ export default function PaywallScreen() {
                   backgroundColor: c.accent,
                   alignItems: 'center',
                   justifyContent: 'center',
+                  marginTop: 1,
                 }}
               >
                 <CheckIcon color="#FFFFFF" size={18} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ color: c.textPrimary, fontSize: 16, fontWeight: '700' }}>{f.title}</Text>
-                <Text style={{ color: c.textSecondary, fontSize: 13, fontWeight: '500', marginTop: 1 }}>
-                  {f.sub}
+                <Text style={{ color: c.textPrimary, fontSize: 16, fontWeight: '800' }}>{b.title}</Text>
+                <Text style={{ color: c.textSecondary, fontSize: 13, fontWeight: '500', marginTop: 2, lineHeight: 18 }}>
+                  {b.sub}
                 </Text>
               </View>
             </View>
           ))}
         </View>
 
-        <View style={{ flex: 1 }} />
+        {/* 信頼ピル */}
+        <View style={{ flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.lg }}>
+          {pills.map((p) => (
+            <View
+              key={p}
+              style={{
+                backgroundColor: c.surfaceAlt,
+                borderRadius: 999,
+                paddingVertical: 6,
+                paddingHorizontal: spacing.md,
+              }}
+            >
+              <Text style={{ color: c.textSecondary, fontSize: 12, fontWeight: '700' }}>{p}</Text>
+            </View>
+          ))}
+        </View>
 
+        <View style={{ flex: 1, minHeight: spacing.lg }} />
+
+        {/* 購入 / Pro有効 */}
         {isPro ? (
           <View style={{ alignItems: 'center', marginBottom: spacing.md }}>
             <Text style={{ color: c.accent, fontSize: 17, fontWeight: '900' }}>{s.pro.active}</Text>
@@ -149,11 +193,11 @@ export default function PaywallScreen() {
         ) : (
           <>
             {price && (
-              <Text style={{ color: c.textPrimary, fontSize: 22, fontWeight: '800', textAlign: 'center', marginBottom: 2 }}>
+              <Text style={{ color: c.textPrimary, fontSize: 28, fontWeight: '900', textAlign: 'center', marginBottom: 2 }}>
                 {price}
               </Text>
             )}
-            <Text style={{ color: c.textTertiary, fontSize: 12, fontWeight: '600', textAlign: 'center', marginBottom: spacing.md }}>
+            <Text style={{ color: c.textTertiary, fontSize: 12, fontWeight: '700', textAlign: 'center', marginBottom: spacing.md }}>
               {s.pro.oneTime}
             </Text>
             <Button title={s.pro.cta} onPress={purchase} loading={loading} />
@@ -164,7 +208,7 @@ export default function PaywallScreen() {
               accessibilityRole="button"
               accessibilityLabel={s.pro.restore}
               accessibilityState={{ busy: restoring }}
-              style={{ alignItems: 'center', marginTop: spacing.lg, opacity: restoring ? 0.5 : 1 }}
+              style={{ alignItems: 'center', marginTop: spacing.md, opacity: restoring ? 0.5 : 1 }}
             >
               <Text style={{ color: c.textSecondary, fontSize: 14, fontWeight: '600' }}>
                 {restoring ? s.pro.restoring : s.pro.restore}
@@ -173,6 +217,7 @@ export default function PaywallScreen() {
           </>
         )}
 
+        {/* 応援（2つ目の選択肢） */}
         <View style={{ marginTop: spacing.lg }}>
           <Button
             title={supportPrice ? `${s.settings.support} ${supportPrice}` : s.settings.support}
