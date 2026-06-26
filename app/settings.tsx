@@ -8,7 +8,19 @@ import { useSettingsStore } from '../src/store/settings';
 import { useTheme } from '../src/ui/theme';
 import { SheetHeader, SectionLabel } from '../src/ui/components/common';
 import { Button } from '../src/ui/components/Button';
-import { CheckIcon, ChevronIcon, StarIcon } from '../src/ui/icons/ui';
+import {
+  CheckIcon,
+  ChevronIcon,
+  StarIcon,
+  ShareIcon,
+  GridIcon,
+  HelpIcon,
+  VibrationIcon,
+  InfoIcon,
+  ChatIcon,
+  DocIcon,
+  LockIcon,
+} from '../src/ui/icons/ui';
 import { haptics } from '../src/ui/haptics';
 import { PRIVACY_URL, TERMS_URL, CONTACT_URL, APP_STORE_URL } from '../src/domain/links';
 import { openWriteReview } from '../src/native/review';
@@ -84,7 +96,12 @@ export default function SettingsScreen() {
             marginBottom: spacing.xl,
           }}
         >
-          <Text style={{ color: c.textPrimary, fontSize: 15, fontWeight: '500' }}>{s.settings.haptics}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, flex: 1 }}>
+            <MenuIcon color="#8B5CF6">
+              <VibrationIcon color="#FFFFFF" size={16} />
+            </MenuIcon>
+            <Text style={{ color: c.textPrimary, fontSize: 15, fontWeight: '500' }}>{s.settings.haptics}</Text>
+          </View>
           <Switch
             value={hapticsEnabled}
             onValueChange={(v) => {
@@ -136,20 +153,78 @@ export default function SettingsScreen() {
           <Button title={s.settings.restore} variant="secondary" onPress={restore} />
         </View>
         <View style={{ backgroundColor: c.surface, borderRadius: radius.lg, marginBottom: spacing.xl }}>
-          <Row first label={s.settings.review} chevron onPress={() => void openWriteReview()} />
-          <Row label={s.settings.share} chevron onPress={share} />
-          <Row label={s.how.add} chevron onPress={() => router.push({ pathname: '/how', params: { video: 'add' } })} />
-          <Row label={s.settings.faq} chevron onPress={() => router.push('/faq')} />
+          <Row
+            first
+            icon={<MenuIcon color="#BC7400"><StarIcon color="#FFFFFF" size={16} /></MenuIcon>}
+            label={s.settings.review}
+            chevron
+            onPress={() => void openWriteReview()}
+          />
+          <Row
+            icon={<MenuIcon color="#3B82F6"><ShareIcon color="#FFFFFF" size={16} /></MenuIcon>}
+            label={s.settings.share}
+            chevron
+            onPress={share}
+          />
+          <Row
+            icon={<MenuIcon color="#FF6A1A"><GridIcon color="#FFFFFF" size={16} /></MenuIcon>}
+            label={s.how.add}
+            chevron
+            onPress={() => router.push({ pathname: '/how', params: { video: 'add' } })}
+          />
+          <Row
+            icon={<MenuIcon color="#0B8E8E"><HelpIcon color="#FFFFFF" size={16} /></MenuIcon>}
+            label={s.settings.faq}
+            chevron
+            onPress={() => router.push('/faq')}
+          />
         </View>
 
         <SectionLabel>{s.settings.about}</SectionLabel>
         <View style={{ backgroundColor: c.surface, borderRadius: radius.lg }}>
-          <Row first label={s.settings.version} value={Constants.expoConfig?.version ?? '1.0.0'} />
-          <Row label={s.settings.contact} chevron onPress={() => Linking.openURL(CONTACT_URL)} />
-          <Row label={s.settings.privacy} chevron onPress={() => Linking.openURL(PRIVACY_URL)} />
-          <Row label={s.settings.terms} chevron onPress={() => Linking.openURL(TERMS_URL)} />
+          <Row
+            first
+            icon={<MenuIcon color="#8A8A8E"><InfoIcon color="#FFFFFF" size={16} /></MenuIcon>}
+            label={s.settings.version}
+            value={Constants.expoConfig?.version ?? '1.0.0'}
+          />
+          <Row
+            icon={<MenuIcon color="#1E9E66"><ChatIcon color="#FFFFFF" size={16} /></MenuIcon>}
+            label={s.settings.contact}
+            chevron
+            onPress={() => Linking.openURL(CONTACT_URL)}
+          />
+          <Row
+            icon={<MenuIcon color="#6366F1"><LockIcon color="#FFFFFF" size={16} /></MenuIcon>}
+            label={s.settings.privacy}
+            chevron
+            onPress={() => Linking.openURL(PRIVACY_URL)}
+          />
+          <Row
+            icon={<MenuIcon color="#8A8A8E"><DocIcon color="#FFFFFF" size={16} /></MenuIcon>}
+            label={s.settings.terms}
+            chevron
+            onPress={() => Linking.openURL(TERMS_URL)}
+          />
         </View>
       </ScrollView>
+    </View>
+  );
+}
+
+function MenuIcon({ color, children }: { color: string; children: React.ReactNode }) {
+  return (
+    <View
+      style={{
+        width: 28,
+        height: 28,
+        borderRadius: 8,
+        backgroundColor: color,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      {children}
     </View>
   );
 }
@@ -160,12 +235,14 @@ function Row({
   chevron,
   onPress,
   first,
+  icon,
 }: {
   label: string;
   value?: string;
   chevron?: boolean;
   onPress?: () => void;
   first?: boolean;
+  icon?: React.ReactNode;
 }) {
   const { c, spacing } = useTheme();
   return (
@@ -176,13 +253,16 @@ function Row({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingVertical: spacing.lg,
+        paddingVertical: spacing.md,
         paddingHorizontal: spacing.lg,
         borderTopWidth: first ? 0 : 1,
         borderTopColor: c.hairline,
       }}
     >
-      <Text style={{ color: c.textPrimary, fontSize: 15, fontWeight: '500' }}>{label}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, flex: 1 }}>
+        {icon}
+        <Text style={{ color: c.textPrimary, fontSize: 15, fontWeight: '500' }}>{label}</Text>
+      </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
         {value != null && (
           <Text style={{ color: c.textSecondary, fontSize: 15, fontVariant: ['tabular-nums'] }}>

@@ -98,3 +98,56 @@ export const ShapesIcon = wrap(() => (
     <Path d="M8 20.2l-3.4-6h6.8z" />
   </>
 ));
+
+// 設定メニュー用の小アイコン群（白グリフ＋カラー角丸に乗せる前提）。
+export const ShareIcon = wrap(() => (
+  <>
+    <Path d="M12 4v9.5" />
+    <Path d="M8.5 7.5L12 4l3.5 3.5" />
+    <Path d="M6.5 11.5V18a1.5 1.5 0 0 0 1.5 1.5h8a1.5 1.5 0 0 0 1.5-1.5v-6.5" />
+  </>
+));
+
+export const GridIcon = wrap(() => (
+  <>
+    <Rect x="4.5" y="4.5" width="6.2" height="6.2" rx="1.6" />
+    <Rect x="13.3" y="4.5" width="6.2" height="6.2" rx="1.6" />
+    <Rect x="4.5" y="13.3" width="6.2" height="6.2" rx="1.6" />
+    <Rect x="13.3" y="13.3" width="6.2" height="6.2" rx="1.6" />
+  </>
+));
+
+export const HelpIcon = wrap((color) => (
+  <>
+    <Circle cx="12" cy="12" r="8.5" />
+    <Path d="M9.6 9.4a2.5 2.5 0 0 1 4.8 1c0 1.6-2.1 1.9-2.4 3.1" />
+    <Circle cx="12" cy="16.6" r="0.9" fill={color} stroke="none" />
+  </>
+));
+
+export const VibrationIcon = wrap(() => (
+  <>
+    <Rect x="8.5" y="4.5" width="7" height="15" rx="2" />
+    <Path d="M5 9.5v5M19 9.5v5" />
+  </>
+));
+
+export const InfoIcon = wrap((color) => (
+  <>
+    <Circle cx="12" cy="12" r="8.5" />
+    <Path d="M12 11v5.2" />
+    <Circle cx="12" cy="7.8" r="0.9" fill={color} stroke="none" />
+  </>
+));
+
+export const ChatIcon = wrap(() => (
+  <Path d="M5 7a1.8 1.8 0 0 1 1.8-1.8h10.4A1.8 1.8 0 0 1 19 7v6.4a1.8 1.8 0 0 1-1.8 1.8H10l-3.8 3.2v-3.2H6.8A1.8 1.8 0 0 1 5 13.4z" />
+));
+
+export const DocIcon = wrap(() => (
+  <>
+    <Path d="M7 4.8h6l4 4v10.4a.8.8 0 0 1-.8.8H7.8a.8.8 0 0 1-.8-.8z" />
+    <Path d="M13 4.8V9h4" />
+    <Path d="M9.5 12.5h5M9.5 15.5h5" />
+  </>
+));
