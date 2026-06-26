@@ -16,27 +16,31 @@
 ```
 app/                 expo-router ルート（画面）
   _layout.tsx        プロバイダ / DB初期化 / 1秒クロック / モーダル定義
-  index.tsx          メイン画面（プリセット2エリア＋実行中ドック＋FAB）
-  onboarding.tsx     初回オンボーディング（3ページ）
-  preset.tsx         プリセット作成・編集シート
-  quick.tsx          今すぐタイマー（ダイヤル＋スタート）
-  settings/paywall.tsx
+  index.tsx          メイン画面（全プリセット＋ボードタブ＋実行中ドック＋FAB）
+  onboarding.tsx     初回オンボーディング（3ページ＋先頭にブランド）
+  how.tsx            ウィジェット追加方法（動画・スマホフレーム・日英）
+  preset.tsx / quick.tsx / settings.tsx / paywall.tsx / welcome-pro.tsx / faq.tsx
 src/
   domain/            型・整形・色パレット・定数・UUID
   db/                schema / client / repo / migrate（起動時DDL）
-  store/             zustand（presets, timers, pro, settings, clock, bootstrap）
+  store/             zustand（presets, boards, timers, pro, settings, clock, bootstrap）
   native/            ネイティブ抽象化（alarm/widget/liveActivity/purchases）＋ env
+  i18n/              ja/en（起動時の端末ロケールで選択）
   ui/                theme / motion / haptics / icons / components
 ```
 
 ## データモデル（SQLite）
 
-- `presets`: id, icon, color, duration_sec, in_widget(bool), sort_order
-- `running_timers`: id, preset_id?, icon, color, duration_sec, end_at(epoch ms), state(running|paused|finished), paused_remaining_sec?, created_at
+- `presets`: id, name(任意・既定空), icon, color, duration_sec, sound, in_widget(bool), sort_order
+- `running_timers`: id, preset_id?, icon, color, duration_sec, sound, end_at(epoch ms), state(running|paused|finished), paused_remaining_sec?, created_at
+- `boards`: id, name(任意), sort_order ＝ ウィジェット欄。ホームに置ける1枚に対応
+- `board_presets`: board_id, preset_id, sort_order ＝ ボード↔プリセットの多対多（順序つき。同一プリセットを複数ボードに置ける）
 - `launch_history`: id, preset_id?, duration_sec, started_at, source(app|widget|liveactivity|quick)
-- `meta`: key/value（onboarding_done, alert_sound, haptics_enabled, pro_owned, seeded）
+- `meta`: key/value（onboarding_done, alert_sound, haptics_enabled, seeded 等）
 
-プリセットは**名前を持たない**（アイコン＋色で識別）。実行中タイマーは起動時点の icon/color/duration を**スナップショット**で保持し、元プリセットの削除・変更に影響されない。
+プリセットは**任意の表示名**を持てる（既定は空。空ならアイコン＋色のみで識別、名前があればタイルにも表示）。アラート音はプリセットごとに選べる。実行中タイマーは起動時点の icon/color/duration/sound を**スナップショット**で保持し、元プリセットの削除・変更に影響されない。
+
+**ボード（欄）モデル**: 「全てのプリセット」（マスター・常に全件）＋複数ボード。マスターからボードへドラッグで**追加**（マスターは保持＝`board_presets` に行追加）。各ホームウィジェットは構成可能ウィジェット（`SelectBoardIntent`／`BoardEntity`）で表示ボードを選ぶ。無料=1ボード×3プリセット（`FREE_BOARDS`/`FREE_PRESETS_PER_BOARD`）、Pro=ボード/プリセット無制限。
 
 ## 主要フロー
 
@@ -70,4 +74,4 @@ src/
 
 ## スコープ
 
-製品スコープ・非対象は SPEC.md §1/§8 を参照。**分析画面はv1で不採用**（SPEC §3.9 は対象外に変更）。Pro 特典はウィジェット枠の無制限のみ（`domain/types.ts` の `FREE_WIDGET_SLOTS`）。時間入力はホイールピッカー（`WheelPicker`/`ClockWheel`）。
+製品スコープ・非対象は SPEC.md §1/§8 を参照。**分析画面はv1で不採用**（SPEC §3.9 は対象外に変更）。Pro 特典はボード/プリセットの無制限（`domain/types.ts` の `FREE_BOARDS`/`FREE_PRESETS_PER_BOARD`）。時間入力はホイールピッカー（`WheelPicker`/`ClockWheel`）。日英2言語（`src/i18n`）。

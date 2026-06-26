@@ -1,8 +1,8 @@
 # 今すぐタイマー
 
-ウィジェットからワンタップで起動できる iOS 専用の相対カウントダウンタイマー。AlarmKit で消音・集中モード中でも確実に鳴らし、ホーム画面ウィジェットとロック画面 Live Activity から操作できる。買い切り Pro。
+ウィジェットからワンタップで起動できる iOS 専用の相対カウントダウンタイマー（英語名 **Tappri**）。AlarmKit で消音・集中モード中でも確実に鳴り、ホーム/ロック画面のウィジェットから起動。プリセットは複数のボード（欄）に振り分けでき、ウィジェットごとに表示ボードを選べる。買い切り Pro。
 
-- **対応**: iOS 26+ / iPhone のみ / 日本語
+- **対応**: iOS 26+ / iPhone のみ / 日本語・英語
 - **技術**: Expo (React Native) + Drizzle/expo-sqlite + Zustand、ネイティブは AlarmKit / WidgetKit / ActivityKit / StoreKit 2
 
 ## 開発
