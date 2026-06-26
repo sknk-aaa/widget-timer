@@ -6,6 +6,7 @@
     "babel-preset-expo": "~54.0.10",
     "drizzle-orm": "^0.45.2",
     "expo": "^54.0.0",
+    "expo-audio": "~1.1.1",
     "expo-build-properties": "~1.0.10",
     "expo-constants": "~18.0.13",
     "expo-haptics": "~15.0.8",
