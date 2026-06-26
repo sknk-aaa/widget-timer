@@ -27,9 +27,12 @@ struct PresetProvider: AppIntentTimelineProvider {
 
     // 欄が未選択（設置直後）なら先頭の欄にフォールバック。
     private func resolve(_ configuration: SelectBoardIntent?) -> [SharedPreset] {
-        let boardId = configuration?.board?.id ?? Shared.loadBoards().first?.id
-        guard let boardId else { return [] }
-        return Shared.presets(forBoard: boardId)
+        let allBoards = Shared.loadBoards()
+        let boardId = configuration?.board?.id ?? allBoards.first?.id
+        let result = boardId.map { Shared.presets(forBoard: $0) } ?? []
+        NSLog("[ImasuguWidget] resolve board=%@ boardsLoaded=%d presets=%d",
+              boardId ?? "nil", allBoards.count, result.count)
+        return result
     }
 }
 

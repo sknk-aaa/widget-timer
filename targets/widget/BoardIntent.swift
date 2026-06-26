@@ -25,7 +25,10 @@ struct BoardEntity: AppEntity {
 
 struct BoardQuery: EntityQuery {
     func entities(for identifiers: [String]) async throws -> [BoardEntity] {
-        boards().filter { identifiers.contains($0.id) }
+        // 選択済みのIDは必ず entity に解決する（一覧に見つからなくても id を保持）。
+        // これを取りこぼすと configuration.board が nil になり、既定の先頭欄へ戻ってしまう。
+        let all = boards()
+        return identifiers.map { id in all.first(where: { $0.id == id }) ?? BoardEntity(id: id, name: "") }
     }
 
     func suggestedEntities() async throws -> [BoardEntity] {

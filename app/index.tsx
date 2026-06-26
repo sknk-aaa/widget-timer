@@ -233,6 +233,25 @@ export default function MainScreen() {
           </View>
         )}
 
+        {sortedTimers.length > 0 && (
+          <View style={{ marginBottom: spacing.xl, gap: spacing.md }}>
+            {sortedTimers.map((timer) => (
+              <Animated.View key={timer.id} entering={enterItem} exiting={exitItem} layout={listLayout}>
+                <RunningTimerRow
+                  timer={timer}
+                  onPause={() => useTimersStore.getState().pause(timer.id)}
+                  onResume={() => useTimersStore.getState().resume(timer.id)}
+                  onCancel={() => {
+                    haptics.remove();
+                    void useTimersStore.getState().cancel(timer.id);
+                  }}
+                  onDismiss={() => useTimersStore.getState().dismiss(timer.id)}
+                />
+              </Animated.View>
+            ))}
+          </View>
+        )}
+
         <PresetBoard
           boards={boards}
           currentBoardId={currentBoardId}
@@ -270,30 +289,6 @@ export default function MainScreen() {
           >
             {s.main.dragHint}
           </Text>
-        )}
-
-        {sortedTimers.length > 0 && (
-          <View style={{ marginTop: spacing.xl, gap: spacing.md }}>
-            {sortedTimers.map((timer) => (
-              <Animated.View
-                key={timer.id}
-                entering={enterItem}
-                exiting={exitItem}
-                layout={listLayout}
-              >
-                <RunningTimerRow
-                  timer={timer}
-                  onPause={() => useTimersStore.getState().pause(timer.id)}
-                  onResume={() => useTimersStore.getState().resume(timer.id)}
-                  onCancel={() => {
-                    haptics.remove();
-                    void useTimersStore.getState().cancel(timer.id);
-                  }}
-                  onDismiss={() => useTimersStore.getState().dismiss(timer.id)}
-                />
-              </Animated.View>
-            ))}
-          </View>
         )}
       </ScrollView>
 
