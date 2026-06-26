@@ -57,7 +57,7 @@ private func tx(_ ja: String, _ en: String) -> String { isJaLocale ? ja : en }
 private func mlsr(_ s: String) -> LocalizedStringResource { LocalizedStringResource(stringLiteral: s) }
 private func moduleHasBundledSound(_ name: String) -> Bool {
   name != "default" && !name.isEmpty &&
-    Bundle.main.url(forResource: name, withExtension: "wav") != nil
+    Bundle.main.url(forResource: name, withExtension: "mp3") != nil
 }
 
 private func authString(_ s: AlarmManager.AuthorizationState) -> String {
@@ -158,7 +158,7 @@ public class ImasuguNativeModule: Module {
       let config = AlarmManager.AlarmConfiguration.timer(
         duration: TimeInterval(durationSec),
         attributes: attributes,
-        sound: moduleHasBundledSound(sound) ? .named("\(sound).wav") : .default
+        sound: moduleHasBundledSound(sound) ? .named("\(sound).mp3") : .default
       )
       do {
         _ = try await AlarmManager.shared.schedule(id: id, configuration: config)

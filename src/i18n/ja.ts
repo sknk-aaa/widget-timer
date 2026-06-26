@@ -86,9 +86,9 @@ export const ja = {
 
   sounds: {
     default: '標準',
-    bell: 'ベル',
-    chime: 'チャイム',
-    marimba: 'マリンバ',
+    xylophone: 'シロフォン',
+    digital: 'デジタル',
+    whale: 'クジラ',
   },
 
   pro: {

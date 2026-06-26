@@ -25,7 +25,7 @@ enum AlarmScheduler {
         let configuration = AlarmManager.AlarmConfiguration.timer(
             duration: TimeInterval(durationSec),
             attributes: attributes,
-            sound: hasBundledSound(soundName) ? .named("\(soundName).wav") : .default
+            sound: hasBundledSound(soundName) ? .named("\(soundName).mp3") : .default
         )
         _ = try await AlarmManager.shared.schedule(id: id, configuration: configuration)
         recordRunning(alarmID: id, presetID: meta.presetID)

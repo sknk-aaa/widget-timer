@@ -2,7 +2,7 @@ const { withXcodeProject, IOSConfig } = require('expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 
-const SOUNDS = ['bell.wav', 'chime.wav', 'marimba.wav'];
+const SOUNDS = ['xylophone.mp3', 'digital.mp3', 'whale.mp3'];
 
 /**
  * assets/sounds/*.wav をアプリ本体ターゲットのバンドルリソースに追加する。

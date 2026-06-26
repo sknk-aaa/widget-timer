@@ -47,7 +47,7 @@ func lsr(_ s: String) -> LocalizedStringResource { LocalizedStringResource(strin
 /// 指定音IDがバンドルに存在するか（無ければ .default を使う側で判定）。
 func hasBundledSound(_ name: String) -> Bool {
     name != "default" && !name.isEmpty &&
-        Bundle.main.url(forResource: name, withExtension: "wav") != nil
+        Bundle.main.url(forResource: name, withExtension: "mp3") != nil
 }
 
 /// 実行中タイマーの読み取りモデル（ホームウィジェットのカウントダウン用）。

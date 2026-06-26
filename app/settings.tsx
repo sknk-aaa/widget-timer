@@ -14,8 +14,8 @@ import { PRIVACY_URL, TERMS_URL, CONTACT_URL } from '../src/domain/links';
 import { openWriteReview } from '../src/native/review';
 import { t } from '../src/i18n';
 
-// AlarmKit に渡す音ID。'default' はシステム標準、その他はバンドル音源（assets/sounds/<id>.wav）。
-const SOUND_IDS = ['default', 'bell', 'chime', 'marimba'] as const;
+// AlarmKit に渡す音ID。'default' はシステム標準、その他はバンドル音源（assets/sounds/<id>.mp3）。
+const SOUND_IDS = ['default', 'xylophone', 'digital', 'whale'] as const;
 
 export default function SettingsScreen() {
   const router = useRouter();

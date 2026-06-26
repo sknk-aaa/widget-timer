@@ -88,9 +88,9 @@ export const en: Strings = {
 
   sounds: {
     default: 'Default',
-    bell: 'Bell',
-    chime: 'Chime',
-    marimba: 'Marimba',
+    xylophone: 'Xylophone',
+    digital: 'Digital',
+    whale: 'Whale',
   },
 
   pro: {
