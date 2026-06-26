@@ -15,7 +15,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   // ロケール別のInfo.plist（ホーム画面のアプリ名・権限文言）。日本語以外は英語にフォールバック。
   locales: {
     en: {
-      CFBundleDisplayName: 'Imasugu Timer',
+      CFBundleDisplayName: 'OneTap Timer',
       NSAlarmKitUsageDescription:
         'Used to reliably sound the alarm when a timer ends, even in Silent or Focus mode.',
     },
