@@ -110,7 +110,7 @@ export const en: Strings = {
     items: [
       {
         q: 'Does it ring in Silent or Focus mode?',
-        a: 'Yes. It uses AlarmKit, so it alerts you with sound and screen even in Silent or Focus mode (alert permission required).',
+        a: 'Yes. It uses AlarmKit, so it alerts you with sound and screen even in Silent or Focus mode (alarm permission required).',
       },
       {
         q: 'How do I add the widget?',
@@ -210,7 +210,7 @@ export const en: Strings = {
 
   alarm: {
     permissionDenied: "Can't sound the alarm",
-    permissionDeniedBody: 'Alerts are not allowed, so the timer will not make a sound when it ends.',
+    permissionDeniedBody: "Alarm permission isn't granted, so the timer won't sound when it ends.",
     openSettings: 'Open Settings',
   },
 
