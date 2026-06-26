@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { useSettingsStore } from '../src/store/settings';
 import { alarmService } from '../src/native/alarm';
 import { useTheme } from '../src/ui/theme';
@@ -20,11 +21,21 @@ import { t } from '../src/i18n';
 
 const PAGES = 3;
 
+// オンボは常に白背景・明るい配色（ダークモードでも固定）。
+const OB = {
+  bg: '#FFFFFF',
+  title: '#16161A',
+  body: '#6B6B72',
+  accent: '#FF6A1A',
+  dotOff: '#E3E3E6',
+  skip: '#9A9AA0',
+};
+
 export default function OnboardingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const { c, spacing } = useTheme();
+  const { spacing } = useTheme();
   const s = t();
   const [page, setPage] = React.useState(0);
   const scrollRef = React.useRef<ScrollView>(null);
@@ -42,7 +53,6 @@ export default function OnboardingScreen() {
   const finish = async () => {
     const firstRun = !useSettingsStore.getState().onboardingDone;
     useSettingsStore.getState().completeOnboarding();
-    // 初回オンボ完了時に通知（アラーム）許可を求める。
     if (firstRun) {
       await alarmService.requestPermission();
       await useSettingsStore.getState().refreshPermission();
@@ -52,11 +62,12 @@ export default function OnboardingScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: insets.top }}>
+    <View style={{ flex: 1, backgroundColor: OB.bg, paddingTop: insets.top }}>
+      <StatusBar style="dark" />
       <View style={{ alignItems: 'flex-end', paddingHorizontal: spacing.xl, height: 44, justifyContent: 'center' }}>
         {page < PAGES - 1 && (
           <Pressable onPress={() => void finish()} hitSlop={10} accessibilityRole="button" accessibilityLabel={s.onboarding.skip}>
-            <Text style={{ color: c.textSecondary, fontSize: 15, fontWeight: '600' }}>{s.onboarding.skip}</Text>
+            <Text style={{ color: OB.skip, fontSize: 15, fontWeight: '600' }}>{s.onboarding.skip}</Text>
           </Pressable>
         )}
       </View>
@@ -69,15 +80,15 @@ export default function OnboardingScreen() {
         onMomentumScrollEnd={onScrollEnd}
         style={{ flex: 1 }}
       >
-        <Page width={width}>
+        <Page width={width} spacing={spacing.xxl}>
           <Illustration source={require('../assets/onboarding/concept-rings.png')} />
           <PageText title={s.onboarding.ringsTitle} body={s.onboarding.ringsBody} />
         </Page>
-        <Page width={width}>
+        <Page width={width} spacing={spacing.xxl}>
           <Illustration source={require('../assets/onboarding/concept-onetap.png')} />
           <PageText title={s.onboarding.onetapTitle} body={s.onboarding.onetapBody} />
         </Page>
-        <Page width={width}>
+        <Page width={width} spacing={spacing.xxl}>
           <Illustration source={require('../assets/onboarding/concept-ready.png')} />
           <PageText title={s.onboarding.readyTitle} body={s.onboarding.readyBody} />
         </Page>
@@ -97,7 +108,7 @@ export default function OnboardingScreen() {
               accessibilityLabel={s.onboarding.seeHowTo}
               style={{ alignItems: 'center', paddingVertical: spacing.sm }}
             >
-              <Text style={{ color: c.textSecondary, fontSize: 14, fontWeight: '600' }}>{s.onboarding.seeHowTo}</Text>
+              <Text style={{ color: OB.accent, fontSize: 14, fontWeight: '700' }}>{s.onboarding.seeHowTo}</Text>
             </Pressable>
           </>
         )}
@@ -106,28 +117,25 @@ export default function OnboardingScreen() {
   );
 }
 
-function Page({ width, children }: { width: number; children: React.ReactNode }) {
-  const { spacing } = useTheme();
+function Page({ width, spacing, children }: { width: number; spacing: number; children: React.ReactNode }) {
   return (
-    <View style={{ width, paddingHorizontal: spacing.xxl, justifyContent: 'center', alignItems: 'center' }}>
+    <View style={{ width, paddingHorizontal: spacing, justifyContent: 'center', alignItems: 'center' }}>
       {children}
     </View>
   );
 }
 
 function Illustration({ source }: { source: number }) {
-  const { spacing } = useTheme();
-  return <Image source={source} style={{ width: 248, height: 248, marginBottom: spacing.xxl }} resizeMode="contain" />;
+  return <Image source={source} style={{ width: 264, height: 264, marginBottom: 28 }} resizeMode="contain" />;
 }
 
 function PageText({ title, body }: { title: string; body: string }) {
-  const { c, spacing } = useTheme();
   return (
     <>
-      <Text style={{ color: c.textPrimary, fontSize: 24, fontWeight: '900', textAlign: 'center', letterSpacing: 0.2 }}>
+      <Text style={{ color: OB.title, fontSize: 25, fontWeight: '900', textAlign: 'center', letterSpacing: 0.2 }}>
         {title}
       </Text>
-      <Text style={{ color: c.textSecondary, fontSize: 15, textAlign: 'center', marginTop: spacing.lg, lineHeight: 23 }}>
+      <Text style={{ color: OB.body, fontSize: 15, textAlign: 'center', marginTop: 14, lineHeight: 23 }}>
         {body}
       </Text>
     </>
@@ -135,7 +143,6 @@ function PageText({ title, body }: { title: string; body: string }) {
 }
 
 function Dots({ count, active }: { count: number; active: number }) {
-  const { c } = useTheme();
   return (
     <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 4 }}>
       {Array.from({ length: count }).map((_, i) => (
@@ -145,7 +152,7 @@ function Dots({ count, active }: { count: number; active: number }) {
             width: i === active ? 22 : 8,
             height: 8,
             borderRadius: 4,
-            backgroundColor: i === active ? c.accent : c.hairline,
+            backgroundColor: i === active ? OB.accent : OB.dotOff,
           }}
         />
       ))}

@@ -5,15 +5,18 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useTheme } from '../src/ui/theme';
 import { Button } from '../src/ui/components/Button';
+import { PhoneFrame } from '../src/ui/components/PhoneFrame';
 import { openWriteReview } from '../src/native/review';
-import { t } from '../src/i18n';
+import { t, isJaLocale } from '../src/i18n';
 
-const CHANGE_VIDEO = require('../assets/onboarding/how-whiget2.mp4');
+const CHANGE_VIDEO = isJaLocale
+  ? require('../assets/onboarding/how-whiget2.mp4')
+  : require('../assets/onboarding/how-whiget2-en.mp4');
 
 export default function WelcomeProScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { c, spacing, radius } = useTheme();
+  const { c, spacing } = useTheme();
   const s = t();
 
   const player = useVideoPlayer(CHANGE_VIDEO, (p) => {
@@ -40,18 +43,11 @@ export default function WelcomeProScreen() {
         {s.proWelcome.body}
       </Text>
 
-      <VideoView
-        style={{
-          flex: 1,
-          marginVertical: spacing.lg,
-          borderRadius: radius.lg,
-          overflow: 'hidden',
-          backgroundColor: '#000',
-        }}
-        player={player}
-        contentFit="contain"
-        nativeControls={false}
-      />
+      <View style={{ flex: 1, marginVertical: spacing.lg }}>
+        <PhoneFrame>
+          <VideoView style={{ flex: 1 }} player={player} contentFit="cover" nativeControls={false} />
+        </PhoneFrame>
+      </View>
 
       <View style={{ gap: spacing.md }}>
         <Button title={s.proWelcome.done} onPress={() => router.back()} />

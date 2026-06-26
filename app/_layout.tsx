@@ -109,7 +109,7 @@ export default function RootLayout() {
           <Stack.Screen name="quick" options={{ presentation: 'modal' }} />
           <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
           <Stack.Screen name="faq" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="how" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="how" />
           <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />
           <Stack.Screen name="welcome-pro" options={{ presentation: 'modal' }} />
         </Stack>

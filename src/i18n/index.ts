@@ -15,6 +15,15 @@ function pickStrings(): Strings {
 
 const strings: Strings = pickStrings();
 
+/** 端末ロケールが日本語か（動画など言語別アセットの出し分けに使う）。 */
+export const isJaLocale: boolean = (() => {
+  try {
+    return getLocales()?.[0]?.languageCode === 'ja';
+  } catch {
+    return false;
+  }
+})();
+
 export function t(): Strings {
   return strings;
 }

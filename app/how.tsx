@@ -4,20 +4,23 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useTheme } from '../src/ui/theme';
-import { t } from '../src/i18n';
+import { PhoneFrame } from '../src/ui/components/PhoneFrame';
+import { ChevronIcon } from '../src/ui/icons/ui';
+import { t, isJaLocale } from '../src/i18n';
 
-// チュートリアル動画。require() でバンドル（mp4 は metro の assetExts に追加済み）。
+// チュートリアル動画（ja/en をロケールで出し分け）。mp4 は metro の assetExts に追加済み。
 const SOURCES = {
-  home: require('../assets/onboarding/how-home.mp4'),
-  lock: require('../assets/onboarding/how-lock.mp4'),
-  change: require('../assets/onboarding/how-whiget2.mp4'),
+  home: { ja: require('../assets/onboarding/how-home.mp4'), en: require('../assets/onboarding/how-home-en.mp4') },
+  lock: { ja: require('../assets/onboarding/how-lock.mp4'), en: require('../assets/onboarding/how-lock-en.mp4') },
+  change: { ja: require('../assets/onboarding/how-whiget2.mp4'), en: require('../assets/onboarding/how-whiget2-en.mp4') },
 };
 type VideoKey = keyof typeof SOURCES;
+const src = (k: VideoKey) => SOURCES[k][isJaLocale ? 'ja' : 'en'];
 
 export default function HowScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { c, spacing, radius } = useTheme();
+  const { c, spacing } = useTheme();
   const s = t();
   const { video } = useLocalSearchParams<{ video?: string }>();
 
@@ -28,34 +31,32 @@ export default function HowScreen() {
   const key: VideoKey = isAdd ? tab : single;
   const title = isAdd ? s.how.add : key === 'lock' ? s.how.lock : key === 'change' ? s.how.change : s.how.home;
 
-  const player = useVideoPlayer(SOURCES[isAdd ? 'home' : single], (p) => {
+  const player = useVideoPlayer(src(isAdd ? 'home' : single), (p) => {
     p.loop = true;
     p.muted = true;
     p.play();
   });
 
   React.useEffect(() => {
-    player.replace(SOURCES[key]);
+    player.replace(src(key));
     player.play();
   }, [key, player]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: insets.top }} accessibilityViewIsModal>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          paddingHorizontal: spacing.xl,
-          height: 52,
-        }}
-      >
+    <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: insets.top }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.lg, height: 52, gap: spacing.xs }}>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel={s.common.close}
+          style={{ transform: [{ rotate: '180deg' }] }}
+        >
+          <ChevronIcon color={c.textPrimary} size={26} />
+        </Pressable>
         <Text style={{ color: c.textPrimary, fontSize: 17, fontWeight: '800', flex: 1 }} numberOfLines={1}>
           {title}
         </Text>
-        <Pressable onPress={() => router.back()} hitSlop={12} accessibilityRole="button" accessibilityLabel={s.common.close}>
-          <Text style={{ color: c.textSecondary, fontSize: 16, fontWeight: '600' }}>{s.common.close}</Text>
-        </Pressable>
       </View>
 
       {isAdd && (
@@ -65,13 +66,10 @@ export default function HowScreen() {
         </View>
       )}
 
-      <View style={{ flex: 1, paddingHorizontal: spacing.xl, paddingBottom: insets.bottom + spacing.xl }}>
-        <VideoView
-          style={{ flex: 1, borderRadius: radius.lg, overflow: 'hidden', backgroundColor: '#000' }}
-          player={player}
-          contentFit="contain"
-          nativeControls={false}
-        />
+      <View style={{ flex: 1, paddingVertical: spacing.lg, paddingBottom: insets.bottom + spacing.lg }}>
+        <PhoneFrame>
+          <VideoView style={{ flex: 1 }} player={player} contentFit="cover" nativeControls={false} />
+        </PhoneFrame>
       </View>
     </View>
   );
