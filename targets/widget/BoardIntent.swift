@@ -14,7 +14,7 @@ struct BoardEntity: AppEntity {
     let id: String
     let name: String
 
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Board"
+    static var typeDisplayRepresentation: TypeDisplayRepresentation = "ウィジェット欄"
 
     var displayRepresentation: DisplayRepresentation {
         DisplayRepresentation(title: "\(name)")
@@ -41,10 +41,10 @@ struct BoardQuery: EntityQuery {
 }
 
 struct SelectBoardIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource = "Choose board"
-    static var description = IntentDescription("Pick which board this widget shows.")
+    static var title: LocalizedStringResource = "表示する欄"
+    static var description = IntentDescription("このウィジェットに表示する欄を選びます。")
 
-    @Parameter(title: "Board")
+    @Parameter(title: "表示する欄")
     var board: BoardEntity?
 
     // これが無いと「編集」画面にパラメータ（Board選択）が出ないことがある。
