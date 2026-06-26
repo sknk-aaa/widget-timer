@@ -94,6 +94,7 @@ export function PresetBoard(props: Props) {
   const [draggingKey, setDraggingKey] = React.useState<string | null>(null);
 
   const draggingRef = React.useRef<{ zone: Zone; id: string } | null>(null);
+  const lastTargetRef = React.useRef<Zone>('master');
   const startMasterRef = React.useRef<string[]>([]);
   const startBoardRef = React.useRef<string[]>([]);
   const workMasterRef = React.useRef<string[]>([]);
@@ -147,6 +148,7 @@ export function PresetBoard(props: Props) {
   };
 
   const onBegin = React.useCallback((zone: Zone, id: string) => {
+    if (draggingRef.current) return; // 2本目の同時ドラッグは無視（状態混線防止）
     const list = zone === 'board' ? boardIdsRef.current : masterIdsRef.current;
     const index = list.indexOf(id);
     if (index < 0) return;
@@ -159,6 +161,7 @@ export function PresetBoard(props: Props) {
     startBoardRef.current = [...boardIdsRef.current];
     workMasterRef.current = startMasterRef.current;
     workBoardRef.current = startBoardRef.current;
+    lastTargetRef.current = zone;
     draggingRef.current = { zone, id };
     setDraggingKey(`${zone}:${id}`);
     cbRef.current.onDragActiveChange(true);
@@ -175,6 +178,7 @@ export function PresetBoard(props: Props) {
     const fx = startLeft.value + TILE_SIZE / 2 + tx;
     const fy = startTop.value + TILE_SIZE / 2 + ty;
     const target: Zone = fy < d.masterLabelTop ? 'board' : 'master';
+    lastTargetRef.current = target;
     const startMaster = startMasterRef.current;
     const startBoard = startBoardRef.current;
     let nextMaster = startMaster;
@@ -184,7 +188,9 @@ export function PresetBoard(props: Props) {
       if (target === 'board') {
         nextBoard = moveTo(startBoard, drag.id, indexAt('board', fx, fy, startBoard.length - 1));
       } else {
-        nextBoard = startBoard.filter((x) => x !== drag.id); // 欄から外すプレビュー
+        // 欄から外す確定は onEnd で行う。ドラッグ中はセルを消さない
+        // （アクティブな Pan を持つセルが unmount すると onEnd が発火せず固まるため）。
+        nextBoard = startBoard;
       }
     } else {
       if (target === 'master') {
@@ -213,21 +219,45 @@ export function PresetBoard(props: Props) {
   const onEnd = React.useCallback(() => {
     const drag = draggingRef.current;
     if (!drag) return;
-    draggingRef.current = null;
     dragScale.value = withSpring(1, springs.snappy);
-    const workBoard = workBoardRef.current;
-    const workMaster = workMasterRef.current;
-    const boardChanged = !sameArr(workBoard, startBoardRef.current);
-    const masterChanged = !sameArr(workMaster, startMasterRef.current);
-    if (boardChanged) {
-      const ok = cbRef.current.onSetBoard(workBoard);
-      if (!ok) setBoardIds(cbRef.current.boardPresetIds);
-    } else if (masterChanged) {
-      cbRef.current.onReorderAll(workMaster);
+    const target = lastTargetRef.current;
+    const startBoard = startBoardRef.current;
+    const startMaster = startMasterRef.current;
+    let handled = false;
+
+    if (drag.zone === 'board') {
+      if (target === 'master') {
+        // 欄から外す（確定はここで）
+        const next = startBoard.filter((x) => x !== drag.id);
+        const ok = cbRef.current.onSetBoard(next);
+        setBoardIds(ok ? next : cbRef.current.boardPresetIds);
+        handled = true;
+      } else {
+        const work = workBoardRef.current;
+        if (!sameArr(work, startBoard)) {
+          const ok = cbRef.current.onSetBoard(work);
+          if (!ok) setBoardIds(cbRef.current.boardPresetIds);
+          handled = true;
+        }
+      }
     } else {
-      setBoardIds(startBoardRef.current);
-      setMasterIds(startMasterRef.current);
+      const work = workBoardRef.current;
+      if (target === 'board' && !startBoard.includes(drag.id) && work.includes(drag.id)) {
+        // 全てのプリセット → 欄へ追加
+        const ok = cbRef.current.onSetBoard(work);
+        if (!ok) setBoardIds(cbRef.current.boardPresetIds);
+        handled = true;
+      } else if (!sameArr(workMasterRef.current, startMaster)) {
+        cbRef.current.onReorderAll(workMasterRef.current);
+        handled = true;
+      }
     }
+
+    if (!handled) {
+      setBoardIds(startBoard);
+      setMasterIds(startMaster);
+    }
+    draggingRef.current = null;
     setDraggingKey(null);
     cbRef.current.onDragActiveChange(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -262,7 +292,8 @@ export function PresetBoard(props: Props) {
 
   const onLayout = (e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width);
 
-  const draggingPreset = draggingRef.current ? byId.get(draggingRef.current.id) : null;
+  const draggingId = draggingKey ? draggingKey.slice(draggingKey.indexOf(':') + 1) : null;
+  const draggingPreset = draggingId ? byId.get(draggingId) : null;
   const masterAddIndex = masterIds.length;
   const addLeft = PAD + (masterAddIndex % cols) * CELL_W;
   const addTop = masterAreaTop + Math.floor(masterAddIndex / cols) * cellH + nameBand;
