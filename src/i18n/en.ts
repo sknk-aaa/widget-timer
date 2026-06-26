@@ -183,14 +183,26 @@ export const en: Strings = {
     next: 'Next',
     start: 'Get started',
     skip: 'Skip',
-    homeTitle: 'Add to Home Screen',
-    homeBody: 'Long-press an empty spot on your Home Screen → "+" → choose "Imasugu Timer". Then start with one tap.',
-    lockTitle: 'Add to Lock Screen',
-    lockBody: 'Long-press the Lock Screen → "Customize" → "Lock Screen" → tap a widget area → "Imasugu Timer". Start without unlocking.',
-    conceptTitle: 'One tap from your widget',
-    conceptBody: 'Save your go-to durations as presets and start a timer instantly from your widget.',
-    startTitle: "You're all set",
-    startBody: "Let's get started. Timers alert you with sound and screen even in Silent or Focus mode.",
+    ringsTitle: 'Rings, even in Silent or Focus.',
+    ringsBody: 'Even in Silent or Focus mode, the timer alerts you with sound and screen.',
+    onetapTitle: 'One tap from your widget.',
+    onetapBody: 'Save your go-to durations as presets and start a timer instantly from your widget.',
+    readyTitle: "You're all set",
+    readyBody: "Let's get started.",
+    seeHowTo: 'See how to add the widget',
+  },
+
+  how: {
+    home: 'Add the widget to your Home Screen',
+    lock: 'Add the widget to your Lock Screen',
+    change: 'Switch what a widget shows',
+  },
+
+  proWelcome: {
+    title: 'Using multiple widgets',
+    body: 'Place several widgets and show a different board on each. Long-press a widget → "Edit Widget" → "Board".',
+    review: 'Write a review',
+    done: 'Get started',
   },
 
   alarm: {

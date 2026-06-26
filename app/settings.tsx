@@ -138,7 +138,8 @@ export default function SettingsScreen() {
         <View style={{ backgroundColor: c.surface, borderRadius: radius.lg, marginBottom: spacing.xl }}>
           <Row first label={s.settings.review} chevron onPress={() => void openWriteReview()} />
           <Row label={s.settings.share} chevron onPress={share} />
-          <Row label={s.settings.replayTutorial} chevron onPress={() => router.push('/onboarding')} />
+          <Row label={s.how.home} chevron onPress={() => router.push({ pathname: '/how', params: { video: 'home' } })} />
+          <Row label={s.how.lock} chevron onPress={() => router.push({ pathname: '/how', params: { video: 'lock' } })} />
           <Row label={s.settings.faq} chevron onPress={() => router.push('/faq')} />
         </View>
 

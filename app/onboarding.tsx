@@ -15,12 +15,10 @@ import { useSettingsStore } from '../src/store/settings';
 import { alarmService } from '../src/native/alarm';
 import { useTheme } from '../src/ui/theme';
 import { Button } from '../src/ui/components/Button';
-import { PresetTileVisual } from '../src/ui/components/PresetTile';
-import { PlusIcon } from '../src/ui/icons/ui';
 import { haptics } from '../src/ui/haptics';
 import { t } from '../src/i18n';
 
-const PAGES = 4;
+const PAGES = 3;
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -44,7 +42,7 @@ export default function OnboardingScreen() {
   const finish = async () => {
     const firstRun = !useSettingsStore.getState().onboardingDone;
     useSettingsStore.getState().completeOnboarding();
-    // 初回オンボ完了時に通知（アラーム）許可を求める。設定からの再表示では求めない。
+    // 初回オンボ完了時に通知（アラーム）許可を求める。
     if (firstRun) {
       await alarmService.requestPermission();
       await useSettingsStore.getState().refreshPermission();
@@ -71,18 +69,37 @@ export default function OnboardingScreen() {
         onMomentumScrollEnd={onScrollEnd}
         style={{ flex: 1 }}
       >
-        <Page width={width}><ConceptPage /></Page>
-        <Page width={width}><HomeAddPage /></Page>
-        <Page width={width}><LockAddPage /></Page>
-        <Page width={width}><StartPage /></Page>
+        <Page width={width}>
+          <Illustration source={require('../assets/onboarding/concept-rings.png')} />
+          <PageText title={s.onboarding.ringsTitle} body={s.onboarding.ringsBody} />
+        </Page>
+        <Page width={width}>
+          <Illustration source={require('../assets/onboarding/concept-onetap.png')} />
+          <PageText title={s.onboarding.onetapTitle} body={s.onboarding.onetapBody} />
+        </Page>
+        <Page width={width}>
+          <Illustration source={require('../assets/onboarding/concept-ready.png')} />
+          <PageText title={s.onboarding.readyTitle} body={s.onboarding.readyBody} />
+        </Page>
       </ScrollView>
 
-      <View style={{ paddingHorizontal: spacing.xxl, paddingBottom: insets.bottom + spacing.xl, gap: spacing.lg }}>
+      <View style={{ paddingHorizontal: spacing.xxl, paddingBottom: insets.bottom + spacing.xl, gap: spacing.md }}>
         <Dots count={PAGES} active={page} />
         {page < PAGES - 1 ? (
           <Button title={s.onboarding.next} onPress={() => goTo(page + 1)} />
         ) : (
-          <Button title={s.onboarding.start} onPress={() => void finish()} />
+          <>
+            <Button title={s.onboarding.start} onPress={() => void finish()} />
+            <Pressable
+              onPress={() => router.push({ pathname: '/how', params: { video: 'home' } })}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={s.onboarding.seeHowTo}
+              style={{ alignItems: 'center', paddingVertical: spacing.sm }}
+            >
+              <Text style={{ color: c.textSecondary, fontSize: 14, fontWeight: '600' }}>{s.onboarding.seeHowTo}</Text>
+            </Pressable>
+          </>
         )}
       </View>
     </View>
@@ -91,14 +108,23 @@ export default function OnboardingScreen() {
 
 function Page({ width, children }: { width: number; children: React.ReactNode }) {
   const { spacing } = useTheme();
-  return <View style={{ width, paddingHorizontal: spacing.xxl, justifyContent: 'center' }}>{children}</View>;
+  return (
+    <View style={{ width, paddingHorizontal: spacing.xxl, justifyContent: 'center', alignItems: 'center' }}>
+      {children}
+    </View>
+  );
+}
+
+function Illustration({ source }: { source: number }) {
+  const { spacing } = useTheme();
+  return <Image source={source} style={{ width: 248, height: 248, marginBottom: spacing.xxl }} resizeMode="contain" />;
 }
 
 function PageText({ title, body }: { title: string; body: string }) {
   const { c, spacing } = useTheme();
   return (
     <>
-      <Text style={{ color: c.textPrimary, fontSize: 25, fontWeight: '900', textAlign: 'center', letterSpacing: 0.2 }}>
+      <Text style={{ color: c.textPrimary, fontSize: 24, fontWeight: '900', textAlign: 'center', letterSpacing: 0.2 }}>
         {title}
       </Text>
       <Text style={{ color: c.textSecondary, fontSize: 15, textAlign: 'center', marginTop: spacing.lg, lineHeight: 23 }}>
@@ -108,132 +134,10 @@ function PageText({ title, body }: { title: string; body: string }) {
   );
 }
 
-function DashedAdd({ size }: { size: number }) {
-  const { c } = useTheme();
-  return (
-    <View
-      style={{
-        width: size,
-        height: size,
-        borderRadius: size * 0.28,
-        borderWidth: 1.5,
-        borderStyle: 'dashed',
-        borderColor: c.hairline,
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <PlusIcon color={c.textTertiary} size={size * 0.42} />
-    </View>
-  );
-}
-
-function HomeAddPage() {
-  const { c, spacing } = useTheme();
-  const s = t();
-  return (
-    <View style={{ alignItems: 'center' }}>
-      <View
-        style={{
-          width: 154,
-          height: 154,
-          borderRadius: 28,
-          backgroundColor: c.surface,
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: spacing.lg,
-          marginBottom: spacing.xxxl,
-        }}
-      >
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'center' }}>
-          <PresetTileVisual icon="ramen" color="orange" size={46} glow={false} />
-          <PresetTileVisual icon="bed" color="indigo" size={46} glow={false} />
-          <PresetTileVisual icon="book" color="blue" size={46} glow={false} />
-          <DashedAdd size={46} />
-        </View>
-      </View>
-      <PageText title={s.onboarding.homeTitle} body={s.onboarding.homeBody} />
-    </View>
-  );
-}
-
-function LockAddPage() {
-  const { spacing } = useTheme();
-  const s = t();
-  const chips = [
-    { i: 'ramen', col: 'orange' },
-    { i: 'bed', col: 'indigo' },
-    { i: 'book', col: 'blue' },
-  ];
-  return (
-    <View style={{ alignItems: 'center' }}>
-      <View
-        style={{
-          width: 210,
-          borderRadius: 22,
-          backgroundColor: '#1C1C1E',
-          padding: spacing.md,
-          marginBottom: spacing.xxxl,
-        }}
-      >
-        <Text style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, fontWeight: '800', marginBottom: 8, marginLeft: 4 }}>
-          9:41
-        </Text>
-        <View style={{ flexDirection: 'row', gap: 6 }}>
-          {chips.map((chip) => (
-            <View
-              key={chip.i}
-              style={{
-                flex: 1,
-                alignItems: 'center',
-                paddingVertical: 7,
-                borderRadius: 10,
-                backgroundColor: 'rgba(255,255,255,0.14)',
-              }}
-            >
-              <PresetTileVisual icon={chip.i} color={chip.col} size={26} glow={false} />
-            </View>
-          ))}
-        </View>
-      </View>
-      <PageText title={s.onboarding.lockTitle} body={s.onboarding.lockBody} />
-    </View>
-  );
-}
-
-function ConceptPage() {
-  const { spacing } = useTheme();
-  const s = t();
-  return (
-    <View style={{ alignItems: 'center' }}>
-      <View style={{ flexDirection: 'row', gap: spacing.md, marginBottom: spacing.xxxl }}>
-        <PresetTileVisual icon="ramen" color="orange" size={64} />
-        <PresetTileVisual icon="bed" color="indigo" size={64} />
-        <PresetTileVisual icon="book" color="blue" size={64} />
-      </View>
-      <PageText title={s.onboarding.conceptTitle} body={s.onboarding.conceptBody} />
-    </View>
-  );
-}
-
-function StartPage() {
-  const { spacing } = useTheme();
-  const s = t();
-  return (
-    <View style={{ alignItems: 'center' }}>
-      <Image
-        source={require('../assets/icon.png')}
-        style={{ width: 100, height: 100, borderRadius: 24, marginBottom: spacing.xxxl }}
-      />
-      <PageText title={s.onboarding.startTitle} body={s.onboarding.startBody} />
-    </View>
-  );
-}
-
 function Dots({ count, active }: { count: number; active: number }) {
   const { c } = useTheme();
   return (
-    <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8 }}>
+    <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 4 }}>
       {Array.from({ length: count }).map((_, i) => (
         <View
           key={i}

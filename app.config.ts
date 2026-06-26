@@ -52,6 +52,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-router',
     'expo-sqlite',
     'expo-localization',
+    'expo-video',
     [
       'expo-splash-screen',
       {

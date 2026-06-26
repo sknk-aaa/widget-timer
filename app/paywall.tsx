@@ -34,7 +34,8 @@ export default function PaywallScreen() {
     setLoading(false);
     if (result === 'purchased') {
       haptics.start();
-      router.back();
+      // 購入直後に「複数ウィジェットの使い方」モーダルを表示（ペイウォールを置き換え）。
+      router.replace('/welcome-pro');
     } else if (result === 'pending') {
       Alert.alert(s.pro.title, s.pro.pending);
     } else if (result === 'failed') {
