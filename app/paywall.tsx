@@ -60,7 +60,10 @@ export default function PaywallScreen() {
     const r = await useProStore.getState().support();
     if (r === 'purchased') {
       haptics.start();
-      Alert.alert(s.pro.title, s.settings.supportThanks);
+      // 「Pro＋応援」は Pro を付与するので、購入後は使い方モーダルへ。
+      router.replace('/welcome-pro');
+    } else if (r === 'pending') {
+      Alert.alert(s.pro.title, s.pro.pending);
     } else if (r === 'failed') {
       Alert.alert(s.pro.title, s.pro.purchaseFailed);
     }
@@ -217,17 +220,17 @@ export default function PaywallScreen() {
                 {restoring ? s.pro.restoring : s.pro.restore}
               </Text>
             </Pressable>
+
+            {/* 「Pro＋応援」= もう一つの選択肢（Proも付与）。Pro取得後は非表示。 */}
+            <View style={{ marginTop: spacing.lg }}>
+              <Button
+                title={supportPrice ? `${s.settings.support} ${supportPrice}` : s.settings.support}
+                variant="secondary"
+                onPress={() => void support()}
+              />
+            </View>
           </>
         )}
-
-        {/* 応援（2つ目の選択肢） */}
-        <View style={{ marginTop: spacing.lg }}>
-          <Button
-            title={supportPrice ? `${s.settings.support} ${supportPrice}` : s.settings.support}
-            variant="secondary"
-            onPress={() => void support()}
-          />
-        </View>
 
         <View style={{ flexDirection: 'row', justifyContent: 'center', gap: spacing.lg, marginTop: spacing.lg }}>
           <Pressable onPress={() => Linking.openURL(PRIVACY_URL)} hitSlop={8}>

@@ -12,7 +12,7 @@ interface ProState {
   refresh: () => Promise<void>;
   purchase: () => Promise<PurchaseResult>;
   restore: () => Promise<boolean>;
-  /** 任意の応援（消耗型）。 */
+  /** 「Pro＋応援」（非消耗型・Proも付与）。 */
   support: () => Promise<PurchaseResult>;
 }
 
@@ -47,6 +47,8 @@ export const useProStore = create<ProState>((set) => ({
   },
 
   support: async () => {
-    return purchaseSupport();
+    const result = await purchaseSupport();
+    if (result === 'purchased') set({ isPro: true });
+    return result;
   },
 }));

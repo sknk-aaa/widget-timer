@@ -4,7 +4,7 @@ import { hasNativeModules } from './env';
 import { ImasuguNative } from '../../modules/imasugu-native';
 
 export const PRO_PRODUCT_ID = 'com.sknk.imasugutimer.pro';
-// 任意の「応援」（消耗型・繰り返し購入可）。所有権は付与しない。
+// 「Pro＋応援」（非消耗型）。これを所有していても Pro を有効にする。
 export const SUPPORT_PRODUCT_ID = 'com.sknk.imasugutimer.support';
 const PRO_KEY = 'pro_owned';
 
@@ -21,7 +21,9 @@ function mapPurchase(
 const storeKit: PurchaseService = {
   async isPro() {
     try {
-      return await ImasuguNative!.isProPurchased(PRO_PRODUCT_ID);
+      // Pro 本体、または「Pro＋応援」のどちらかを所有していれば Pro。
+      if (await ImasuguNative!.isProPurchased(PRO_PRODUCT_ID)) return true;
+      return await ImasuguNative!.isProPurchased(SUPPORT_PRODUCT_ID);
     } catch {
       return false;
     }
@@ -35,7 +37,9 @@ const storeKit: PurchaseService = {
   },
   async restore() {
     try {
-      return await ImasuguNative!.restorePurchases(PRO_PRODUCT_ID);
+      // restorePurchases が AppStore.sync するので、続けて応援側も確認。
+      if (await ImasuguNative!.restorePurchases(PRO_PRODUCT_ID)) return true;
+      return await ImasuguNative!.isProPurchased(SUPPORT_PRODUCT_ID);
     } catch {
       return false;
     }
@@ -70,7 +74,7 @@ export async function getProPrice(): Promise<string | null> {
   }
 }
 
-/** 応援（消耗型）を購入。Expo Go ではモックで purchased。 */
+/** 「Pro＋応援」（非消耗型・Pro付与）を購入。Expo Go ではモックで purchased。 */
 export async function purchaseSupport(): Promise<PurchaseResult> {
   if (!ImasuguNative) return 'purchased';
   try {
