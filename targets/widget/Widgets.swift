@@ -167,7 +167,7 @@ struct PresetWidget: Widget {
             PresetWidgetView(entry: entry)
                 .containerBackground(.fill.tertiary, for: .widget)
         }
-        .configurationDisplayName(LX.isJa ? "今すぐタイマー" : "OneTap Timer")
+        .configurationDisplayName(LX.isJa ? "今すぐタイマー" : "Tappri")
         .description(LX.isJa ? "ウィジェット欄のプリセットをワンタップで起動" : "Start a board's presets in one tap")
         .supportedFamilies([
             .systemSmall, .systemMedium,
