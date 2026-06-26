@@ -196,6 +196,9 @@ export const en: Strings = {
     home: 'Add the widget to your Home Screen',
     lock: 'Add the widget to your Lock Screen',
     change: 'Switch what a widget shows',
+    add: 'How to add the widget',
+    homeTab: 'Home Screen',
+    lockTab: 'Lock Screen',
   },
 
   proWelcome: {

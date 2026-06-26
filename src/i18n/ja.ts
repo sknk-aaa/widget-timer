@@ -194,6 +194,9 @@ export const ja = {
     home: 'ホーム画面にウィジェットを追加',
     lock: 'ロック画面にウィジェットを追加',
     change: 'ウィジェットの表示を切り替える',
+    add: 'ウィジェットの追加方法',
+    homeTab: 'ホーム画面',
+    lockTab: 'ロック画面',
   },
 
   proWelcome: {

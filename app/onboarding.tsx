@@ -91,7 +91,7 @@ export default function OnboardingScreen() {
           <>
             <Button title={s.onboarding.start} onPress={() => void finish()} />
             <Pressable
-              onPress={() => router.push({ pathname: '/how', params: { video: 'home' } })}
+              onPress={() => router.push({ pathname: '/how', params: { video: 'add' } })}
               hitSlop={8}
               accessibilityRole="button"
               accessibilityLabel={s.onboarding.seeHowTo}
