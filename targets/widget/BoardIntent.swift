@@ -35,10 +35,6 @@ struct BoardQuery: EntityQuery {
         boards()
     }
 
-    func defaultResult() async -> BoardEntity? {
-        boards().first
-    }
-
     private func boards() -> [BoardEntity] {
         Shared.loadBoards().map { BoardEntity(id: $0.id, name: $0.name) }
     }

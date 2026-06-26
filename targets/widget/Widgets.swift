@@ -9,30 +9,33 @@ import AppIntents
 struct PresetEntry: TimelineEntry {
     let date: Date
     let presets: [SharedPreset]
+    let debug: String
 }
 
 // 設定可能ウィジェット：選択された欄(ボード)のプリセットを表示する。
 struct PresetProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> PresetEntry {
-        PresetEntry(date: Date(), presets: resolve(nil))
+        makeEntry(nil)
     }
 
     func snapshot(for configuration: SelectBoardIntent, in context: Context) async -> PresetEntry {
-        PresetEntry(date: Date(), presets: resolve(configuration))
+        makeEntry(configuration)
     }
 
     func timeline(for configuration: SelectBoardIntent, in context: Context) async -> Timeline<PresetEntry> {
-        Timeline(entries: [PresetEntry(date: Date(), presets: resolve(configuration))], policy: .never)
+        Timeline(entries: [makeEntry(configuration)], policy: .never)
     }
 
     // 欄が未選択（設置直後）なら先頭の欄にフォールバック。
-    private func resolve(_ configuration: SelectBoardIntent?) -> [SharedPreset] {
+    private func makeEntry(_ configuration: SelectBoardIntent?) -> PresetEntry {
         let allBoards = Shared.loadBoards()
         let boardId = configuration?.board?.id ?? allBoards.first?.id
-        let result = boardId.map { Shared.presets(forBoard: $0) } ?? []
-        NSLog("[ImasuguWidget] resolve board=%@ boardsLoaded=%d presets=%d",
-              boardId ?? "nil", allBoards.count, result.count)
-        return result
+        let board = allBoards.first(where: { $0.id == boardId })
+        let presets = boardId.map { Shared.presets(forBoard: $0) } ?? []
+        // 診断用（原因切り分け後に削除）: 表示中の欄名・件数・全欄数。
+        let debug = "欄:\(board?.name ?? "?") 件:\(presets.count) 全:\(allBoards.count)"
+        NSLog("[ImasuguWidget] %@ id=%@", debug, boardId ?? "nil")
+        return PresetEntry(date: Date(), presets: presets, debug: debug)
     }
 }
 
@@ -46,7 +49,7 @@ struct PresetWidgetView: View {
             // ロック画面：タップでアプリを開かず無音起動（ロック解除不要）。
             AccessoryView(entry: entry)
         default:
-            WaitingView(presets: entry.presets, small: family == .systemSmall)
+            WaitingView(presets: entry.presets, small: family == .systemSmall, debug: entry.debug)
         }
     }
 }
@@ -56,7 +59,20 @@ struct PresetWidgetView: View {
 private struct WaitingView: View {
     let presets: [SharedPreset]
     let small: Bool
+    let debug: String
     var body: some View {
+        VStack(spacing: 3) {
+            grid
+            // 診断表示（原因切り分け後に削除）。
+            Text(debug)
+                .font(.system(size: 8, weight: .medium))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+        }
+    }
+
+    @ViewBuilder private var grid: some View {
         let shown = Array(presets.prefix(small ? 4 : 8))
         if shown.isEmpty {
             VStack(spacing: 6) {

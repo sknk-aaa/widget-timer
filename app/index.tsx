@@ -17,7 +17,7 @@ import { PressableScale } from '../src/ui/components/PressableScale';
 import { Banner } from '../src/ui/components/common';
 import { MenuIcon, PlusIcon } from '../src/ui/icons/ui';
 import { haptics } from '../src/ui/haptics';
-import { enterItem, exitItem, listLayout } from '../src/ui/motion';
+import { enterItem, listLayout, fadeOut } from '../src/ui/motion';
 import { openAppSettings } from '../src/native/settings';
 import { t } from '../src/i18n';
 
@@ -236,7 +236,7 @@ export default function MainScreen() {
         {sortedTimers.length > 0 && (
           <View style={{ marginBottom: spacing.xl, gap: spacing.md }}>
             {sortedTimers.map((timer) => (
-              <Animated.View key={timer.id} entering={enterItem} exiting={exitItem} layout={listLayout}>
+              <Animated.View key={timer.id} entering={enterItem} exiting={fadeOut} layout={listLayout}>
                 <RunningTimerRow
                   timer={timer}
                   onPause={() => useTimersStore.getState().pause(timer.id)}
