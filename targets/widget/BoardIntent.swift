@@ -24,7 +24,7 @@ struct BoardEntity: AppEntity {
 }
 
 struct BoardQuery: EntityQuery {
-    func entities(for identifiers: [String]) async throws -> [BoardEntity] {
+    func entities(for identifiers: [BoardEntity.ID]) async throws -> [BoardEntity] {
         // 選択済みのIDは必ず entity に解決する（一覧に見つからなくても id を保持）。
         // これを取りこぼすと configuration.board が nil になり、既定の先頭欄へ戻ってしまう。
         let all = boards()
@@ -46,6 +46,13 @@ struct SelectBoardIntent: WidgetConfigurationIntent {
 
     @Parameter(title: "Board")
     var board: BoardEntity?
+
+    // これが無いと「編集」画面にパラメータ（Board選択）が出ないことがある。
+    static var parameterSummary: some ParameterSummary {
+        Summary {
+            \.$board
+        }
+    }
 
     init() {}
 }
