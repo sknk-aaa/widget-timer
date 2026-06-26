@@ -64,11 +64,25 @@ export default function OnboardingScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: OB.bg, paddingTop: insets.top }}>
       <StatusBar style="dark" />
-      <View style={{ alignItems: 'flex-end', paddingHorizontal: spacing.xl, height: 44, justifyContent: 'center' }}>
-        {page < PAGES - 1 && (
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingHorizontal: spacing.xl,
+          height: 48,
+        }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, opacity: page === 0 ? 1 : 0 }}>
+          <Image source={require('../assets/icon.png')} style={{ width: 30, height: 30, borderRadius: 7 }} />
+          <Text style={{ color: OB.title, fontSize: 16, fontWeight: '800', letterSpacing: 0.2 }}>{s.appName}</Text>
+        </View>
+        {page < PAGES - 1 ? (
           <Pressable onPress={() => void finish()} hitSlop={10} accessibilityRole="button" accessibilityLabel={s.onboarding.skip}>
             <Text style={{ color: OB.skip, fontSize: 15, fontWeight: '600' }}>{s.onboarding.skip}</Text>
           </Pressable>
+        ) : (
+          <View />
         )}
       </View>
 
@@ -81,12 +95,12 @@ export default function OnboardingScreen() {
         style={{ flex: 1 }}
       >
         <Page width={width} spacing={spacing.xxl}>
-          <Illustration source={require('../assets/onboarding/concept-rings.png')} />
-          <PageText title={s.onboarding.ringsTitle} body={s.onboarding.ringsBody} />
-        </Page>
-        <Page width={width} spacing={spacing.xxl}>
           <Illustration source={require('../assets/onboarding/concept-onetap.png')} />
           <PageText title={s.onboarding.onetapTitle} body={s.onboarding.onetapBody} />
+        </Page>
+        <Page width={width} spacing={spacing.xxl}>
+          <Illustration source={require('../assets/onboarding/concept-rings.png')} />
+          <PageText title={s.onboarding.ringsTitle} body={s.onboarding.ringsBody} />
         </Page>
         <Page width={width} spacing={spacing.xxl}>
           <Illustration source={require('../assets/onboarding/concept-ready.png')} />
