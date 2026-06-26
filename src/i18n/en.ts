@@ -118,7 +118,11 @@ export const en: Strings = {
       },
       {
         q: 'How do I show a preset on the widget?',
-        a: 'On the main screen, drag the preset into the lower "On widget" area.',
+        a: 'On the main screen, drag a preset from "All presets" up into the widget board.',
+      },
+      {
+        q: 'How do I show a different board on the widget?',
+        a: 'Long-press the widget on your Home Screen → "Edit Widget" → pick the board under "Board". Place multiple widgets to show different boards (adding boards is Pro).',
       },
       {
         q: 'Can I run multiple timers at once?',
