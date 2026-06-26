@@ -11,6 +11,7 @@ import { uuid } from '../domain/uuid';
 import { useProStore } from './pro';
 
 export interface PresetInput {
+  name: string;
   icon: string;
   color: string;
   durationSec: number;
@@ -58,6 +59,7 @@ export const usePresetsStore = create<PresetsState>((set, get) => ({
     }
     const preset: Preset = {
       id: uuid(),
+      name: input.name,
       icon: input.icon,
       color: input.color,
       durationSec: input.durationSec,

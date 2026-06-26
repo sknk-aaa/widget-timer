@@ -14,5 +14,8 @@ export const CONTACT_URL = 'https://tally.so/r/rjgJYL';
 // App Store ID（ASC → App情報 → Apple ID）。
 export const APP_STORE_ID = '6782746504';
 
+// 共有・「友だちにすすめる」用の公開URL。
+export const APP_STORE_URL = `https://apps.apple.com/app/id${APP_STORE_ID}`;
+
 // レビュー作成画面（文章を書ける）を直接開く。
 export const REVIEW_URL = `itms-apps://apps.apple.com/app/id${APP_STORE_ID}?action=write-review`;

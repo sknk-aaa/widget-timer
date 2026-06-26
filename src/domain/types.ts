@@ -6,6 +6,8 @@ export type TimerSource = 'app' | 'widget' | 'liveactivity' | 'quick';
 
 export interface Preset {
   id: string;
+  /** 任意の表示名（空文字＝名前なし）。アイコンの上に表示される。 */
+  name: string;
   icon: IconId;
   color: ColorId;
   durationSec: number;

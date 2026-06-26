@@ -80,6 +80,13 @@ export const ClockIcon = wrap(() => (
   </>
 ));
 
+export const TagIcon = wrap(() => (
+  <>
+    <Path d="M4 4.5h7.4l8.1 8.1a1.9 1.9 0 0 1 0 2.7l-4.2 4.2a1.9 1.9 0 0 1-2.7 0L4.5 11.4V4.5z" />
+    <Circle cx="8.2" cy="8.2" r="1.3" />
+  </>
+));
+
 export const DropletIcon = wrap(() => (
   <Path d="M12 3.5c3.4 3.9 5.4 6.5 5.4 9.3a5.4 5.4 0 0 1-10.8 0C6.6 10 8.6 7.4 12 3.5z" />
 ));

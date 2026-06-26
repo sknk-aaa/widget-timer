@@ -55,6 +55,13 @@ export function PresetBoard(props: Props) {
   const [width, setWidth] = React.useState(0);
   const cols = width > 0 ? Math.max(3, Math.floor((width - 2 * PAD + GAP) / CELL_W)) : 4;
 
+  // 名前を1つでも持つプリセットがある時だけ、アイコン上に名前バンドを確保（無ければ詰める）。
+  const anyNamed =
+    props.hidden.some((p) => p.name.trim().length > 0) ||
+    props.widget.some((p) => p.name.trim().length > 0);
+  const nameBand = anyNamed ? 18 : 0;
+  const cellH = CELL_H + nameBand;
+
   const [hiddenIds, setHiddenIds] = React.useState<string[]>(props.hidden.map((p) => p.id));
   const [widgetIds, setWidgetIds] = React.useState<string[]>(props.widget.map((p) => p.id));
   const [draggingId, setDraggingId] = React.useState<string | null>(null);
@@ -77,15 +84,15 @@ export function PresetBoard(props: Props) {
   const hiddenRows = Math.max(1, Math.ceil(hiddenSlots / cols));
   const widgetRows = Math.max(1, Math.ceil(widgetIds.length / cols));
   const hiddenAreaTop = LABEL_BLOCK;
-  const widgetLabelTop = hiddenAreaTop + hiddenRows * CELL_H + 8;
+  const widgetLabelTop = hiddenAreaTop + hiddenRows * cellH + 8;
   const widgetAreaTop = widgetLabelTop + LABEL_BLOCK;
-  const totalHeight = widgetAreaTop + widgetRows * CELL_H + 8;
+  const totalHeight = widgetAreaTop + widgetRows * cellH + 8;
 
   const areaTopOf = (area: Area) => (area === 'hidden' ? hiddenAreaTop : widgetAreaTop);
 
   // ---- ハンドラを安定化するための ref（再レンダーでジェスチャを作り直さない）----
-  const dataRef = React.useRef({ hiddenIds, widgetIds, cols, widgetLabelTop, hiddenAreaTop, widgetAreaTop });
-  dataRef.current = { hiddenIds, widgetIds, cols, widgetLabelTop, hiddenAreaTop, widgetAreaTop };
+  const dataRef = React.useRef({ hiddenIds, widgetIds, cols, widgetLabelTop, hiddenAreaTop, widgetAreaTop, cellH, nameBand });
+  dataRef.current = { hiddenIds, widgetIds, cols, widgetLabelTop, hiddenAreaTop, widgetAreaTop, cellH, nameBand };
   const cbRef = React.useRef(props);
   cbRef.current = props;
   const byIdRef = React.useRef(byId);
@@ -107,7 +114,7 @@ export function PresetBoard(props: Props) {
     const row = Math.floor(index / d.cols);
     const col = index % d.cols;
     startLeft.value = PAD + col * CELL_W;
-    startTop.value = (area === 'hidden' ? d.hiddenAreaTop : d.widgetAreaTop) + row * CELL_H;
+    startTop.value = (area === 'hidden' ? d.hiddenAreaTop : d.widgetAreaTop) + row * d.cellH + d.nameBand;
     dragX.value = 0;
     dragY.value = 0;
     dragScale.value = withSpring(1.08, springs.snappy);
@@ -133,7 +140,7 @@ export function PresetBoard(props: Props) {
     const sameArea = (targetArea === 'hidden') === fromHidden;
     const col = clamp(Math.round((fx - PAD) / CELL_W), 0, d.cols - 1);
     const areaTop = targetArea === 'hidden' ? d.hiddenAreaTop : d.widgetAreaTop;
-    const row = Math.max(0, Math.floor((fy - areaTop) / CELL_H));
+    const row = Math.max(0, Math.floor((fy - areaTop) / d.cellH));
     let j = row * d.cols + col;
 
     if (sameArea) {
@@ -210,11 +217,11 @@ export function PresetBoard(props: Props) {
     const index = hi >= 0 ? hi : widgetIds.indexOf(id);
     const row = Math.floor(index / cols);
     const col = index % cols;
-    return { left: PAD + col * CELL_W, top: areaTopOf(area) + row * CELL_H, index };
+    return { left: PAD + col * CELL_W, top: areaTopOf(area) + row * cellH, index };
   };
 
   const draggingPreset = draggingId ? byId.get(draggingId) : null;
-  const addPos = { left: PAD + (hiddenIds.length % cols) * CELL_W, top: hiddenAreaTop + Math.floor(hiddenIds.length / cols) * CELL_H };
+  const addPos = { left: PAD + (hiddenIds.length % cols) * CELL_W, top: hiddenAreaTop + Math.floor(hiddenIds.length / cols) * cellH + nameBand };
   // 描画順は固定（並べ替えで子の順序を変えるとジェスチャが切れるため）。位置は left/top で表現。
   const orderedIds = React.useMemo(() => [...byId.keys()], [byId]);
 
@@ -242,7 +249,7 @@ export function PresetBoard(props: Props) {
         text={props.widgetLabel}
         right={props.widgetCountLabel}
       />
-      {widgetIds.length === 0 && <EmptyHint theme={theme} top={widgetAreaTop} />}
+      {widgetIds.length === 0 && <EmptyHint theme={theme} top={widgetAreaTop + nameBand} />}
 
       {orderedIds.map((id) => {
         const p = byId.get(id);
@@ -256,6 +263,7 @@ export function PresetBoard(props: Props) {
             index={pos.index}
             left={pos.left}
             top={pos.top}
+            nameBand={nameBand}
             theme={theme}
             editMode={editMode}
             isDragging={id === draggingId}
@@ -360,6 +368,7 @@ interface CellProps {
   index: number;
   left: number;
   top: number;
+  nameBand: number;
   theme: Theme;
   editMode: boolean;
   isDragging: boolean;
@@ -381,6 +390,7 @@ function PresetCell({
   preset,
   left,
   top,
+  nameBand,
   theme,
   editMode,
   isDragging,
@@ -457,11 +467,29 @@ function PresetCell({
         opacity: isDragging ? 0.2 : 1,
       }}
     >
+      {nameBand > 0 && (
+        <View style={{ height: nameBand, width: TILE_SIZE, justifyContent: 'center' }}>
+          {preset.name.trim().length > 0 && (
+            <Text
+              allowFontScaling={false}
+              numberOfLines={1}
+              style={{ color: c.textPrimary, fontSize: 11.5, fontWeight: '700', textAlign: 'center' }}
+            >
+              {preset.name.trim()}
+            </Text>
+          )}
+        </View>
+      )}
+
       <GestureDetector gesture={gesture}>
         <Animated.View
           style={animStyle}
           accessibilityRole="button"
-          accessibilityLabel={t().board.timerOf(formatDurationShort(preset.durationSec))}
+          accessibilityLabel={
+            preset.name.trim().length > 0
+              ? `${preset.name.trim()} ${formatDurationShort(preset.durationSec)}`
+              : t().board.timerOf(formatDurationShort(preset.durationSec))
+          }
           accessibilityHint={editMode ? t().board.editHint : t().board.launchHint}
         >
           <PresetTileVisual icon={preset.icon} color={preset.color} glow={!isDragging} />
@@ -476,7 +504,7 @@ function PresetCell({
           accessibilityLabel={t().common.delete}
           style={{
             position: 'absolute',
-            top: -6,
+            top: nameBand - 6,
             left: -6,
             width: 24,
             height: 24,

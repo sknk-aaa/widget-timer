@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, Text, ScrollView, Alert, Pressable } from 'react-native';
+import { View, Text, ScrollView, Alert, Pressable, TextInput } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAudioPlayer } from 'expo-audio';
@@ -14,7 +14,7 @@ import { ColorPicker, IconPicker } from '../src/ui/components/Pickers';
 import { Button } from '../src/ui/components/Button';
 import { PresetTileVisual } from '../src/ui/components/PresetTile';
 import { SheetHeader, SectionLabel } from '../src/ui/components/common';
-import { ClockIcon, DropletIcon, ShapesIcon, BellGlyph } from '../src/ui/icons/ui';
+import { TagIcon, ClockIcon, DropletIcon, ShapesIcon, BellGlyph } from '../src/ui/icons/ui';
 import { haptics } from '../src/ui/haptics';
 import { t } from '../src/i18n';
 
@@ -30,6 +30,7 @@ export default function PresetScreen() {
   const existing = params.id ? presets.find((p) => p.id === params.id) : undefined;
   const isEdit = !!existing;
 
+  const [name, setName] = React.useState(existing?.name ?? '');
   const [durationSec, setDurationSec] = React.useState(existing?.durationSec ?? 300);
   const [icon, setIcon] = React.useState(existing?.icon ?? DEFAULT_ICON_ID);
   const [color, setColor] = React.useState(existing?.color ?? DEFAULT_COLOR_ID);
@@ -74,9 +75,9 @@ export default function PresetScreen() {
       return;
     }
     if (isEdit && existing) {
-      usePresetsStore.getState().update(existing.id, { durationSec, icon, color, sound, inWidget });
+      usePresetsStore.getState().update(existing.id, { name: name.trim(), durationSec, icon, color, sound, inWidget });
     } else {
-      const created = usePresetsStore.getState().create({ durationSec, icon, color, sound, inWidget });
+      const created = usePresetsStore.getState().create({ name: name.trim(), durationSec, icon, color, sound, inWidget });
       if (!created) {
         router.push('/paywall');
         return;
@@ -137,7 +138,38 @@ export default function PresetScreen() {
         />
 
         <View style={{ alignItems: 'center', marginBottom: spacing.lg }}>
+          {name.trim().length > 0 && (
+            <Text
+              numberOfLines={1}
+              style={{ color: c.textPrimary, fontSize: 15, fontWeight: '700', marginBottom: 8, maxWidth: 220 }}
+            >
+              {name.trim()}
+            </Text>
+          )}
           <PresetTileVisual icon={icon} color={color} size={68} />
+        </View>
+
+        <View style={{ marginBottom: spacing.xl }}>
+          <SectionLabel icon={<TagIcon color={c.textSecondary} size={15} />}>
+            {s.preset.name}
+          </SectionLabel>
+          <TextInput
+            value={name}
+            onChangeText={setName}
+            placeholder={s.preset.namePlaceholder}
+            placeholderTextColor={c.textTertiary}
+            maxLength={20}
+            returnKeyType="done"
+            style={{
+              backgroundColor: c.surface,
+              borderRadius: radius.md,
+              paddingHorizontal: spacing.lg,
+              paddingVertical: spacing.md,
+              color: c.textPrimary,
+              fontSize: 16,
+              fontWeight: '600',
+            }}
+          />
         </View>
 
         <View style={{ marginBottom: spacing.xl }}>

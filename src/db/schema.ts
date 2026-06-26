@@ -2,6 +2,8 @@ import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
 
 export const presets = sqliteTable('presets', {
   id: text('id').primaryKey(),
+  // 任意の表示名（空文字＝名前なし）。
+  name: text('name').notNull().default(''),
   icon: text('icon').notNull(),
   color: text('color').notNull(),
   durationSec: integer('duration_sec').notNull(),

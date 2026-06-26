@@ -30,6 +30,7 @@ export function bulkUpsertPresets(items: Preset[]): void {
         .onConflictDoUpdate({
           target: presets.id,
           set: {
+            name: p.name,
             icon: p.icon,
             color: p.color,
             durationSec: p.durationSec,

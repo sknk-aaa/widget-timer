@@ -26,6 +26,8 @@ export const ja = {
   preset: {
     newTitle: 'プリセットを作成',
     editTitle: 'プリセットを編集',
+    name: '名前',
+    namePlaceholder: '任意（例: 仕事）',
     duration: '時間',
     icon: 'アイコン',
     color: '色',
@@ -80,6 +82,8 @@ export const ja = {
     restore: '購入を復元',
     support: '開発者を応援',
     supportThanks: '応援ありがとうございます！',
+    share: '友だちにすすめる',
+    shareMessage: '「今すぐタイマー」— ウィジェットからワンタップでタイマー。',
     replayTutorial: 'チュートリアルをもう一度見る',
     faq: 'よくある質問',
     about: 'アプリ情報',

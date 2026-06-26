@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, Text, ScrollView, Pressable, Switch, Linking, Alert } from 'react-native';
+import { View, Text, ScrollView, Pressable, Switch, Linking, Alert, Share } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
@@ -10,7 +10,7 @@ import { SheetHeader, SectionLabel } from '../src/ui/components/common';
 import { Button } from '../src/ui/components/Button';
 import { CheckIcon, ChevronIcon, StarIcon } from '../src/ui/icons/ui';
 import { haptics } from '../src/ui/haptics';
-import { PRIVACY_URL, TERMS_URL, CONTACT_URL } from '../src/domain/links';
+import { PRIVACY_URL, TERMS_URL, CONTACT_URL, APP_STORE_URL } from '../src/domain/links';
 import { openWriteReview } from '../src/native/review';
 import { t } from '../src/i18n';
 
@@ -26,6 +26,10 @@ export default function SettingsScreen() {
   const restore = async () => {
     const ok = await useProStore.getState().restore();
     Alert.alert(ok ? s.pro.restored : s.pro.title, ok ? '' : s.pro.notRestored);
+  };
+
+  const share = () => {
+    void Share.share({ message: s.settings.shareMessage, url: APP_STORE_URL }).catch(() => {});
   };
 
   return (
@@ -131,6 +135,7 @@ export default function SettingsScreen() {
         </View>
         <View style={{ backgroundColor: c.surface, borderRadius: radius.lg, marginBottom: spacing.xl }}>
           <Row first label={s.settings.review} chevron onPress={() => void openWriteReview()} />
+          <Row label={s.settings.share} chevron onPress={share} />
           <Row label={s.settings.replayTutorial} chevron onPress={() => router.push('/onboarding')} />
           <Row label={s.settings.faq} chevron onPress={() => router.push('/faq')} />
         </View>

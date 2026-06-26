@@ -5,6 +5,7 @@ import { expoDb } from './client';
 const DDL = `
 CREATE TABLE IF NOT EXISTS \`presets\` (
   \`id\` text PRIMARY KEY NOT NULL,
+  \`name\` text DEFAULT '' NOT NULL,
   \`icon\` text NOT NULL,
   \`color\` text NOT NULL,
   \`duration_sec\` integer NOT NULL,
@@ -41,6 +42,7 @@ export function runMigrations(): void {
   expoDb.execSync(DDL);
   // 既存インストール向け：CREATE TABLE IF NOT EXISTS では追加されない新カラムを冪等に補う。
   ensureColumn('presets', 'sound', "text NOT NULL DEFAULT 'default'");
+  ensureColumn('presets', 'name', "text NOT NULL DEFAULT ''");
   ensureColumn('running_timers', 'sound', "text NOT NULL DEFAULT 'default'");
 }
 

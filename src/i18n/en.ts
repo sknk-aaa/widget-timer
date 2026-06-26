@@ -28,6 +28,8 @@ export const en: Strings = {
   preset: {
     newTitle: 'New preset',
     editTitle: 'Edit preset',
+    name: 'Name',
+    namePlaceholder: 'Optional (e.g. Work)',
     duration: 'Duration',
     icon: 'Icon',
     color: 'Color',
@@ -82,6 +84,8 @@ export const en: Strings = {
     restore: 'Restore purchase',
     support: 'Support the developer',
     supportThanks: 'Thank you for your support!',
+    share: 'Tell a friend',
+    shareMessage: 'Imasugu Timer — start a timer in one tap from your widget.',
     replayTutorial: 'Replay the tutorial',
     faq: 'FAQ',
     about: 'About',
