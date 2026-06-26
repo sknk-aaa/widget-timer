@@ -21,6 +21,8 @@ import type { Preset, Board } from '../../domain/types';
 import { useTheme, type Theme } from '../theme';
 import { t } from '../../i18n';
 
+type Colors = Theme['c'];
+
 const PAD = 2;
 const GAP = 16;
 const CELL_W = TILE_SIZE + GAP;
@@ -47,11 +49,23 @@ interface Props {
   onAddPreset: () => void;
   /** ボードの所属を順序つきで確定（並べ替え/追加/削除）。無料上限超過なら false。 */
   onSetBoard: (presetIds: string[]) => boolean;
+  /** 「全てのプリセット」の並び順を確定。 */
+  onReorderAll: (presetIds: string[]) => void;
   onDragActiveChange: (active: boolean) => void;
 }
 
 function clamp(n: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, n));
+}
+
+function sameArr(a: string[], b: string[]): boolean {
+  return a.length === b.length && a.every((v, i) => v === b[i]);
+}
+
+function moveTo(arr: string[], id: string, j: number): string[] {
+  const without = arr.filter((x) => x !== id);
+  const k = clamp(j, 0, without.length);
+  return [...without.slice(0, k), id, ...without.slice(k)];
 }
 
 export function PresetBoard(props: Props) {
@@ -63,26 +77,36 @@ export function PresetBoard(props: Props) {
   const [width, setWidth] = React.useState(0);
   const cols = width > 0 ? Math.max(3, Math.floor((width - 2 * PAD + GAP) / CELL_W)) : 4;
 
-  const masterIds = React.useMemo(() => props.allPresets.map((p) => p.id), [props.allPresets]);
   const byId = React.useMemo(() => {
     const m = new Map<string, Preset>();
     for (const p of props.allPresets) m.set(p.id, p);
     return m;
   }, [props.allPresets]);
+  const byIdRef = React.useRef(byId);
+  byIdRef.current = byId;
 
   const anyNamed = props.allPresets.some((p) => p.name.trim().length > 0);
   const nameBand = anyNamed ? 18 : 0;
   const cellH = BASE_CELL_H + nameBand;
 
+  const [masterIds, setMasterIds] = React.useState<string[]>(() => props.allPresets.map((p) => p.id));
   const [boardIds, setBoardIds] = React.useState<string[]>(props.boardPresetIds);
   const [draggingKey, setDraggingKey] = React.useState<string | null>(null);
+
   const draggingRef = React.useRef<{ zone: Zone; id: string } | null>(null);
+  const startMasterRef = React.useRef<string[]>([]);
   const startBoardRef = React.useRef<string[]>([]);
+  const workMasterRef = React.useRef<string[]>([]);
   const workBoardRef = React.useRef<string[]>([]);
-  // boardIds の最新値をジェスチャ内から参照するための ref。
+  const masterIdsRef = React.useRef(masterIds);
+  masterIdsRef.current = masterIds;
   const boardIdsRef = React.useRef(boardIds);
   boardIdsRef.current = boardIds;
 
+  React.useEffect(() => {
+    if (draggingRef.current) return;
+    setMasterIds(props.allPresets.map((p) => p.id));
+  }, [props.allPresets]);
   React.useEffect(() => {
     if (draggingRef.current) return;
     setBoardIds(props.boardPresetIds);
@@ -93,12 +117,11 @@ export function PresetBoard(props: Props) {
   const boardAreaTop = LABEL_BLOCK;
   const masterLabelTop = boardAreaTop + boardRows * cellH + 8;
   const masterAreaTop = masterLabelTop + LABEL_BLOCK;
-  const masterSlots = masterIds.length + 1;
-  const masterRows = Math.max(1, Math.ceil(masterSlots / cols));
+  const masterRows = Math.max(1, Math.ceil((masterIds.length + 1) / cols));
   const totalHeight = masterAreaTop + masterRows * cellH + 8;
 
-  const dataRef = React.useRef({ cols, cellH, nameBand, boardAreaTop, masterLabelTop });
-  dataRef.current = { cols, cellH, nameBand, boardAreaTop, masterLabelTop };
+  const layoutRef = React.useRef({ cols, cellH, nameBand, boardAreaTop, masterAreaTop, masterLabelTop });
+  layoutRef.current = { cols, cellH, nameBand, boardAreaTop, masterAreaTop, masterLabelTop };
   const cbRef = React.useRef(props);
   cbRef.current = props;
 
@@ -108,100 +131,124 @@ export function PresetBoard(props: Props) {
   const dragY = useSharedValue(0);
   const dragScale = useSharedValue(1);
 
-  const slotTop = (zone: Zone, index: number): number => {
-    const d = dataRef.current;
-    const row = Math.floor(index / d.cols);
-    return (zone === 'board' ? d.boardAreaTop : masterAreaTop) + row * d.cellH + d.nameBand;
+  const slotLeft = (index: number, cols_: number) => PAD + (index % cols_) * CELL_W;
+  const slotTop = (zone: Zone, index: number) => {
+    const d = layoutRef.current;
+    const top = (zone === 'board' ? d.boardAreaTop : d.masterAreaTop) + Math.floor(index / d.cols) * d.cellH;
+    return top + d.nameBand;
   };
-  const slotLeft = (index: number): number => PAD + (index % dataRef.current.cols) * CELL_W;
 
-  const handleBegin = React.useCallback((zone: Zone, id: string) => {
-    const board = zone === 'board' ? boardIdsRef.current : masterIds;
-    const index = board.indexOf(id);
-    if (index < 0) return;
-    startLeft.value = slotLeft(index);
-    startTop.value = slotTop(zone, index);
-    dragX.value = 0;
-    dragY.value = 0;
-    dragScale.value = withSpring(1.08, springs.snappy);
-    startBoardRef.current = [...boardIdsRef.current];
-    workBoardRef.current = [...boardIdsRef.current];
-    draggingRef.current = { zone, id };
-    setDraggingKey(`${zone}:${id}`);
-    cbRef.current.onDragActiveChange(true);
-    haptics.pickup();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [masterIds]);
-
-  const indexAt = (fx: number, fy: number, areaTop: number, len: number): number => {
-    const d = dataRef.current;
+  const indexAt = (zone: Zone, fx: number, fy: number, len: number): number => {
+    const d = layoutRef.current;
+    const areaTop = zone === 'board' ? d.boardAreaTop : d.masterAreaTop;
     const col = clamp(Math.round((fx - PAD) / CELL_W), 0, d.cols - 1);
     const row = Math.max(0, Math.floor((fy - areaTop) / d.cellH));
     return clamp(row * d.cols + col, 0, len);
   };
 
-  const handleMove = React.useCallback((tx: number, ty: number) => {
+  const onBegin = React.useCallback((zone: Zone, id: string) => {
+    const list = zone === 'board' ? boardIdsRef.current : masterIdsRef.current;
+    const index = list.indexOf(id);
+    if (index < 0) return;
+    startLeft.value = slotLeft(index, layoutRef.current.cols);
+    startTop.value = slotTop(zone, index);
+    dragX.value = 0;
+    dragY.value = 0;
+    dragScale.value = withSpring(1.08, springs.snappy);
+    startMasterRef.current = [...masterIdsRef.current];
+    startBoardRef.current = [...boardIdsRef.current];
+    workMasterRef.current = startMasterRef.current;
+    workBoardRef.current = startBoardRef.current;
+    draggingRef.current = { zone, id };
+    setDraggingKey(`${zone}:${id}`);
+    cbRef.current.onDragActiveChange(true);
+    haptics.pickup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onMove = React.useCallback((tx: number, ty: number) => {
     const drag = draggingRef.current;
     if (!drag) return;
     dragX.value = tx;
     dragY.value = ty;
-    const d = dataRef.current;
+    const d = layoutRef.current;
     const fx = startLeft.value + TILE_SIZE / 2 + tx;
     const fy = startTop.value + TILE_SIZE / 2 + ty;
     const target: Zone = fy < d.masterLabelTop ? 'board' : 'master';
-    const start = startBoardRef.current;
-    let next = start;
+    const startMaster = startMasterRef.current;
+    const startBoard = startBoardRef.current;
+    let nextMaster = startMaster;
+    let nextBoard = startBoard;
 
     if (drag.zone === 'board') {
       if (target === 'board') {
-        const without = start.filter((x) => x !== drag.id);
-        const j = indexAt(fx, fy, d.boardAreaTop, without.length);
-        next = [...without.slice(0, j), drag.id, ...without.slice(j)];
+        nextBoard = moveTo(startBoard, drag.id, indexAt('board', fx, fy, startBoard.length - 1));
       } else {
-        next = start.filter((x) => x !== drag.id); // 取り除きプレビュー
+        nextBoard = startBoard.filter((x) => x !== drag.id); // 欄から外すプレビュー
       }
     } else {
-      // master 由来：ボード上なら追加プレビュー（既存メンバーは何もしない）
-      if (target === 'board' && !start.includes(drag.id)) {
-        const j = indexAt(fx, fy, d.boardAreaTop, start.length);
-        next = [...start.slice(0, j), drag.id, ...start.slice(j)];
-      } else {
-        next = start;
+      if (target === 'master') {
+        nextMaster = moveTo(startMaster, drag.id, indexAt('master', fx, fy, startMaster.length - 1));
+      } else if (!startBoard.includes(drag.id)) {
+        const j = indexAt('board', fx, fy, startBoard.length);
+        nextBoard = [...startBoard.slice(0, j), drag.id, ...startBoard.slice(j)]; // 欄へ追加プレビュー
       }
     }
-    const cur = workBoardRef.current;
-    if (next.length !== cur.length || next.some((v, i) => v !== cur[i])) {
-      workBoardRef.current = next;
-      setBoardIds(next);
-      haptics.swap();
+
+    let changed = false;
+    if (!sameArr(nextBoard, workBoardRef.current)) {
+      workBoardRef.current = nextBoard;
+      setBoardIds(nextBoard);
+      changed = true;
     }
+    if (!sameArr(nextMaster, workMasterRef.current)) {
+      workMasterRef.current = nextMaster;
+      setMasterIds(nextMaster);
+      changed = true;
+    }
+    if (changed) haptics.swap();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleEnd = React.useCallback(() => {
+  const onEnd = React.useCallback(() => {
     const drag = draggingRef.current;
     if (!drag) return;
     draggingRef.current = null;
     dragScale.value = withSpring(1, springs.snappy);
-    const work = workBoardRef.current;
-    const start = startBoardRef.current;
-    const changed = work.length !== start.length || work.some((v, i) => v !== start[i]);
-    if (changed) {
-      const ok = cbRef.current.onSetBoard(work);
+    const workBoard = workBoardRef.current;
+    const workMaster = workMasterRef.current;
+    const boardChanged = !sameArr(workBoard, startBoardRef.current);
+    const masterChanged = !sameArr(workMaster, startMasterRef.current);
+    if (boardChanged) {
+      const ok = cbRef.current.onSetBoard(workBoard);
       if (!ok) setBoardIds(cbRef.current.boardPresetIds);
+    } else if (masterChanged) {
+      cbRef.current.onReorderAll(workMaster);
     } else {
-      setBoardIds(start);
+      setBoardIds(startBoardRef.current);
+      setMasterIds(startMasterRef.current);
     }
     setDraggingKey(null);
     cbRef.current.onDragActiveChange(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleTap = React.useCallback((id: string) => {
-    const p = cbRef.current.allPresets.find((x) => x.id === id);
+  const onTap = React.useCallback((id: string) => {
+    const p = byIdRef.current.get(id);
     if (!p) return;
     if (cbRef.current.editMode) cbRef.current.onEdit(p);
     else cbRef.current.onLaunch(p);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onDeleteId = React.useCallback((id: string) => {
+    const p = byIdRef.current.get(id);
+    if (p) cbRef.current.onDeletePreset(p);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onRemoveId = React.useCallback((id: string) => {
+    cbRef.current.onRemoveFromBoard(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -227,21 +274,20 @@ export function PresetBoard(props: Props) {
     return (
       <PresetCell
         key={key}
-        cellKey={key}
         zone={zone}
         preset={p}
-        left={slotLeft(index)}
+        left={slotLeft(index, cols)}
         top={(zone === 'board' ? boardAreaTop : masterAreaTop) + Math.floor(index / cols) * cellH}
         nameBand={nameBand}
-        theme={theme}
+        c={c}
         editMode={editMode}
         isDragging={key === draggingKey}
-        onBegin={handleBegin}
-        onMove={handleMove}
-        onEnd={handleEnd}
-        onTap={handleTap}
-        onDelete={() => cbRef.current.onDeletePreset(p)}
-        onRemoveFromBoard={() => cbRef.current.onRemoveFromBoard(id)}
+        onBegin={onBegin}
+        onMove={onMove}
+        onEnd={onEnd}
+        onTap={onTap}
+        onDelete={onDeleteId}
+        onRemoveFromBoard={onRemoveId}
       />
     );
   };
@@ -259,7 +305,6 @@ export function PresetBoard(props: Props) {
       />
 
       <View onLayout={onLayout} style={{ height: totalHeight }}>
-        {/* ボード（ウィジェット欄）をカード化 */}
         <View
           style={{
             position: 'absolute',
@@ -427,21 +472,20 @@ function EmptyHint({ theme, top, text }: { theme: Theme; top: number; text: stri
 }
 
 interface CellProps {
-  cellKey: string;
   zone: Zone;
   preset: Preset;
   left: number;
   top: number;
   nameBand: number;
-  theme: Theme;
+  c: Colors;
   editMode: boolean;
   isDragging: boolean;
   onBegin: (zone: Zone, id: string) => void;
   onMove: (tx: number, ty: number) => void;
   onEnd: () => void;
   onTap: (id: string) => void;
-  onDelete: () => void;
-  onRemoveFromBoard: () => void;
+  onDelete: (id: string) => void;
+  onRemoveFromBoard: (id: string) => void;
 }
 
 function jigglePhase(id: string): number {
@@ -450,14 +494,13 @@ function jigglePhase(id: string): number {
   return (h - 2) * 18;
 }
 
-function PresetCell({
-  cellKey,
+const PresetCell = React.memo(function PresetCell({
   zone,
   preset,
   left,
   top,
   nameBand,
-  theme,
+  c,
   editMode,
   isDragging,
   onBegin,
@@ -467,11 +510,11 @@ function PresetCell({
   onDelete,
   onRemoveFromBoard,
 }: CellProps) {
-  const { c } = theme;
   const pressScale = useSharedValue(1);
   const jiggle = useSharedValue(0);
   const reduced = useReducedMotion();
   const id = preset.id;
+  const cellKey = `${zone}:${id}`;
 
   React.useEffect(() => {
     if (editMode && !isDragging && !reduced) {
@@ -556,7 +599,7 @@ function PresetCell({
 
       {editMode && !isDragging && (
         <Pressable
-          onPress={zone === 'master' ? onDelete : onRemoveFromBoard}
+          onPress={() => (zone === 'master' ? onDelete(id) : onRemoveFromBoard(id))}
           hitSlop={10}
           accessibilityRole="button"
           accessibilityLabel={zone === 'master' ? t().common.delete : t().board.remove}
@@ -585,4 +628,4 @@ function PresetCell({
       </Text>
     </Animated.View>
   );
-}
+});

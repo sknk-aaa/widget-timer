@@ -236,6 +236,7 @@ export default function MainScreen() {
           onRemoveFromBoard={onRemoveFromBoard}
           onAddPreset={onAddPreset}
           onSetBoard={onSetBoard}
+          onReorderAll={(ids) => usePresetsStore.getState().reorder(ids)}
           onDragActiveChange={setDragActive}
         />
 
