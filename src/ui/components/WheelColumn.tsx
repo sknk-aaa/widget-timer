@@ -71,18 +71,25 @@ export function WheelColumn({
     onChange(idx);
   };
 
+  // 指を離した瞬間：フリックがある（慣性が続く）ときはここで確定せず、
+  // onMomentumScrollEnd に任せる（途中で止まる／勢いが打ち切られるのを防ぐ）。
+  const onEndDrag = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const v = e.nativeEvent.velocity?.y ?? 0;
+    if (Math.abs(v) < 0.05) finalize(e);
+  };
+
   return (
     <View style={{ flex: 1 }}>
       <ScrollView
         ref={ref}
         showsVerticalScrollIndicator={false}
         snapToInterval={ITEM_H}
-        decelerationRate="fast"
+        decelerationRate="normal"
         scrollEventThrottle={16}
         onScroll={onScroll}
         onScrollBeginDrag={() => onActiveChange?.(true)}
         onMomentumScrollEnd={finalize}
-        onScrollEndDrag={finalize}
+        onScrollEndDrag={onEndDrag}
         contentContainerStyle={{ paddingVertical: WHEEL_PAD }}
       >
         {Array.from({ length: max + 1 }, (_, n) => (
