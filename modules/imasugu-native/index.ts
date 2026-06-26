@@ -20,8 +20,6 @@ export interface ImasuguNativeModule {
     presetId: string | null,
     sound: string,
   ): Promise<void>;
-  /** アラート音IDを App Group にミラー（ウィジェット無音起動時に読む）。 */
-  setSharedSound(sound: string): void;
   pauseTimer(timerId: string): Promise<void>;
   resumeTimer(timerId: string): Promise<void>;
   cancel(timerId: string): Promise<void>;

@@ -14,7 +14,6 @@ import { liveActivityService } from '../native/liveActivity';
 import { widgetService } from '../native/widget';
 import { readRunningFromAppGroup, takeCancelledFromAppGroup } from '../native/shared';
 import { bumpCompletionCount, maybeAskReview } from '../native/review';
-import { useSettingsStore } from './settings';
 import { haptics } from '../ui/haptics';
 
 interface StartInput {
@@ -23,6 +22,7 @@ interface StartInput {
   color: string;
   durationSec: number;
   source: TimerSource;
+  sound: string;
 }
 
 interface TimersState {
@@ -85,6 +85,7 @@ export const useTimersStore = create<TimersState>((set, get) => ({
       state: 'running',
       pausedRemainingSec: null,
       createdAt: now,
+      sound: input.sound,
     };
     insertRunningTimer(timer);
     // 起動履歴を記録（「最近使った」「統計」の土台）。
@@ -102,7 +103,7 @@ export const useTimersStore = create<TimersState>((set, get) => ({
       endAt: timer.endAt,
       icon: timer.icon,
       color: timer.color,
-      sound: useSettingsStore.getState().alertSound,
+      sound: timer.sound,
     });
     await liveActivityService.start(liveParams(timer));
     await widgetService.reloadTimelines();
@@ -116,6 +117,7 @@ export const useTimersStore = create<TimersState>((set, get) => ({
       color: preset.color,
       durationSec: preset.durationSec,
       source,
+      sound: preset.sound,
     }),
 
   pause: async (id) => {
@@ -153,7 +155,7 @@ export const useTimersStore = create<TimersState>((set, get) => ({
       endAt,
       icon: next.icon,
       color: next.color,
-      sound: useSettingsStore.getState().alertSound,
+      sound: next.sound,
     });
     await liveActivityService.update(liveParams(next));
     await widgetService.reloadTimelines();
@@ -278,6 +280,7 @@ export const useTimersStore = create<TimersState>((set, get) => ({
         state: wantState,
         pausedRemainingSec: wantState === 'paused' ? e.pausedRemainingSec : null,
         createdAt: now,
+        sound: e.sound ?? 'default',
       });
     }
 

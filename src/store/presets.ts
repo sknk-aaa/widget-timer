@@ -15,6 +15,7 @@ export interface PresetInput {
   color: string;
   durationSec: number;
   inWidget: boolean;
+  sound: string;
 }
 
 interface PresetsState {
@@ -62,6 +63,7 @@ export const usePresetsStore = create<PresetsState>((set, get) => ({
       durationSec: input.durationSec,
       inWidget: input.inWidget,
       sortOrder: nextSortOrder(items, input.inWidget),
+      sound: input.sound,
     };
     insertPreset(preset);
     set({ presets: sorted([...items, preset]) });

@@ -14,9 +14,6 @@ import { PRIVACY_URL, TERMS_URL, CONTACT_URL } from '../src/domain/links';
 import { openWriteReview } from '../src/native/review';
 import { t } from '../src/i18n';
 
-// AlarmKit に渡す音ID。'default' はシステム標準、その他はバンドル音源（assets/sounds/<id>.mp3）。
-const SOUND_IDS = ['default', 'xylophone', 'digital', 'whale'] as const;
-
 export default function SettingsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -24,12 +21,22 @@ export default function SettingsScreen() {
   const s = t();
 
   const isPro = useProStore((st) => st.isPro);
-  const alertSound = useSettingsStore((st) => st.alertSound);
   const hapticsEnabled = useSettingsStore((st) => st.hapticsEnabled);
+  const supportPrice = useProStore((st) => st.supportPrice);
 
   const restore = async () => {
     const ok = await useProStore.getState().restore();
     Alert.alert(ok ? s.pro.restored : s.pro.title, ok ? '' : s.pro.notRestored);
+  };
+
+  const support = async () => {
+    const r = await useProStore.getState().support();
+    if (r === 'purchased') {
+      haptics.start();
+      Alert.alert(s.pro.title, s.settings.supportThanks);
+    } else if (r === 'failed') {
+      Alert.alert(s.pro.title, s.pro.purchaseFailed);
+    }
   };
 
   return (
@@ -70,34 +77,6 @@ export default function SettingsScreen() {
             <ChevronIcon color="#FFFFFF" size={20} />
           </Pressable>
         )}
-
-        <SectionLabel>{s.settings.sound}</SectionLabel>
-        <View style={{ backgroundColor: c.surface, borderRadius: radius.lg, marginBottom: spacing.xl }}>
-          {SOUND_IDS.map((id, i) => (
-            <Pressable
-              key={id}
-              onPress={() => {
-                useSettingsStore.getState().setAlertSound(id);
-                haptics.light();
-              }}
-              accessibilityRole="button"
-              accessibilityState={{ selected: alertSound === id }}
-              accessibilityLabel={s.sounds[id]}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                paddingVertical: spacing.lg,
-                paddingHorizontal: spacing.lg,
-                borderTopWidth: i === 0 ? 0 : 1,
-                borderTopColor: c.hairline,
-              }}
-            >
-              <Text style={{ color: c.textPrimary, fontSize: 15, fontWeight: '500' }}>{s.sounds[id]}</Text>
-              {alertSound === id && <CheckIcon color={c.accent} size={20} />}
-            </Pressable>
-          ))}
-        </View>
 
         <SectionLabel>{s.settings.feedback}</SectionLabel>
         <View
@@ -159,6 +138,7 @@ export default function SettingsScreen() {
         </View>
         <View style={{ backgroundColor: c.surface, borderRadius: radius.lg, marginBottom: spacing.xl }}>
           <Row first label={s.settings.review} chevron onPress={() => void openWriteReview()} />
+          <Row label={s.settings.support} value={supportPrice ?? undefined} chevron onPress={() => void support()} />
         </View>
 
         <SectionLabel>{s.settings.about}</SectionLabel>

@@ -14,6 +14,7 @@ export function mirrorPresetsToAppGroup(presets: Preset[]): void {
     durationSec: p.durationSec,
     inWidget: p.inWidget,
     sortOrder: p.sortOrder,
+    sound: p.sound,
   }));
   ImasuguNative.setSharedPresets(JSON.stringify(model));
 }
@@ -31,14 +32,9 @@ export function mirrorRunningToAppGroup(timers: RunningTimer[]): void {
     state: t.state,
     durationSec: t.durationSec,
     pausedRemainingSec: t.pausedRemainingSec,
+    sound: t.sound,
   }));
   ImasuguNative.setSharedRunning(JSON.stringify(model));
-}
-
-/** アラート音IDを App Group にミラー（ウィジェット無音起動時に AlarmKit で使う）。 */
-export function mirrorSoundToAppGroup(sound: string): void {
-  if (!ImasuguNative) return;
-  ImasuguNative.setSharedSound(sound);
 }
 
 interface SharedRunningEntry {
@@ -49,6 +45,7 @@ interface SharedRunningEntry {
   state: TimerState;
   durationSec: number;
   pausedRemainingSec: number | null;
+  sound?: string;
 }
 
 function isSharedRunningEntry(v: unknown): v is SharedRunningEntry {

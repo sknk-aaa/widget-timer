@@ -18,14 +18,9 @@ enum Shared {
     static let runningKey = "shared_running_v1" // 実行中タイマー JSON 配列
     static let runningMapKey = "running_alarm_map_v1" // alarmID -> presetID
     static let cancelledKey = "cancelled_ids_v1" // ウィジェット/通知で終了したID（アプリが取り込んでドックから消す）
-    static let soundKey = "alert_sound_v1" // アラート音ID（default / bell / chime / marimba）
 
     static var defaults: UserDefaults? {
         UserDefaults(suiteName: appGroup)
-    }
-
-    static func alertSound() -> String {
-        defaults?.string(forKey: soundKey) ?? "default"
     }
 }
 
@@ -59,6 +54,7 @@ struct SharedRunning: Codable, Identifiable {
     let state: String // running | paused | finished
     let durationSec: Int
     let pausedRemainingSec: Int?
+    var sound: String? = nil
 
     var endDate: Date { Date(timeIntervalSince1970: endAt / 1000) }
 }
@@ -79,6 +75,7 @@ struct SharedPreset: Codable, Identifiable, Hashable {
     let durationSec: Int
     let inWidget: Bool
     let sortOrder: Int
+    var sound: String? = nil
 }
 
 extension Shared {

@@ -15,33 +15,32 @@ import WidgetKit
 // ※ AlarmKit は iOS 26 の新API。シグネチャは実機(TestFlight)で要確認。
 
 enum AlarmScheduler {
-    static func schedule(durationSec: Int, metadata: TimerMetadata, tint: Color) async throws -> UUID {
+    static func schedule(durationSec: Int, metadata: TimerMetadata, tint: Color, sound: String) async throws -> UUID {
         let id = UUID()
         // Live Activity がボタンに渡す確実な alarmID をメタデータに埋め込む。
         let meta = TimerMetadata(presetID: metadata.presetID, icon: metadata.icon,
                                  colorID: metadata.colorID, alarmID: id.lower)
         let attributes = makeAttributes(metadata: meta, tint: tint)
-        let soundName = Shared.alertSound()
         let configuration = AlarmManager.AlarmConfiguration.timer(
             duration: TimeInterval(durationSec),
             attributes: attributes,
-            sound: hasBundledSound(soundName) ? .named("\(soundName).mp3") : .default
+            sound: hasBundledSound(sound) ? .named("\(sound).mp3") : .default
         )
         _ = try await AlarmManager.shared.schedule(id: id, configuration: configuration)
         recordRunning(alarmID: id, presetID: meta.presetID)
         // ウィジェットがカウントダウン表示できるよう実行中モデルを App Group に追記＋再読込
         let endAt = Date().addingTimeInterval(TimeInterval(durationSec)).timeIntervalSince1970 * 1000
-        appendRunning(id: id, endAt: endAt, icon: meta.icon, colorID: meta.colorID, durationSec: durationSec)
+        appendRunning(id: id, endAt: endAt, icon: meta.icon, colorID: meta.colorID, durationSec: durationSec, sound: sound)
         WidgetCenter.shared.reloadAllTimelines()
         return id
     }
 
-    private static func appendRunning(id: UUID, endAt: Double, icon: String, colorID: String, durationSec: Int) {
+    private static func appendRunning(id: UUID, endAt: Double, icon: String, colorID: String, durationSec: Int, sound: String) {
         var list = Shared.loadRunning()
         list.removeAll { $0.id.lowercased() == id.lower }
         list.append(SharedRunning(
             id: id.lower, endAt: endAt, icon: icon, color: colorID,
-            state: "running", durationSec: durationSec, pausedRemainingSec: nil
+            state: "running", durationSec: durationSec, pausedRemainingSec: nil, sound: sound
         ))
         if let data = try? JSONEncoder().encode(list) {
             Shared.defaults?.set(data, forKey: Shared.runningKey)
@@ -108,7 +107,7 @@ enum AlarmScheduler {
             guard r.id.lowercased() == id.lower, r.state == "running" else { return r }
             let remaining = max(0, Int(r.endDate.timeIntervalSince(now)))
             return SharedRunning(id: r.id, endAt: r.endAt, icon: r.icon, color: r.color,
-                                 state: "paused", durationSec: r.durationSec, pausedRemainingSec: remaining)
+                                 state: "paused", durationSec: r.durationSec, pausedRemainingSec: remaining, sound: r.sound)
         }
         if let data = try? JSONEncoder().encode(list) {
             Shared.defaults?.set(data, forKey: Shared.runningKey)
@@ -124,7 +123,7 @@ enum AlarmScheduler {
             let remaining = r.pausedRemainingSec ?? 0
             let endAt = now.addingTimeInterval(TimeInterval(remaining)).timeIntervalSince1970 * 1000
             return SharedRunning(id: r.id, endAt: endAt, icon: r.icon, color: r.color,
-                                 state: "running", durationSec: r.durationSec, pausedRemainingSec: nil)
+                                 state: "running", durationSec: r.durationSec, pausedRemainingSec: nil, sound: r.sound)
         }
         if let data = try? JSONEncoder().encode(list) {
             Shared.defaults?.set(data, forKey: Shared.runningKey)
@@ -164,7 +163,8 @@ struct StartPresetTimerIntent: AppIntent, LiveActivityIntent {
             let id = try await AlarmScheduler.schedule(
                 durationSec: preset.durationSec,
                 metadata: metadata,
-                tint: paletteColor(preset.color)
+                tint: paletteColor(preset.color),
+                sound: preset.sound ?? "default"
             )
             NSLog("[ImasuguWidget] scheduled OK id=%@", id.uuidString)
         } catch {

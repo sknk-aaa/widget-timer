@@ -41,6 +41,7 @@ export default function QuickScreen() {
       color: QUICK_COLOR,
       durationSec: effectiveSec,
       source: 'quick',
+      sound: 'default',
     });
     router.back();
   };

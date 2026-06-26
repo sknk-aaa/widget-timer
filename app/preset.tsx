@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePresetsStore } from '../src/store/presets';
 import { useProStore } from '../src/store/pro';
-import { FREE_WIDGET_SLOTS } from '../src/domain/types';
+import { FREE_WIDGET_SLOTS, SOUND_IDS } from '../src/domain/types';
 import { DEFAULT_COLOR_ID } from '../src/domain/colors';
 import { DEFAULT_ICON_ID } from '../src/ui/icons/registry';
 import { useTheme } from '../src/ui/theme';
@@ -13,6 +13,7 @@ import { ColorPicker, IconPicker } from '../src/ui/components/Pickers';
 import { Button } from '../src/ui/components/Button';
 import { PresetTileVisual } from '../src/ui/components/PresetTile';
 import { SheetHeader, SectionLabel } from '../src/ui/components/common';
+import { haptics } from '../src/ui/haptics';
 import { t } from '../src/i18n';
 
 export default function PresetScreen() {
@@ -30,6 +31,7 @@ export default function PresetScreen() {
   const [durationSec, setDurationSec] = React.useState(existing?.durationSec ?? 300);
   const [icon, setIcon] = React.useState(existing?.icon ?? DEFAULT_ICON_ID);
   const [color, setColor] = React.useState(existing?.color ?? DEFAULT_COLOR_ID);
+  const [sound, setSound] = React.useState(existing?.sound ?? 'default');
   const [inWidget, setInWidget] = React.useState(existing?.inWidget ?? false);
   const [dialActive, setDialActive] = React.useState(false);
 
@@ -47,9 +49,9 @@ export default function PresetScreen() {
       return;
     }
     if (isEdit && existing) {
-      usePresetsStore.getState().update(existing.id, { durationSec, icon, color, inWidget });
+      usePresetsStore.getState().update(existing.id, { durationSec, icon, color, sound, inWidget });
     } else {
-      const created = usePresetsStore.getState().create({ durationSec, icon, color, inWidget });
+      const created = usePresetsStore.getState().create({ durationSec, icon, color, sound, inWidget });
       if (!created) {
         router.push('/paywall');
         return;
@@ -125,6 +127,43 @@ export default function PresetScreen() {
         <View style={{ marginBottom: spacing.xl }}>
           <SectionLabel>{s.preset.icon}</SectionLabel>
           <IconPicker value={icon} color={color} onChange={setIcon} />
+        </View>
+
+        <View style={{ marginBottom: spacing.xl }}>
+          <SectionLabel>{s.preset.sound}</SectionLabel>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+            {SOUND_IDS.map((id) => {
+              const selected = sound === id;
+              return (
+                <Pressable
+                  key={id}
+                  onPress={() => {
+                    setSound(id);
+                    haptics.light();
+                  }}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  accessibilityLabel={s.sounds[id]}
+                  style={{
+                    paddingVertical: spacing.sm,
+                    paddingHorizontal: spacing.lg,
+                    borderRadius: radius.md,
+                    backgroundColor: selected ? c.accent : c.surface,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: selected ? '#FFFFFF' : c.textPrimary,
+                      fontSize: 14,
+                      fontWeight: '700',
+                    }}
+                  >
+                    {s.sounds[id]}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
 
         <View

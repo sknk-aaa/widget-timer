@@ -12,9 +12,9 @@ import { widgetService } from '../native/widget';
 const SEEDED_KEY = 'seeded';
 
 const DEFAULT_PRESETS: Omit<Preset, 'id'>[] = [
-  { icon: 'ramen', color: 'orange', durationSec: 180, inWidget: true, sortOrder: 0 },
-  { icon: 'bed', color: 'indigo', durationSec: 1200, inWidget: true, sortOrder: 1 },
-  { icon: 'book', color: 'blue', durationSec: 1500, inWidget: true, sortOrder: 2 },
+  { icon: 'ramen', color: 'orange', durationSec: 180, inWidget: true, sortOrder: 0, sound: 'default' },
+  { icon: 'bed', color: 'indigo', durationSec: 1200, inWidget: true, sortOrder: 1, sound: 'default' },
+  { icon: 'book', color: 'blue', durationSec: 1500, inWidget: true, sortOrder: 2, sound: 'default' },
 ];
 
 function seedDefaultsIfNeeded(): void {

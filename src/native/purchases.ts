@@ -4,6 +4,8 @@ import { hasNativeModules } from './env';
 import { ImasuguNative } from '../../modules/imasugu-native';
 
 export const PRO_PRODUCT_ID = 'com.sknk.imasugutimer.pro';
+// 任意の「応援」（消耗型・繰り返し購入可）。所有権は付与しない。
+export const SUPPORT_PRODUCT_ID = 'com.sknk.imasugutimer.support';
 const PRO_KEY = 'pro_owned';
 
 function mapPurchase(
@@ -62,6 +64,27 @@ export async function getProPrice(): Promise<string | null> {
   if (!ImasuguNative) return null;
   try {
     const product = await ImasuguNative.getProduct(PRO_PRODUCT_ID);
+    return product?.displayPrice ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** 応援（消耗型）を購入。Expo Go ではモックで purchased。 */
+export async function purchaseSupport(): Promise<PurchaseResult> {
+  if (!ImasuguNative) return 'purchased';
+  try {
+    return mapPurchase(await ImasuguNative.purchaseProduct(SUPPORT_PRODUCT_ID));
+  } catch {
+    return 'failed';
+  }
+}
+
+/** 応援の表示価格（取得できなければ null）。 */
+export async function getSupportPrice(): Promise<string | null> {
+  if (!ImasuguNative) return null;
+  try {
+    const product = await ImasuguNative.getProduct(SUPPORT_PRODUCT_ID);
     return product?.displayPrice ?? null;
   } catch {
     return null;

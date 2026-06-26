@@ -7,6 +7,8 @@ export const presets = sqliteTable('presets', {
   durationSec: integer('duration_sec').notNull(),
   inWidget: integer('in_widget', { mode: 'boolean' }).notNull().default(false),
   sortOrder: integer('sort_order').notNull().default(0),
+  // アラート音ID（'default' or バンドル音 xylophone/digital/whale）。プリセットごとに選べる。
+  sound: text('sound').notNull().default('default'),
 });
 
 export const runningTimers = sqliteTable('running_timers', {
@@ -21,6 +23,7 @@ export const runningTimers = sqliteTable('running_timers', {
     .default('running'),
   pausedRemainingSec: integer('paused_remaining_sec'),
   createdAt: integer('created_at').notNull(),
+  sound: text('sound').notNull().default('default'),
 });
 
 export const meta = sqliteTable('meta', {

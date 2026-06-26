@@ -35,6 +35,7 @@ export function bulkUpsertPresets(items: Preset[]): void {
             durationSec: p.durationSec,
             inWidget: p.inWidget,
             sortOrder: p.sortOrder,
+            sound: p.sound,
           },
         })
         .run();
