@@ -29,7 +29,7 @@ export const en: Strings = {
     newTitle: 'New preset',
     editTitle: 'Edit preset',
     name: 'Name',
-    namePlaceholder: 'Optional (e.g. Work)',
+    namePlaceholder: 'Optional',
     duration: 'Duration',
     icon: 'Icon',
     color: 'Color',

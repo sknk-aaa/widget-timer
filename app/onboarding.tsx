@@ -38,25 +38,23 @@ export default function OnboardingScreen() {
     }
   };
 
-  const finish = () => {
+  const finish = async () => {
+    const firstRun = !useSettingsStore.getState().onboardingDone;
     useSettingsStore.getState().completeOnboarding();
-    // 設定からの再表示は戻る、初回（スタックなし）はメインへ。
+    // 初回オンボ完了時に通知（アラーム）許可を求める。設定からの再表示では求めない。
+    if (firstRun) {
+      await alarmService.requestPermission();
+      await useSettingsStore.getState().refreshPermission();
+    }
     if (router.canGoBack()) router.back();
     else router.replace('/');
-  };
-
-  const requestPermission = async () => {
-    await alarmService.requestPermission();
-    await useSettingsStore.getState().refreshPermission();
-    haptics.start();
-    goTo(2);
   };
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: insets.top }}>
       <View style={{ alignItems: 'flex-end', paddingHorizontal: spacing.xl, height: 44, justifyContent: 'center' }}>
         {page < 2 && (
-          <Pressable onPress={finish} hitSlop={10} accessibilityRole="button" accessibilityLabel={s.onboarding.skip}>
+          <Pressable onPress={() => void finish()} hitSlop={10} accessibilityRole="button" accessibilityLabel={s.onboarding.skip}>
             <Text style={{ color: c.textSecondary, fontSize: 15, fontWeight: '600' }}>{s.onboarding.skip}</Text>
           </Pressable>
         )}
@@ -84,21 +82,8 @@ export default function OnboardingScreen() {
       <View style={{ paddingHorizontal: spacing.xxl, paddingBottom: insets.bottom + spacing.xl, gap: spacing.lg }}>
         <Dots count={3} active={page} />
         {page === 0 && <Button title={s.onboarding.next} onPress={() => goTo(1)} />}
-        {page === 1 && (
-          <>
-            <Button title={s.onboarding.page2Cta} onPress={requestPermission} />
-            <Pressable
-              onPress={() => goTo(2)}
-              hitSlop={10}
-              accessibilityRole="button"
-              accessibilityLabel={s.onboarding.page2Later}
-              style={{ alignItems: 'center' }}
-            >
-              <Text style={{ color: c.textSecondary, fontSize: 14, fontWeight: '600' }}>{s.onboarding.page2Later}</Text>
-            </Pressable>
-          </>
-        )}
-        {page === 2 && <Button title={s.onboarding.start} onPress={finish} />}
+        {page === 1 && <Button title={s.onboarding.next} onPress={() => goTo(2)} />}
+        {page === 2 && <Button title={s.onboarding.start} onPress={() => void finish()} />}
       </View>
     </View>
   );

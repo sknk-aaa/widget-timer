@@ -132,7 +132,7 @@ export default function PresetScreen() {
           <PresetTileVisual icon={icon} color={color} size={68} />
         </View>
 
-        <View style={{ marginBottom: spacing.xl }}>
+        <View style={{ marginBottom: spacing.xxxl }}>
           <SectionLabel icon={<TagIcon color={c.textSecondary} size={15} />}>
             {s.preset.name}
           </SectionLabel>
@@ -155,28 +155,28 @@ export default function PresetScreen() {
           />
         </View>
 
-        <View style={{ marginBottom: spacing.xl }}>
+        <View style={{ marginBottom: spacing.xxxl }}>
           <SectionLabel icon={<ClockIcon color={c.textSecondary} size={15} />}>
             {s.preset.duration}
           </SectionLabel>
           <WheelPicker valueSec={durationSec} onChange={setDurationSec} onActiveChange={setDialActive} />
         </View>
 
-        <View style={{ marginBottom: spacing.xl }}>
+        <View style={{ marginBottom: spacing.xxxl }}>
           <SectionLabel icon={<DropletIcon color={c.textSecondary} size={15} />}>
             {s.preset.color}
           </SectionLabel>
           <ColorPicker value={color} onChange={setColor} />
         </View>
 
-        <View style={{ marginBottom: spacing.xl }}>
+        <View style={{ marginBottom: spacing.xxxl }}>
           <SectionLabel icon={<ShapesIcon color={c.textSecondary} size={15} />}>
             {s.preset.icon}
           </SectionLabel>
           <IconPicker value={icon} color={color} onChange={setIcon} />
         </View>
 
-        <View style={{ marginBottom: spacing.xl }}>
+        <View style={{ marginBottom: spacing.xxxl }}>
           <SectionLabel icon={<BellGlyph color={c.textSecondary} size={15} />}>
             {s.preset.sound}
           </SectionLabel>

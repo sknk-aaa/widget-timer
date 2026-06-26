@@ -121,6 +121,23 @@ export default function MainScreen() {
     Alert.alert(label, undefined, buttons);
   };
 
+  const onDeleteBoard = (board: Board) => {
+    if (boards.length <= 1) return;
+    const idx = boards.findIndex((x) => x.id === board.id);
+    const label = boardLabel(board, idx, s.board.fallbackName);
+    Alert.alert(label, s.board.removeConfirm, [
+      { text: s.common.cancel, style: 'cancel' },
+      {
+        text: s.board.remove,
+        style: 'destructive',
+        onPress: () => {
+          haptics.remove();
+          useBoardsStore.getState().removeBoard(board.id);
+        },
+      },
+    ]);
+  };
+
   const onDeletePreset = (p: Preset) => {
     Alert.alert(s.preset.delete, s.preset.deleteConfirm, [
       { text: s.common.cancel, style: 'cancel' },
@@ -227,6 +244,7 @@ export default function MainScreen() {
           onSelectBoard={(id) => useBoardsStore.getState().setCurrent(id)}
           onAddBoard={onAddBoard}
           onEditBoard={onEditBoard}
+          onDeleteBoard={onDeleteBoard}
           onLaunch={launch}
           onEdit={(p) => {
             haptics.light();

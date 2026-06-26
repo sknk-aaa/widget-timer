@@ -42,6 +42,7 @@ interface Props {
   onSelectBoard: (id: string) => void;
   onAddBoard: () => void;
   onEditBoard: (board: Board) => void;
+  onDeleteBoard: (board: Board) => void;
   onLaunch: (p: Preset) => void;
   onEdit: (p: Preset) => void;
   onDeletePreset: (p: Preset) => void;
@@ -95,6 +96,7 @@ export function PresetBoard(props: Props) {
 
   const draggingRef = React.useRef<{ zone: Zone; id: string } | null>(null);
   const lastTargetRef = React.useRef<Zone>('master');
+  const hasMovedRef = React.useRef(false);
   const startMasterRef = React.useRef<string[]>([]);
   const startBoardRef = React.useRef<string[]>([]);
   const workMasterRef = React.useRef<string[]>([]);
@@ -142,8 +144,10 @@ export function PresetBoard(props: Props) {
   const indexAt = (zone: Zone, fx: number, fy: number, len: number): number => {
     const d = layoutRef.current;
     const areaTop = zone === 'board' ? d.boardAreaTop : d.masterAreaTop;
-    const col = clamp(Math.round((fx - PAD) / CELL_W), 0, d.cols - 1);
-    const row = Math.max(0, Math.floor((fy - areaTop) / d.cellH));
+    // fx,fy はドラッグ中タイルの中心。タイルの基準位置(左上)に戻してスロットを求める＝
+    // 半セル分動かして初めて隣と入れ替わる（触れた瞬間の誤入れ替えを防ぐ）。
+    const col = clamp(Math.round((fx - TILE_SIZE / 2 - PAD) / CELL_W), 0, d.cols - 1);
+    const row = Math.max(0, Math.round((fy - TILE_SIZE / 2 - d.nameBand - areaTop) / d.cellH));
     return clamp(row * d.cols + col, 0, len);
   };
 
@@ -162,6 +166,7 @@ export function PresetBoard(props: Props) {
     workMasterRef.current = startMasterRef.current;
     workBoardRef.current = startBoardRef.current;
     lastTargetRef.current = zone;
+    hasMovedRef.current = false;
     draggingRef.current = { zone, id };
     setDraggingKey(`${zone}:${id}`);
     cbRef.current.onDragActiveChange(true);
@@ -174,6 +179,11 @@ export function PresetBoard(props: Props) {
     if (!drag) return;
     dragX.value = tx;
     dragY.value = ty;
+    // デッドゾーン: 持ち上げ直後の微小な揺れでは並べ替え/欄移動をしない。
+    if (!hasMovedRef.current) {
+      if (Math.abs(tx) < 12 && Math.abs(ty) < 12) return;
+      hasMovedRef.current = true;
+    }
     const d = layoutRef.current;
     const fx = startLeft.value + TILE_SIZE / 2 + tx;
     const fy = startTop.value + TILE_SIZE / 2 + ty;
@@ -329,10 +339,12 @@ export function PresetBoard(props: Props) {
         boards={props.boards}
         currentBoardId={props.currentBoardId}
         boardName={props.boardName}
+        editMode={editMode}
         theme={theme}
         onSelect={props.onSelectBoard}
         onAdd={props.onAddBoard}
         onEditBoard={props.onEditBoard}
+        onDeleteBoard={props.onDeleteBoard}
       />
 
       <View onLayout={onLayout} style={{ height: totalHeight }}>
@@ -392,49 +404,76 @@ function BoardTabs({
   boards,
   currentBoardId,
   boardName,
+  editMode,
   theme,
   onSelect,
   onAdd,
   onEditBoard,
+  onDeleteBoard,
 }: {
   boards: Board[];
   currentBoardId: string | null;
   boardName: (board: Board, index: number) => string;
+  editMode: boolean;
   theme: Theme;
   onSelect: (id: string) => void;
   onAdd: () => void;
   onEditBoard: (board: Board) => void;
+  onDeleteBoard: (board: Board) => void;
 }) {
   const { c, spacing, radius } = theme;
+  const canDelete = editMode && boards.length > 1;
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{ gap: spacing.sm, paddingVertical: spacing.sm, paddingRight: spacing.lg }}
+      contentContainerStyle={{ gap: spacing.sm, paddingVertical: spacing.sm, paddingRight: spacing.lg, paddingTop: canDelete ? 12 : spacing.sm }}
     >
       {boards.map((b, i) => {
         const active = b.id === currentBoardId;
         return (
-          <Pressable
-            key={b.id}
-            onPress={() => onSelect(b.id)}
-            onLongPress={() => onEditBoard(b)}
-            delayLongPress={300}
-            accessibilityRole="button"
-            accessibilityState={{ selected: active }}
-            style={{
-              paddingHorizontal: spacing.lg,
-              paddingVertical: spacing.sm,
-              borderRadius: radius.md,
-              backgroundColor: active ? c.accent : c.surface,
-              borderWidth: 1,
-              borderColor: active ? c.accent : c.hairline,
-            }}
-          >
-            <Text style={{ color: active ? '#FFFFFF' : c.textSecondary, fontSize: 14, fontWeight: '700' }}>
-              {boardName(b, i)}
-            </Text>
-          </Pressable>
+          <View key={b.id}>
+            <Pressable
+              onPress={() => onSelect(b.id)}
+              onLongPress={() => onEditBoard(b)}
+              delayLongPress={300}
+              accessibilityRole="button"
+              accessibilityState={{ selected: active }}
+              style={{
+                paddingHorizontal: spacing.lg,
+                paddingVertical: spacing.sm,
+                borderRadius: radius.md,
+                backgroundColor: active ? c.accent : c.surface,
+                borderWidth: 1,
+                borderColor: active ? c.accent : c.hairline,
+              }}
+            >
+              <Text style={{ color: active ? '#FFFFFF' : c.textSecondary, fontSize: 14, fontWeight: '700' }}>
+                {boardName(b, i)}
+              </Text>
+            </Pressable>
+            {canDelete && (
+              <Pressable
+                onPress={() => onDeleteBoard(b)}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel={t().board.remove}
+                style={{
+                  position: 'absolute',
+                  top: -8,
+                  right: -6,
+                  width: 22,
+                  height: 22,
+                  borderRadius: 11,
+                  backgroundColor: c.danger,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <View style={{ width: 10, height: 2.2, borderRadius: 2, backgroundColor: '#FFFFFF' }} />
+              </Pressable>
+            )}
+          </View>
         );
       })}
       <Pressable

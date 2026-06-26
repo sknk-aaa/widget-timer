@@ -27,7 +27,7 @@ export const ja = {
     newTitle: 'プリセットを作成',
     editTitle: 'プリセットを編集',
     name: '名前',
-    namePlaceholder: '任意（例: 仕事）',
+    namePlaceholder: '任意',
     duration: '時間',
     icon: 'アイコン',
     color: '色',
