@@ -61,23 +61,28 @@ private struct WaitingView: View {
                 Text("プリセットを追加").font(.caption).foregroundStyle(.secondary)
             }
         } else {
-            let columns = Array(repeating: GridItem(.flexible(), spacing: 10), count: small ? 2 : 4)
-            LazyVGrid(columns: columns, spacing: 10) {
+            // タイルは列幅いっぱいにせず固定サイズに収め、medium で2段でもはみ出さないようにする。
+            let tile: CGFloat = small ? 54 : 48
+            let iconSize: CGFloat = small ? 20 : 17
+            let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: small ? 2 : 4)
+            LazyVGrid(columns: columns, spacing: 8) {
                 ForEach(shown) { p in
                     // タップでアプリを開き、メイン画面のまま起動（別画面を挟まない）
                     Link(destination: URL(string: "imasugutimer://?start=\(p.id)")!) {
                         VStack(spacing: 3) {
-                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
                                 .fill(paletteColor(p.color))
-                                .aspectRatio(1, contentMode: .fit)
+                                .frame(width: tile, height: tile)
                                 .overlay(
                                     Image(systemName: iconToSymbol(p.icon))
                                         .foregroundStyle(.white)
-                                        .font(.system(size: 18, weight: .semibold))
+                                        .font(.system(size: iconSize, weight: .semibold))
                                 )
                             Text(durationLabel(p.durationSec))
                                 .font(.system(size: 10, weight: .semibold))
                                 .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
                         }
                     }
                 }
