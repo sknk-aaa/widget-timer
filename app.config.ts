@@ -38,9 +38,21 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       NSAlarmKitUsageDescription:
         'Used to reliably sound the alarm when a timer ends, even in Silent or Focus mode.',
       ITSAppUsesNonExemptEncryption: false,
+      // カスタム Live Activity（AlarmKit の AlarmAttributes 表示）を使うため必須。
+      NSSupportsLiveActivities: true,
     },
     entitlements: {
       'com.apple.security.application-groups': [APP_GROUP],
+    },
+    // Required Reason API: App Group の UserDefaults を読み書き（C56D.1）。標準用 CA92.1 も併記。
+    // データ収集・トラッキングは無し（既定の NSPrivacyTracking=false / 収集タイプ空 を維持）。
+    privacyManifests: {
+      NSPrivacyAccessedAPITypes: [
+        {
+          NSPrivacyAccessedAPIType: 'NSPrivacyAccessedAPICategoryUserDefaults',
+          NSPrivacyAccessedAPITypeReasons: ['C56D.1', 'CA92.1'],
+        },
+      ],
     },
   },
   extra: {
