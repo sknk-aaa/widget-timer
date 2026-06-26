@@ -4,13 +4,17 @@ import WidgetKit
 // 設定可能ウィジェット用：ホームに置いた各ウィジェットが「どのウィジェット欄(ボード)」を
 // 表示するかを、長押し →「ウィジェットを編集」で選べるようにする。
 // 欄の一覧・名前は App Group（Shared.loadBoards）から取得する。
+//
+// 注意: App Intents のメタデータ（typeDisplayRepresentation / title / description /
+//   @Parameter(title:)）はビルド時に抽出されるため、コンパイル時の文字列リテラル必須。
+//   実行時の分岐（ロケール）は使えない。欄名そのものは displayRepresentation で
+//   App Group の値（ja: 枠N / en: Board N。ミラー側でローカライズ済み）を表示する。
 
 struct BoardEntity: AppEntity {
     let id: String
     let name: String
 
-    static var typeDisplayRepresentation: TypeDisplayRepresentation =
-        LX.isJa ? "ウィジェット欄" : "Board"
+    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Board"
 
     var displayRepresentation: DisplayRepresentation {
         DisplayRepresentation(title: "\(name)")
@@ -38,12 +42,8 @@ struct BoardQuery: EntityQuery {
 }
 
 struct SelectBoardIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource =
-        LX.isJa ? "ウィジェット欄を選択" : "Choose a board"
-
-    static var description = IntentDescription(
-        LX.isJa ? "このウィジェットに表示するウィジェット欄を選びます。" : "Pick which board this widget shows."
-    )
+    static var title: LocalizedStringResource = "Choose board"
+    static var description = IntentDescription("Pick which board this widget shows.")
 
     @Parameter(title: "Board")
     var board: BoardEntity?
