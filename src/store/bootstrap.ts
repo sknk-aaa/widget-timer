@@ -1,8 +1,18 @@
-import { getMeta, setMeta, insertPreset } from '../db/repo';
+import {
+  getMeta,
+  setMeta,
+  insertPreset,
+  listPresets,
+  listBoards,
+  insertBoard,
+  listBoardPresets,
+  setBoardPresets,
+} from '../db/repo';
 import { runMigrations } from '../db/migrate';
 import { uuid } from '../domain/uuid';
-import type { Preset } from '../domain/types';
+import type { Preset, Board } from '../domain/types';
 import { usePresetsStore } from './presets';
+import { useBoardsStore } from './boards';
 import { useTimersStore } from './timers';
 import { useProStore } from './pro';
 import { useSettingsStore } from './settings';
@@ -10,6 +20,7 @@ import { mirrorPresetsToAppGroup, mirrorRunningToAppGroup } from '../native/shar
 import { widgetService } from '../native/widget';
 
 const SEEDED_KEY = 'seeded';
+const BOARDS_SEEDED_KEY = 'boards_seeded';
 
 const DEFAULT_PRESETS: Omit<Preset, 'id'>[] = [
   { name: '', icon: 'ramen', color: 'orange', durationSec: 180, inWidget: true, sortOrder: 0, sound: 'default' },
@@ -25,12 +36,35 @@ function seedDefaultsIfNeeded(): void {
   setMeta(SEEDED_KEY, '1');
 }
 
+// ウィジェット欄（ボード）を初期化。デフォルト欄を1つ用意し、旧 inWidget プリセットを移行する。
+function seedBoardsIfNeeded(): void {
+  if (getMeta(BOARDS_SEEDED_KEY) === '1') return;
+  let boards = listBoards();
+  if (boards.length === 0) {
+    const board: Board = { id: uuid(), name: '', sortOrder: 0 };
+    insertBoard(board);
+    boards = [board];
+  }
+  if (listBoardPresets().length === 0) {
+    const widgetPresetIds = listPresets()
+      .filter((p) => p.inWidget)
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map((p) => p.id);
+    if (widgetPresetIds.length > 0) {
+      setBoardPresets(boards[0]!.id, widgetPresetIds);
+    }
+  }
+  setMeta(BOARDS_SEEDED_KEY, '1');
+}
+
 /** アプリ起動時に DB を初期化し、ストアを読み込む。 */
 export async function bootstrap(): Promise<void> {
   runMigrations();
   seedDefaultsIfNeeded();
+  seedBoardsIfNeeded();
   useSettingsStore.getState().load();
   usePresetsStore.getState().load();
+  useBoardsStore.getState().load();
   useTimersStore.getState().load();
   useTimersStore.getState().reconcile();
   // ウィジェット/ロック画面から無音起動したぶんを取り込む（ミラー前に行い消えないようにする）。

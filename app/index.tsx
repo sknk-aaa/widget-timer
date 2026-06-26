@@ -3,11 +3,12 @@ import { View, Text, ScrollView, Pressable, Alert } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { Redirect, useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { usePresetsStore, selectHidden, selectWidget } from '../src/store/presets';
+import { usePresetsStore } from '../src/store/presets';
+import { useBoardsStore, boardLabel } from '../src/store/boards';
 import { useTimersStore } from '../src/store/timers';
 import { useProStore } from '../src/store/pro';
 import { useSettingsStore } from '../src/store/settings';
-import { FREE_WIDGET_SLOTS, type Preset } from '../src/domain/types';
+import { FREE_PRESETS_PER_BOARD, type Preset, type Board } from '../src/domain/types';
 import { useTheme } from '../src/ui/theme';
 import { PresetBoard } from '../src/ui/components/PresetBoard';
 import { RunningTimerRow } from '../src/ui/components/RunningTimerRow';
@@ -29,7 +30,9 @@ export default function MainScreen() {
   const onboardingDone = useSettingsStore((st) => st.onboardingDone);
   const alarmPermission = useSettingsStore((st) => st.alarmPermission);
   const presets = usePresetsStore((st) => st.presets);
-  const applyArrangement = usePresetsStore((st) => st.applyArrangement);
+  const boards = useBoardsStore((st) => st.boards);
+  const currentBoardId = useBoardsStore((st) => st.currentBoardId);
+  const membership = useBoardsStore((st) => st.membership);
   const timers = useTimersStore((st) => st.timers);
   const pendingCancel = useTimersStore((st) => st.pendingCancel);
   const isPro = useProStore((st) => st.isPro);
@@ -57,21 +60,65 @@ export default function MainScreen() {
     return <Redirect href="/onboarding" />;
   }
 
-  const hidden = selectHidden(presets);
-  const widget = selectWidget(presets);
-  const widgetMax = isPro ? '∞' : FREE_WIDGET_SLOTS;
+  const boardPresetIds = currentBoardId ? (membership[currentBoardId] ?? []) : [];
+  const boardMax: number | '∞' = isPro ? '∞' : FREE_PRESETS_PER_BOARD;
 
   const launch = async (p: Preset) => {
     haptics.start();
     await useTimersStore.getState().startFromPreset(p, 'app');
   };
 
-  const onArrange = (hiddenIds: string[], widgetIds: string[]): boolean => {
-    const ok = applyArrangement(hiddenIds, widgetIds);
-    if (!ok) {
-      router.push('/paywall');
-    }
+  const onSetBoard = (ids: string[]): boolean => {
+    if (!currentBoardId) return false;
+    const ok = useBoardsStore.getState().setBoardOrder(currentBoardId, ids);
+    if (!ok) router.push('/paywall');
     return ok;
+  };
+
+  const onRemoveFromBoard = (presetId: string) => {
+    if (!currentBoardId) return;
+    haptics.remove();
+    useBoardsStore.getState().removeFromBoard(currentBoardId, presetId);
+  };
+
+  const onAddBoard = () => {
+    const b = useBoardsStore.getState().createBoard();
+    if (!b) {
+      router.push('/paywall');
+      return;
+    }
+    haptics.light();
+  };
+
+  const onEditBoard = (board: Board) => {
+    const idx = boards.findIndex((x) => x.id === board.id);
+    const label = boardLabel(board, idx, s.board.fallbackName);
+    const buttons: Parameters<typeof Alert.alert>[2] = [
+      {
+        text: s.board.rename,
+        onPress: () => {
+          Alert.prompt(
+            s.board.renameTitle,
+            undefined,
+            (text) => useBoardsStore.getState().renameBoard(board.id, (text ?? '').slice(0, 16)),
+            'plain-text',
+            board.name,
+          );
+        },
+      },
+    ];
+    if (boards.length > 1) {
+      buttons.push({
+        text: s.board.remove,
+        style: 'destructive',
+        onPress: () => {
+          haptics.remove();
+          useBoardsStore.getState().removeBoard(board.id);
+        },
+      });
+    }
+    buttons.push({ text: s.common.cancel, style: 'cancel' });
+    Alert.alert(label, undefined, buttons);
   };
 
   const onDeletePreset = (p: Preset) => {
@@ -83,6 +130,7 @@ export default function MainScreen() {
         onPress: () => {
           haptics.remove();
           usePresetsStore.getState().remove(p.id);
+          useBoardsStore.getState().load();
         },
       },
     ]);
@@ -169,20 +217,25 @@ export default function MainScreen() {
         )}
 
         <PresetBoard
-          hidden={hidden}
-          widget={widget}
+          boards={boards}
+          currentBoardId={currentBoardId}
+          boardName={(b, i) => boardLabel(b, i, s.board.fallbackName)}
+          allPresets={presets}
+          boardPresetIds={boardPresetIds}
+          boardCountLabel={s.board.onWidgetCount(boardPresetIds.length, boardMax)}
           editMode={editMode}
-          hiddenLabel={s.main.areaHidden}
-          widgetLabel={s.main.areaWidget}
-          widgetCountLabel={s.main.widgetSlots(widget.length, widgetMax)}
+          onSelectBoard={(id) => useBoardsStore.getState().setCurrent(id)}
+          onAddBoard={onAddBoard}
+          onEditBoard={onEditBoard}
           onLaunch={launch}
           onEdit={(p) => {
             haptics.light();
             router.push({ pathname: '/preset', params: { id: p.id } });
           }}
-          onDelete={onDeletePreset}
-          onAdd={onAddPreset}
-          onArrange={onArrange}
+          onDeletePreset={onDeletePreset}
+          onRemoveFromBoard={onRemoveFromBoard}
+          onAddPreset={onAddPreset}
+          onSetBoard={onSetBoard}
           onDragActiveChange={setDragActive}
         />
 

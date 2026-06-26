@@ -4,8 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAudioPlayer } from 'expo-audio';
 import { usePresetsStore } from '../src/store/presets';
-import { useProStore } from '../src/store/pro';
-import { FREE_WIDGET_SLOTS, SOUND_IDS } from '../src/domain/types';
+import { SOUND_IDS } from '../src/domain/types';
 import { DEFAULT_COLOR_ID } from '../src/domain/colors';
 import { DEFAULT_ICON_ID } from '../src/ui/icons/registry';
 import { useTheme } from '../src/ui/theme';
@@ -26,7 +25,6 @@ export default function PresetScreen() {
 
   const params = useLocalSearchParams<{ id?: string }>();
   const presets = usePresetsStore((st) => st.presets);
-  const isPro = useProStore((st) => st.isPro);
   const existing = params.id ? presets.find((p) => p.id === params.id) : undefined;
   const isEdit = !!existing;
 
@@ -35,8 +33,6 @@ export default function PresetScreen() {
   const [icon, setIcon] = React.useState(existing?.icon ?? DEFAULT_ICON_ID);
   const [color, setColor] = React.useState(existing?.color ?? DEFAULT_COLOR_ID);
   const [sound, setSound] = React.useState(existing?.sound ?? 'default');
-  // ウィジェット表示はメイン画面のドラッグで切り替える（編集画面にはトグルを置かない）。
-  const inWidget = existing?.inWidget ?? false;
   const [dialActive, setDialActive] = React.useState(false);
 
   // 音プレビュー（'default' は iPhone 標準音なので試聴対象外）。
@@ -63,25 +59,12 @@ export default function PresetScreen() {
 
   const close = () => router.back();
 
-  const widgetCountExclSelf = presets.filter(
-    (p) => p.inWidget && p.id !== existing?.id,
-  ).length;
-  const wouldExceed = !isPro && inWidget && widgetCountExclSelf >= FREE_WIDGET_SLOTS;
-
   const onSave = () => {
     if (durationSec <= 0) return;
-    if (wouldExceed) {
-      router.push('/paywall');
-      return;
-    }
     if (isEdit && existing) {
-      usePresetsStore.getState().update(existing.id, { name: name.trim(), durationSec, icon, color, sound, inWidget });
+      usePresetsStore.getState().update(existing.id, { name: name.trim(), durationSec, icon, color, sound });
     } else {
-      const created = usePresetsStore.getState().create({ name: name.trim(), durationSec, icon, color, sound, inWidget });
-      if (!created) {
-        router.push('/paywall');
-        return;
-      }
+      usePresetsStore.getState().create({ name: name.trim(), durationSec, icon, color, sound });
     }
     close();
   };

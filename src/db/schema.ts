@@ -28,6 +28,20 @@ export const runningTimers = sqliteTable('running_timers', {
   sound: text('sound').notNull().default('default'),
 });
 
+// ウィジェット欄（ボード）。ホームに置ける1枚に対応。
+export const boards = sqliteTable('boards', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull().default(''),
+  sortOrder: integer('sort_order').notNull().default(0),
+});
+
+// ボード ↔ プリセット の多対多（順序つき）。
+export const boardPresets = sqliteTable('board_presets', {
+  boardId: text('board_id').notNull(),
+  presetId: text('preset_id').notNull(),
+  sortOrder: integer('sort_order').notNull().default(0),
+});
+
 export const meta = sqliteTable('meta', {
   key: text('key').primaryKey(),
   value: text('value').notNull(),

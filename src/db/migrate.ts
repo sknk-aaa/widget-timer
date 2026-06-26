@@ -25,6 +25,16 @@ CREATE TABLE IF NOT EXISTS \`running_timers\` (
   \`created_at\` integer NOT NULL,
   \`sound\` text DEFAULT 'default' NOT NULL
 );
+CREATE TABLE IF NOT EXISTS \`boards\` (
+  \`id\` text PRIMARY KEY NOT NULL,
+  \`name\` text DEFAULT '' NOT NULL,
+  \`sort_order\` integer DEFAULT 0 NOT NULL
+);
+CREATE TABLE IF NOT EXISTS \`board_presets\` (
+  \`board_id\` text NOT NULL,
+  \`preset_id\` text NOT NULL,
+  \`sort_order\` integer DEFAULT 0 NOT NULL
+);
 CREATE TABLE IF NOT EXISTS \`meta\` (
   \`key\` text PRIMARY KEY NOT NULL,
   \`value\` text NOT NULL

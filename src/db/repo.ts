@@ -1,7 +1,7 @@
 import { asc, eq } from 'drizzle-orm';
 import { db } from './client';
-import { presets, runningTimers, meta, launchHistory } from './schema';
-import type { Preset, RunningTimer, TimerSource } from '../domain/types';
+import { presets, runningTimers, meta, launchHistory, boards, boardPresets } from './schema';
+import type { Preset, Board, BoardPreset, RunningTimer, TimerSource } from '../domain/types';
 
 // ---- presets ----
 
@@ -18,7 +18,10 @@ export function updatePreset(id: string, patch: Partial<Omit<Preset, 'id'>>): vo
 }
 
 export function deletePreset(id: string): void {
-  db.delete(presets).where(eq(presets.id, id)).run();
+  db.transaction((tx) => {
+    tx.delete(boardPresets).where(eq(boardPresets.presetId, id)).run();
+    tx.delete(presets).where(eq(presets.id, id)).run();
+  });
 }
 
 export function bulkUpsertPresets(items: Preset[]): void {
@@ -41,6 +44,45 @@ export function bulkUpsertPresets(items: Preset[]): void {
         })
         .run();
     }
+  });
+}
+
+export function removePresetFromAllBoards(presetId: string): void {
+  db.delete(boardPresets).where(eq(boardPresets.presetId, presetId)).run();
+}
+
+// ---- boards（ウィジェット欄） ----
+
+export function listBoards(): Board[] {
+  return db.select().from(boards).orderBy(asc(boards.sortOrder)).all();
+}
+
+export function insertBoard(b: Board): void {
+  db.insert(boards).values(b).run();
+}
+
+export function updateBoard(id: string, patch: Partial<Omit<Board, 'id'>>): void {
+  db.update(boards).set(patch).where(eq(boards.id, id)).run();
+}
+
+export function deleteBoard(id: string): void {
+  db.transaction((tx) => {
+    tx.delete(boardPresets).where(eq(boardPresets.boardId, id)).run();
+    tx.delete(boards).where(eq(boards.id, id)).run();
+  });
+}
+
+export function listBoardPresets(): BoardPreset[] {
+  return db.select().from(boardPresets).orderBy(asc(boardPresets.sortOrder)).all();
+}
+
+/** 指定ボードの所属プリセットを、順序つきで丸ごと置き換える（追加/削除/並べ替えの共通経路）。 */
+export function setBoardPresets(boardId: string, presetIds: string[]): void {
+  db.transaction((tx) => {
+    tx.delete(boardPresets).where(eq(boardPresets.boardId, boardId)).run();
+    presetIds.forEach((presetId, i) => {
+      tx.insert(boardPresets).values({ boardId, presetId, sortOrder: i }).run();
+    });
   });
 }
 

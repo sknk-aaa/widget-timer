@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, Text, Pressable, LayoutChangeEvent } from 'react-native';
+import { View, Text, Pressable, ScrollView, LayoutChangeEvent } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
@@ -17,30 +17,36 @@ import { PlusIcon } from '../icons/ui';
 import { formatDurationShort } from '../../domain/format';
 import { springs, listLayout } from '../motion';
 import { haptics } from '../haptics';
-import type { Preset } from '../../domain/types';
+import type { Preset, Board } from '../../domain/types';
 import { useTheme, type Theme } from '../theme';
 import { t } from '../../i18n';
 
 const PAD = 2;
 const GAP = 16;
 const CELL_W = TILE_SIZE + GAP;
-const CELL_H = TILE_SIZE + 24 + GAP;
+const BASE_CELL_H = TILE_SIZE + 24 + GAP;
 const LABEL_BLOCK = 40;
 
-type Area = 'hidden' | 'widget';
+type Zone = 'board' | 'master';
 
 interface Props {
-  hidden: Preset[];
-  widget: Preset[];
+  boards: Board[];
+  currentBoardId: string | null;
+  boardName: (board: Board, index: number) => string;
+  allPresets: Preset[];
+  boardPresetIds: string[];
+  boardCountLabel: string;
   editMode: boolean;
-  hiddenLabel: string;
-  widgetLabel: string;
-  widgetCountLabel: string;
+  onSelectBoard: (id: string) => void;
+  onAddBoard: () => void;
+  onEditBoard: (board: Board) => void;
   onLaunch: (p: Preset) => void;
   onEdit: (p: Preset) => void;
-  onDelete: (p: Preset) => void;
-  onAdd: () => void;
-  onArrange: (hiddenIds: string[], widgetIds: string[]) => boolean;
+  onDeletePreset: (p: Preset) => void;
+  onRemoveFromBoard: (presetId: string) => void;
+  onAddPreset: () => void;
+  /** ボードの所属を順序つきで確定（並べ替え/追加/削除）。無料上限超過なら false。 */
+  onSetBoard: (presetIds: string[]) => boolean;
   onDragActiveChange: (active: boolean) => void;
 }
 
@@ -52,53 +58,49 @@ export function PresetBoard(props: Props) {
   const theme = useTheme();
   const { c } = theme;
   const { editMode } = props;
+  const s = t();
+
   const [width, setWidth] = React.useState(0);
   const cols = width > 0 ? Math.max(3, Math.floor((width - 2 * PAD + GAP) / CELL_W)) : 4;
 
-  // 名前を1つでも持つプリセットがある時だけ、アイコン上に名前バンドを確保（無ければ詰める）。
-  const anyNamed =
-    props.hidden.some((p) => p.name.trim().length > 0) ||
-    props.widget.some((p) => p.name.trim().length > 0);
-  const nameBand = anyNamed ? 18 : 0;
-  const cellH = CELL_H + nameBand;
-
-  const [hiddenIds, setHiddenIds] = React.useState<string[]>(props.hidden.map((p) => p.id));
-  const [widgetIds, setWidgetIds] = React.useState<string[]>(props.widget.map((p) => p.id));
-  const [draggingId, setDraggingId] = React.useState<string | null>(null);
-  const draggingRef = React.useRef<string | null>(null);
-
+  const masterIds = React.useMemo(() => props.allPresets.map((p) => p.id), [props.allPresets]);
   const byId = React.useMemo(() => {
     const m = new Map<string, Preset>();
-    for (const p of props.hidden) m.set(p.id, p);
-    for (const p of props.widget) m.set(p.id, p);
+    for (const p of props.allPresets) m.set(p.id, p);
     return m;
-  }, [props.hidden, props.widget]);
+  }, [props.allPresets]);
+
+  const anyNamed = props.allPresets.some((p) => p.name.trim().length > 0);
+  const nameBand = anyNamed ? 18 : 0;
+  const cellH = BASE_CELL_H + nameBand;
+
+  const [boardIds, setBoardIds] = React.useState<string[]>(props.boardPresetIds);
+  const [draggingKey, setDraggingKey] = React.useState<string | null>(null);
+  const draggingRef = React.useRef<{ zone: Zone; id: string } | null>(null);
+  const startBoardRef = React.useRef<string[]>([]);
+  const workBoardRef = React.useRef<string[]>([]);
+  // boardIds の最新値をジェスチャ内から参照するための ref。
+  const boardIdsRef = React.useRef(boardIds);
+  boardIdsRef.current = boardIds;
 
   React.useEffect(() => {
     if (draggingRef.current) return;
-    setHiddenIds(props.hidden.map((p) => p.id));
-    setWidgetIds(props.widget.map((p) => p.id));
-  }, [props.hidden, props.widget]);
+    setBoardIds(props.boardPresetIds);
+  }, [props.boardPresetIds, props.currentBoardId]);
 
-  const hiddenSlots = hiddenIds.length + 1; // 末尾の追加タイル枠（常時表示）
-  const hiddenRows = Math.max(1, Math.ceil(hiddenSlots / cols));
-  const widgetRows = Math.max(1, Math.ceil(widgetIds.length / cols));
-  const hiddenAreaTop = LABEL_BLOCK;
-  const widgetLabelTop = hiddenAreaTop + hiddenRows * cellH + 8;
-  const widgetAreaTop = widgetLabelTop + LABEL_BLOCK;
-  const totalHeight = widgetAreaTop + widgetRows * cellH + 8;
+  const boardRows = Math.max(1, Math.ceil(boardIds.length / cols));
+  const boardLabelTop = 0;
+  const boardAreaTop = LABEL_BLOCK;
+  const masterLabelTop = boardAreaTop + boardRows * cellH + 8;
+  const masterAreaTop = masterLabelTop + LABEL_BLOCK;
+  const masterSlots = masterIds.length + 1;
+  const masterRows = Math.max(1, Math.ceil(masterSlots / cols));
+  const totalHeight = masterAreaTop + masterRows * cellH + 8;
 
-  const areaTopOf = (area: Area) => (area === 'hidden' ? hiddenAreaTop : widgetAreaTop);
-
-  // ---- ハンドラを安定化するための ref（再レンダーでジェスチャを作り直さない）----
-  const dataRef = React.useRef({ hiddenIds, widgetIds, cols, widgetLabelTop, hiddenAreaTop, widgetAreaTop, cellH, nameBand });
-  dataRef.current = { hiddenIds, widgetIds, cols, widgetLabelTop, hiddenAreaTop, widgetAreaTop, cellH, nameBand };
+  const dataRef = React.useRef({ cols, cellH, nameBand, boardAreaTop, masterLabelTop });
+  dataRef.current = { cols, cellH, nameBand, boardAreaTop, masterLabelTop };
   const cbRef = React.useRef(props);
   cbRef.current = props;
-  const byIdRef = React.useRef(byId);
-  byIdRef.current = byId;
-  // ドラッグ中の作業配列（描画タイミングに依存せず即時更新）
-  const workRef = React.useRef<{ hidden: string[]; widget: string[] }>({ hidden: [], widget: [] });
 
   const startLeft = useSharedValue(0);
   const startTop = useSharedValue(0);
@@ -106,217 +108,284 @@ export function PresetBoard(props: Props) {
   const dragY = useSharedValue(0);
   const dragScale = useSharedValue(1);
 
-  const handleBegin = React.useCallback((id: string) => {
+  const slotTop = (zone: Zone, index: number): number => {
     const d = dataRef.current;
-    const hi = d.hiddenIds.indexOf(id);
-    const area: Area = hi >= 0 ? 'hidden' : 'widget';
-    const index = hi >= 0 ? hi : d.widgetIds.indexOf(id);
     const row = Math.floor(index / d.cols);
-    const col = index % d.cols;
-    startLeft.value = PAD + col * CELL_W;
-    startTop.value = (area === 'hidden' ? d.hiddenAreaTop : d.widgetAreaTop) + row * d.cellH + d.nameBand;
+    return (zone === 'board' ? d.boardAreaTop : masterAreaTop) + row * d.cellH + d.nameBand;
+  };
+  const slotLeft = (index: number): number => PAD + (index % dataRef.current.cols) * CELL_W;
+
+  const handleBegin = React.useCallback((zone: Zone, id: string) => {
+    const board = zone === 'board' ? boardIdsRef.current : masterIds;
+    const index = board.indexOf(id);
+    if (index < 0) return;
+    startLeft.value = slotLeft(index);
+    startTop.value = slotTop(zone, index);
     dragX.value = 0;
     dragY.value = 0;
     dragScale.value = withSpring(1.08, springs.snappy);
-    workRef.current = { hidden: [...d.hiddenIds], widget: [...d.widgetIds] };
-    draggingRef.current = id;
-    setDraggingId(id);
+    startBoardRef.current = [...boardIdsRef.current];
+    workBoardRef.current = [...boardIdsRef.current];
+    draggingRef.current = { zone, id };
+    setDraggingKey(`${zone}:${id}`);
     cbRef.current.onDragActiveChange(true);
     haptics.pickup();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [masterIds]);
 
-  const handleMove = React.useCallback((id: string, tx: number, ty: number) => {
+  const indexAt = (fx: number, fy: number, areaTop: number, len: number): number => {
+    const d = dataRef.current;
+    const col = clamp(Math.round((fx - PAD) / CELL_W), 0, d.cols - 1);
+    const row = Math.max(0, Math.floor((fy - areaTop) / d.cellH));
+    return clamp(row * d.cols + col, 0, len);
+  };
+
+  const handleMove = React.useCallback((tx: number, ty: number) => {
+    const drag = draggingRef.current;
+    if (!drag) return;
     dragX.value = tx;
     dragY.value = ty;
     const d = dataRef.current;
-    const w = workRef.current;
     const fx = startLeft.value + TILE_SIZE / 2 + tx;
     const fy = startTop.value + TILE_SIZE / 2 + ty;
-    const targetArea: Area = fy < d.widgetLabelTop ? 'hidden' : 'widget';
-    const fromHidden = w.hidden.includes(id);
-    const srcArr = fromHidden ? w.hidden : w.widget;
-    const fromIdx = srcArr.indexOf(id);
-    if (fromIdx < 0) return;
-    const sameArea = (targetArea === 'hidden') === fromHidden;
-    const col = clamp(Math.round((fx - PAD) / CELL_W), 0, d.cols - 1);
-    const areaTop = targetArea === 'hidden' ? d.hiddenAreaTop : d.widgetAreaTop;
-    const row = Math.max(0, Math.floor((fy - areaTop) / d.cellH));
-    let j = row * d.cols + col;
+    const target: Zone = fy < d.masterLabelTop ? 'board' : 'master';
+    const start = startBoardRef.current;
+    let next = start;
 
-    if (sameArea) {
-      j = clamp(j, 0, srcArr.length - 1);
-      if (j === fromIdx) return;
-      const arr = [...srcArr];
-      arr.splice(fromIdx, 1);
-      arr.splice(j, 0, id);
-      if (fromHidden) w.hidden = arr;
-      else w.widget = arr;
-    } else {
-      const dstArr = targetArea === 'hidden' ? w.hidden : w.widget;
-      j = clamp(j, 0, dstArr.length);
-      const src = [...srcArr];
-      src.splice(fromIdx, 1);
-      const dst = [...dstArr];
-      dst.splice(j, 0, id);
-      if (targetArea === 'hidden') {
-        w.hidden = dst;
-        w.widget = src;
+    if (drag.zone === 'board') {
+      if (target === 'board') {
+        const without = start.filter((x) => x !== drag.id);
+        const j = indexAt(fx, fy, d.boardAreaTop, without.length);
+        next = [...without.slice(0, j), drag.id, ...without.slice(j)];
       } else {
-        w.widget = dst;
-        w.hidden = src;
+        next = start.filter((x) => x !== drag.id); // 取り除きプレビュー
+      }
+    } else {
+      // master 由来：ボード上なら追加プレビュー（既存メンバーは何もしない）
+      if (target === 'board' && !start.includes(drag.id)) {
+        const j = indexAt(fx, fy, d.boardAreaTop, start.length);
+        next = [...start.slice(0, j), drag.id, ...start.slice(j)];
+      } else {
+        next = start;
       }
     }
-    setHiddenIds(w.hidden);
-    setWidgetIds(w.widget);
-    haptics.swap();
+    const cur = workBoardRef.current;
+    if (next.length !== cur.length || next.some((v, i) => v !== cur[i])) {
+      workBoardRef.current = next;
+      setBoardIds(next);
+      haptics.swap();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleEnd = React.useCallback((id: string) => {
-    if (draggingRef.current !== id) return; // ドラッグ未開始（タップ等）は無視
+  const handleEnd = React.useCallback(() => {
+    const drag = draggingRef.current;
+    if (!drag) return;
     draggingRef.current = null;
     dragScale.value = withSpring(1, springs.snappy);
-    const w = workRef.current;
-    const ok = cbRef.current.onArrange(w.hidden, w.widget);
-    if (!ok) {
-      setHiddenIds(cbRef.current.hidden.map((p) => p.id));
-      setWidgetIds(cbRef.current.widget.map((p) => p.id));
+    const work = workBoardRef.current;
+    const start = startBoardRef.current;
+    const changed = work.length !== start.length || work.some((v, i) => v !== start[i]);
+    if (changed) {
+      const ok = cbRef.current.onSetBoard(work);
+      if (!ok) setBoardIds(cbRef.current.boardPresetIds);
+    } else {
+      setBoardIds(start);
     }
-    setDraggingId(null);
+    setDraggingKey(null);
     cbRef.current.onDragActiveChange(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleTap = React.useCallback((id: string) => {
-    const p = byIdRef.current.get(id);
+    const p = cbRef.current.allPresets.find((x) => x.id === id);
     if (!p) return;
     if (cbRef.current.editMode) cbRef.current.onEdit(p);
     else cbRef.current.onLaunch(p);
-  }, []);
-
-  const handleDelete = React.useCallback((id: string) => {
-    const p = byIdRef.current.get(id);
-    if (p) cbRef.current.onDelete(p);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const floatingStyle = useAnimatedStyle(() => ({
     position: 'absolute',
     left: startLeft.value,
     top: startTop.value,
-    transform: [
-      { translateX: dragX.value },
-      { translateY: dragY.value },
-      { scale: dragScale.value },
-    ],
+    transform: [{ translateX: dragX.value }, { translateY: dragY.value }, { scale: dragScale.value }],
     zIndex: 1000,
   }));
 
   const onLayout = (e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width);
 
-  const posOf = (id: string) => {
-    const hi = hiddenIds.indexOf(id);
-    const area: Area = hi >= 0 ? 'hidden' : 'widget';
-    const index = hi >= 0 ? hi : widgetIds.indexOf(id);
-    const row = Math.floor(index / cols);
-    const col = index % cols;
-    return { left: PAD + col * CELL_W, top: areaTopOf(area) + row * cellH, index };
+  const draggingPreset = draggingRef.current ? byId.get(draggingRef.current.id) : null;
+  const masterAddIndex = masterIds.length;
+  const addLeft = PAD + (masterAddIndex % cols) * CELL_W;
+  const addTop = masterAreaTop + Math.floor(masterAddIndex / cols) * cellH + nameBand;
+
+  const renderCell = (zone: Zone, id: string, index: number) => {
+    const p = byId.get(id);
+    if (!p) return null;
+    const key = `${zone}:${id}`;
+    return (
+      <PresetCell
+        key={key}
+        cellKey={key}
+        zone={zone}
+        preset={p}
+        left={slotLeft(index)}
+        top={(zone === 'board' ? boardAreaTop : masterAreaTop) + Math.floor(index / cols) * cellH}
+        nameBand={nameBand}
+        theme={theme}
+        editMode={editMode}
+        isDragging={key === draggingKey}
+        onBegin={handleBegin}
+        onMove={handleMove}
+        onEnd={handleEnd}
+        onTap={handleTap}
+        onDelete={() => cbRef.current.onDeletePreset(p)}
+        onRemoveFromBoard={() => cbRef.current.onRemoveFromBoard(id)}
+      />
+    );
   };
 
-  const draggingPreset = draggingId ? byId.get(draggingId) : null;
-  const addPos = { left: PAD + (hiddenIds.length % cols) * CELL_W, top: hiddenAreaTop + Math.floor(hiddenIds.length / cols) * cellH + nameBand };
-  // 描画順は固定（並べ替えで子の順序を変えるとジェスチャが切れるため）。位置は left/top で表現。
-  const orderedIds = React.useMemo(() => [...byId.keys()], [byId]);
-
   return (
-    <View onLayout={onLayout} style={{ height: totalHeight }}>
-      {/* ウィジェット欄をカード化して「ここがウィジェットに出る」と分かるように */}
-      <View
-        style={{
-          position: 'absolute',
-          left: -10,
-          right: -10,
-          top: widgetLabelTop - 10,
-          height: LABEL_BLOCK + widgetRows * CELL_H + 16,
-          borderRadius: 22,
-          backgroundColor: c.surface,
-          borderWidth: 1,
-          borderColor: c.hairline,
-        }}
-      />
-
-      <AreaLabel theme={theme} top={0} text={props.hiddenLabel} />
-      <AreaLabel
+    <View>
+      <BoardTabs
+        boards={props.boards}
+        currentBoardId={props.currentBoardId}
+        boardName={props.boardName}
+        editMode={editMode}
         theme={theme}
-        top={widgetLabelTop}
-        text={props.widgetLabel}
-        right={props.widgetCountLabel}
+        onSelect={props.onSelectBoard}
+        onAdd={props.onAddBoard}
+        onEditBoard={props.onEditBoard}
       />
-      {widgetIds.length === 0 && <EmptyHint theme={theme} top={widgetAreaTop + nameBand} />}
 
-      {orderedIds.map((id) => {
-        const p = byId.get(id);
-        if (!p) return null;
-        const pos = posOf(id);
-        return (
-          <PresetCell
-            key={id}
-            id={id}
-            preset={p}
-            index={pos.index}
-            left={pos.left}
-            top={pos.top}
-            nameBand={nameBand}
-            theme={theme}
-            editMode={editMode}
-            isDragging={id === draggingId}
-            onBegin={handleBegin}
-            onMove={handleMove}
-            onEnd={handleEnd}
-            onTap={handleTap}
-            onDelete={handleDelete}
-          />
-        );
-      })}
+      <View onLayout={onLayout} style={{ height: totalHeight }}>
+        {/* ボード（ウィジェット欄）をカード化 */}
+        <View
+          style={{
+            position: 'absolute',
+            left: -10,
+            right: -10,
+            top: boardLabelTop - 2,
+            height: LABEL_BLOCK + boardRows * cellH + 12,
+            borderRadius: 22,
+            backgroundColor: c.surface,
+            borderWidth: 1,
+            borderColor: c.hairline,
+          }}
+        />
 
-      <Pressable
-        onPress={props.onAdd}
-        accessibilityRole="button"
-        accessibilityLabel={t().board.addPreset}
-        style={{
-          position: 'absolute',
-          left: addPos.left,
-          top: addPos.top,
-          width: TILE_SIZE,
-          height: TILE_SIZE,
-          borderRadius: 22,
-          borderWidth: 1.5,
-          borderStyle: 'dashed',
-          borderColor: c.textTertiary,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <PlusIcon color={c.textSecondary} size={26} />
-      </Pressable>
+        <AreaLabel theme={theme} top={boardLabelTop} text={s.main.areaWidget} right={props.boardCountLabel} />
+        <AreaLabel theme={theme} top={masterLabelTop} text={s.board.allPresets} />
+        {boardIds.length === 0 && <EmptyHint theme={theme} top={boardAreaTop + nameBand} text={s.board.emptyHint} />}
 
-      {draggingPreset && (
-        <Animated.View style={floatingStyle} pointerEvents="none">
-          <PresetTileVisual icon={draggingPreset.icon} color={draggingPreset.color} />
-        </Animated.View>
-      )}
+        {boardIds.map((id, i) => renderCell('board', id, i))}
+        {masterIds.map((id, i) => renderCell('master', id, i))}
+
+        <Pressable
+          onPress={props.onAddPreset}
+          accessibilityRole="button"
+          accessibilityLabel={s.board.addPreset}
+          style={{
+            position: 'absolute',
+            left: addLeft,
+            top: addTop,
+            width: TILE_SIZE,
+            height: TILE_SIZE,
+            borderRadius: 22,
+            borderWidth: 1.5,
+            borderStyle: 'dashed',
+            borderColor: c.textTertiary,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <PlusIcon color={c.textSecondary} size={26} />
+        </Pressable>
+
+        {draggingPreset && (
+          <Animated.View style={floatingStyle} pointerEvents="none">
+            <PresetTileVisual icon={draggingPreset.icon} color={draggingPreset.color} />
+          </Animated.View>
+        )}
+      </View>
     </View>
   );
 }
 
-function AreaLabel({
+function BoardTabs({
+  boards,
+  currentBoardId,
+  boardName,
+  editMode,
   theme,
-  top,
-  text,
-  right,
+  onSelect,
+  onAdd,
+  onEditBoard,
 }: {
+  boards: Board[];
+  currentBoardId: string | null;
+  boardName: (board: Board, index: number) => string;
+  editMode: boolean;
   theme: Theme;
-  top: number;
-  text: string;
-  right?: string;
+  onSelect: (id: string) => void;
+  onAdd: () => void;
+  onEditBoard: (board: Board) => void;
 }) {
+  const { c, spacing, radius } = theme;
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={{ gap: spacing.sm, paddingVertical: spacing.sm, paddingRight: spacing.lg }}
+    >
+      {boards.map((b, i) => {
+        const active = b.id === currentBoardId;
+        return (
+          <Pressable
+            key={b.id}
+            onPress={() => onSelect(b.id)}
+            onLongPress={editMode ? () => onEditBoard(b) : undefined}
+            delayLongPress={260}
+            accessibilityRole="button"
+            accessibilityState={{ selected: active }}
+            style={{
+              paddingHorizontal: spacing.lg,
+              paddingVertical: spacing.sm,
+              borderRadius: radius.md,
+              backgroundColor: active ? c.accent : c.surface,
+              borderWidth: 1,
+              borderColor: active ? c.accent : c.hairline,
+            }}
+          >
+            <Text style={{ color: active ? '#FFFFFF' : c.textSecondary, fontSize: 14, fontWeight: '700' }}>
+              {boardName(b, i)}
+            </Text>
+          </Pressable>
+        );
+      })}
+      <Pressable
+        onPress={onAdd}
+        accessibilityRole="button"
+        accessibilityLabel={t().board.add}
+        style={{
+          width: 38,
+          paddingVertical: spacing.sm,
+          borderRadius: radius.md,
+          backgroundColor: c.surface,
+          borderWidth: 1,
+          borderColor: c.hairline,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <PlusIcon color={c.textSecondary} size={18} />
+      </Pressable>
+    </ScrollView>
+  );
+}
+
+function AreaLabel({ theme, top, text, right }: { theme: Theme; top: number; text: string; right?: string }) {
   const { c } = theme;
   return (
     <View
@@ -331,9 +400,7 @@ function AreaLabel({
         justifyContent: 'space-between',
       }}
     >
-      <Text style={{ color: c.textSecondary, fontSize: 13, fontWeight: '700', letterSpacing: 0.3 }}>
-        {text}
-      </Text>
+      <Text style={{ color: c.textSecondary, fontSize: 13, fontWeight: '700', letterSpacing: 0.3 }}>{text}</Text>
       {right != null && (
         <Text style={{ color: c.textTertiary, fontSize: 12, fontWeight: '700', fontVariant: ['tabular-nums'] }}>
           {right}
@@ -343,40 +410,41 @@ function AreaLabel({
   );
 }
 
-function EmptyHint({ theme, top }: { theme: Theme; top: number }) {
+function EmptyHint({ theme, top, text }: { theme: Theme; top: number; text: string }) {
   const { c } = theme;
   return (
-    <View
-      style={{
-        position: 'absolute',
-        top: top + 6,
-        left: PAD,
-        width: TILE_SIZE,
-        height: TILE_SIZE,
-        borderRadius: 22,
-        borderWidth: 1.5,
-        borderColor: c.hairline,
-        borderStyle: 'dashed',
-      }}
-    />
+    <View style={{ position: 'absolute', top: top + 6, left: PAD, right: PAD, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+      <View
+        style={{
+          width: TILE_SIZE,
+          height: TILE_SIZE,
+          borderRadius: 22,
+          borderWidth: 1.5,
+          borderColor: c.hairline,
+          borderStyle: 'dashed',
+        }}
+      />
+      <Text style={{ color: c.textTertiary, fontSize: 12, fontWeight: '600', flex: 1 }}>{text}</Text>
+    </View>
   );
 }
 
 interface CellProps {
-  id: string;
+  cellKey: string;
+  zone: Zone;
   preset: Preset;
-  index: number;
   left: number;
   top: number;
   nameBand: number;
   theme: Theme;
   editMode: boolean;
   isDragging: boolean;
-  onBegin: (id: string) => void;
-  onMove: (id: string, tx: number, ty: number) => void;
-  onEnd: (id: string) => void;
+  onBegin: (zone: Zone, id: string) => void;
+  onMove: (tx: number, ty: number) => void;
+  onEnd: () => void;
   onTap: (id: string) => void;
-  onDelete: (id: string) => void;
+  onDelete: () => void;
+  onRemoveFromBoard: () => void;
 }
 
 function jigglePhase(id: string): number {
@@ -386,7 +454,8 @@ function jigglePhase(id: string): number {
 }
 
 function PresetCell({
-  id,
+  cellKey,
+  zone,
   preset,
   left,
   top,
@@ -399,20 +468,19 @@ function PresetCell({
   onEnd,
   onTap,
   onDelete,
+  onRemoveFromBoard,
 }: CellProps) {
   const { c } = theme;
   const pressScale = useSharedValue(1);
   const jiggle = useSharedValue(0);
   const reduced = useReducedMotion();
+  const id = preset.id;
 
   React.useEffect(() => {
     if (editMode && !isDragging && !reduced) {
-      const phase = jigglePhase(id);
+      const phase = jigglePhase(cellKey);
       jiggle.value = withRepeat(
-        withSequence(
-          withTiming(1, { duration: 130 + phase }),
-          withTiming(-1, { duration: 130 + phase }),
-        ),
+        withSequence(withTiming(1, { duration: 130 + phase }), withTiming(-1, { duration: 130 + phase })),
         -1,
         true,
       );
@@ -421,7 +489,7 @@ function PresetCell({
       jiggle.value = withTiming(0, { duration: 100 });
     }
     return () => cancelAnimation(jiggle);
-  }, [editMode, isDragging, reduced, id, jiggle]);
+  }, [editMode, isDragging, reduced, cellKey, jiggle]);
 
   const tap = React.useMemo(
     () =>
@@ -443,10 +511,10 @@ function PresetCell({
     () =>
       Gesture.Pan()
         .activateAfterLongPress(220)
-        .onStart(() => runOnJS(onBegin)(id))
-        .onUpdate((e) => runOnJS(onMove)(id, e.translationX, e.translationY))
-        .onFinalize(() => runOnJS(onEnd)(id)),
-    [id, onBegin, onMove, onEnd],
+        .onStart(() => runOnJS(onBegin)(zone, id))
+        .onUpdate((e) => runOnJS(onMove)(e.translationX, e.translationY))
+        .onFinalize(() => runOnJS(onEnd)()),
+    [id, zone, onBegin, onMove, onEnd],
   );
 
   const gesture = React.useMemo(() => Gesture.Exclusive(pan, tap), [pan, tap]);
@@ -458,14 +526,7 @@ function PresetCell({
   return (
     <Animated.View
       layout={listLayout}
-      style={{
-        position: 'absolute',
-        left,
-        top,
-        width: TILE_SIZE,
-        alignItems: 'center',
-        opacity: isDragging ? 0.2 : 1,
-      }}
+      style={{ position: 'absolute', left, top, width: TILE_SIZE, alignItems: 'center', opacity: isDragging ? 0.2 : 1 }}
     >
       {nameBand > 0 && (
         <View style={{ height: nameBand, width: TILE_SIZE, justifyContent: 'center' }}>
@@ -498,10 +559,10 @@ function PresetCell({
 
       {editMode && !isDragging && (
         <Pressable
-          onPress={() => onDelete(id)}
+          onPress={zone === 'master' ? onDelete : onRemoveFromBoard}
           hitSlop={10}
           accessibilityRole="button"
-          accessibilityLabel={t().common.delete}
+          accessibilityLabel={zone === 'master' ? t().common.delete : t().board.remove}
           style={{
             position: 'absolute',
             top: nameBand - 6,
@@ -509,7 +570,7 @@ function PresetCell({
             width: 24,
             height: 24,
             borderRadius: 12,
-            backgroundColor: c.danger,
+            backgroundColor: zone === 'master' ? c.danger : c.textTertiary,
             alignItems: 'center',
             justifyContent: 'center',
           }}
@@ -520,13 +581,7 @@ function PresetCell({
 
       <Text
         allowFontScaling={false}
-        style={{
-          marginTop: 7,
-          color: c.textSecondary,
-          fontSize: 12,
-          fontWeight: '600',
-          fontVariant: ['tabular-nums'],
-        }}
+        style={{ marginTop: 7, color: c.textSecondary, fontSize: 12, fontWeight: '600', fontVariant: ['tabular-nums'] }}
         numberOfLines={1}
       >
         {formatDurationShort(preset.durationSec)}
