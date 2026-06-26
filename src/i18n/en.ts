@@ -153,12 +153,12 @@ export const en: Strings = {
   pro: {
     title: 'Upgrade to Pro',
     headline: 'As many widgets as you like.',
-    subtitle: 'Put all your go-to timers on your widget.',
+    subtitle: 'Put your go-to timers on multiple widgets.',
     pillOnce: 'One-time',
     pillNoAds: 'No ads',
     pillNoData: 'No tracking',
-    featureWidget: 'Unlimited widget slots',
-    featureWidgetSub: 'Go beyond the free 3 — show as many presets on the widget as you like.',
+    featureWidget: 'Unlimited boards & presets',
+    featureWidgetSub: 'Free includes 1 board with 3 presets. Pro unlocks unlimited boards and presets.',
     featureSupport: 'Support an indie developer',
     featureSupportSub: 'Your purchase helps fund future updates.',
     cta: 'Buy',
@@ -170,9 +170,9 @@ export const en: Strings = {
     purchased: 'Upgraded to Pro',
     pending: 'Your purchase is pending approval. It will activate automatically once approved.',
     purchaseFailed: "Couldn't complete the purchase. Please try again later.",
-    active: 'Pro active',
-    activeSub: 'Thank you for your purchase',
-    widgetLimit: 'Free includes up to 3 widget slots. Pro makes it unlimited.',
+    active: 'Pro purchased',
+    activeSub: '',
+    widgetLimit: 'Free includes 1 board with 3 presets. Pro makes it unlimited.',
   },
 
   onboarding: {

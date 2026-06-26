@@ -3,6 +3,8 @@ import { requireOptionalNativeModule } from 'expo-modules-core';
 export interface ImasuguNativeModule {
   /** App Group にプリセットJSONをミラー（Control/ウィジェットが読む）。 */
   setSharedPresets(json: string): void;
+  /** App Group にウィジェット欄（ボード）JSONをミラー（設定可能ウィジェットが読む）。 */
+  setSharedBoards(json: string): void;
   setSharedRunning(json: string): void;
   /** App Group の実行中タイマーJSONを返す（ウィジェット無音起動ぶんの取り込み用）。 */
   getSharedRunning(): string;

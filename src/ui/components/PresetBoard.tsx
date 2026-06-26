@@ -252,7 +252,6 @@ export function PresetBoard(props: Props) {
         boards={props.boards}
         currentBoardId={props.currentBoardId}
         boardName={props.boardName}
-        editMode={editMode}
         theme={theme}
         onSelect={props.onSelectBoard}
         onAdd={props.onAddBoard}
@@ -317,7 +316,6 @@ function BoardTabs({
   boards,
   currentBoardId,
   boardName,
-  editMode,
   theme,
   onSelect,
   onAdd,
@@ -326,7 +324,6 @@ function BoardTabs({
   boards: Board[];
   currentBoardId: string | null;
   boardName: (board: Board, index: number) => string;
-  editMode: boolean;
   theme: Theme;
   onSelect: (id: string) => void;
   onAdd: () => void;
@@ -345,8 +342,8 @@ function BoardTabs({
           <Pressable
             key={b.id}
             onPress={() => onSelect(b.id)}
-            onLongPress={editMode ? () => onEditBoard(b) : undefined}
-            delayLongPress={260}
+            onLongPress={() => onEditBoard(b)}
+            delayLongPress={300}
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
             style={{

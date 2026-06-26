@@ -125,7 +125,9 @@ export default function SettingsScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ color: c.textPrimary, fontSize: 15, fontWeight: '700' }}>{s.pro.active}</Text>
-              <Text style={{ color: c.textSecondary, fontSize: 12, fontWeight: '500' }}>{s.pro.activeSub}</Text>
+              {s.pro.activeSub.length > 0 && (
+                <Text style={{ color: c.textSecondary, fontSize: 12, fontWeight: '500' }}>{s.pro.activeSub}</Text>
+              )}
             </View>
             <ChevronIcon color={c.textTertiary} size={18} />
           </Pressable>

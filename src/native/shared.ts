@@ -1,5 +1,5 @@
 import { ImasuguNative } from '../../modules/imasugu-native';
-import type { Preset, RunningTimer, TimerState } from '../domain/types';
+import type { Preset, Board, RunningTimer, TimerState } from '../domain/types';
 
 /**
  * プリセットを App Group にミラーする（Control / ウィジェットが読む読み取りモデル）。
@@ -9,6 +9,7 @@ export function mirrorPresetsToAppGroup(presets: Preset[]): void {
   if (!ImasuguNative) return;
   const model = presets.map((p) => ({
     id: p.id,
+    name: p.name,
     icon: p.icon,
     color: p.color,
     durationSec: p.durationSec,
@@ -17,6 +18,25 @@ export function mirrorPresetsToAppGroup(presets: Preset[]): void {
     sound: p.sound,
   }));
   ImasuguNative.setSharedPresets(JSON.stringify(model));
+}
+
+/**
+ * ウィジェット欄（ボード）を App Group にミラーする（設定可能ウィジェットの欄選択＋表示用）。
+ * 各欄に表示名（空なら「枠N」）と所属プリセットID（順序つき）を含める。
+ */
+export function mirrorBoardsToAppGroup(
+  boards: Board[],
+  membership: Record<string, string[]>,
+  fallbackName: (n: number) => string,
+): void {
+  if (!ImasuguNative) return;
+  const model = boards.map((b, i) => ({
+    id: b.id,
+    name: b.name.trim().length > 0 ? b.name.trim() : fallbackName(i + 1),
+    sortOrder: b.sortOrder,
+    presetIds: membership[b.id] ?? [],
+  }));
+  ImasuguNative.setSharedBoards(JSON.stringify(model));
 }
 
 /**

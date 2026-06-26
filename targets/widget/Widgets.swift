@@ -11,16 +11,25 @@ struct PresetEntry: TimelineEntry {
     let presets: [SharedPreset]
 }
 
-struct PresetProvider: TimelineProvider {
+// 設定可能ウィジェット：選択された欄(ボード)のプリセットを表示する。
+struct PresetProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> PresetEntry {
-        PresetEntry(date: Date(), presets: [])
+        PresetEntry(date: Date(), presets: resolve(nil))
     }
-    func getSnapshot(in context: Context, completion: @escaping (PresetEntry) -> Void) {
-        completion(PresetEntry(date: Date(), presets: Shared.widgetPresets()))
+
+    func snapshot(for configuration: SelectBoardIntent, in context: Context) async -> PresetEntry {
+        PresetEntry(date: Date(), presets: resolve(configuration))
     }
-    func getTimeline(in context: Context, completion: @escaping (Timeline<PresetEntry>) -> Void) {
-        let entry = PresetEntry(date: Date(), presets: Shared.widgetPresets())
-        completion(Timeline(entries: [entry], policy: .never))
+
+    func timeline(for configuration: SelectBoardIntent, in context: Context) async -> Timeline<PresetEntry> {
+        Timeline(entries: [PresetEntry(date: Date(), presets: resolve(configuration))], policy: .never)
+    }
+
+    // 欄が未選択（設置直後）なら先頭の欄にフォールバック。
+    private func resolve(_ configuration: SelectBoardIntent?) -> [SharedPreset] {
+        let boardId = configuration?.board?.id ?? Shared.loadBoards().first?.id
+        guard let boardId else { return [] }
+        return Shared.presets(forBoard: boardId)
     }
 }
 
@@ -148,12 +157,12 @@ private struct AccessoryView: View {
 struct PresetWidget: Widget {
     static let kind = "com.sknk.imasugutimer.PresetWidget"
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: Self.kind, provider: PresetProvider()) { entry in
+        AppIntentConfiguration(kind: Self.kind, intent: SelectBoardIntent.self, provider: PresetProvider()) { entry in
             PresetWidgetView(entry: entry)
                 .containerBackground(.fill.tertiary, for: .widget)
         }
-        .configurationDisplayName("今すぐタイマー")
-        .description("プリセットをワンタップで起動")
+        .configurationDisplayName(LX.isJa ? "今すぐタイマー" : "Imasugu Timer")
+        .description(LX.isJa ? "ウィジェット欄のプリセットをワンタップで起動" : "Start a board's presets in one tap")
         .supportedFamilies([
             .systemSmall, .systemMedium,
             .accessoryRectangular, .accessoryCircular, .accessoryInline,

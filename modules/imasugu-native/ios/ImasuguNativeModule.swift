@@ -109,6 +109,10 @@ public class ImasuguNativeModule: Module {
       UserDefaults(suiteName: kAppGroup)?.set(json.data(using: .utf8), forKey: "shared_running_v1")
     }
 
+    Function("setSharedBoards") { (json: String) in
+      UserDefaults(suiteName: kAppGroup)?.set(json.data(using: .utf8), forKey: "shared_boards_v1")
+    }
+
     // ウィジェット/ロック画面から無音起動したぶんをアプリに取り込むため、
     // App Group の実行中モデルJSONをそのまま返す。
     Function("getSharedRunning") { () -> String in

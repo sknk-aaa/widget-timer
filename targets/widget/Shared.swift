@@ -18,6 +18,7 @@ enum Shared {
     static let runningKey = "shared_running_v1" // 実行中タイマー JSON 配列
     static let runningMapKey = "running_alarm_map_v1" // alarmID -> presetID
     static let cancelledKey = "cancelled_ids_v1" // ウィジェット/通知で終了したID（アプリが取り込んでドックから消す）
+    static let boardsKey = "shared_boards_v1" // ウィジェット欄（ボード）JSON 配列
 
     static var defaults: UserDefaults? {
         UserDefaults(suiteName: appGroup)
@@ -70,6 +71,7 @@ extension Shared {
 /// App Group にミラーされるプリセットの読み取りモデル。
 struct SharedPreset: Codable, Identifiable, Hashable {
     let id: String
+    var name: String? = nil
     let icon: String
     let color: String // パレットID
     let durationSec: Int
@@ -90,6 +92,29 @@ extension Shared {
 
     static func preset(id: String) -> SharedPreset? {
         loadPresets().first { $0.id == id }
+    }
+}
+
+/// ウィジェット欄（ボード）の読み取りモデル。設定可能ウィジェットの欄選択＋表示に使う。
+struct SharedBoard: Codable, Identifiable {
+    let id: String
+    let name: String
+    let sortOrder: Int
+    let presetIds: [String]
+}
+
+extension Shared {
+    static func loadBoards() -> [SharedBoard] {
+        guard let data = defaults?.data(forKey: boardsKey) else { return [] }
+        let all = (try? JSONDecoder().decode([SharedBoard].self, from: data)) ?? []
+        return all.sorted { $0.sortOrder < $1.sortOrder }
+    }
+
+    /// 指定ボードの所属プリセットを、保存された順序で解決して返す。
+    static func presets(forBoard boardId: String) -> [SharedPreset] {
+        guard let board = loadBoards().first(where: { $0.id == boardId }) else { return [] }
+        let byId = Dictionary(loadPresets().map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        return board.presetIds.compactMap { byId[$0] }
     }
 }
 

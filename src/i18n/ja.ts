@@ -151,12 +151,12 @@ export const ja = {
   pro: {
     title: 'Pro にアップグレード',
     headline: 'ウィジェットを、好きなだけ。',
-    subtitle: 'よく使うタイマーを、全部ウィジェットに。',
+    subtitle: 'よく使うタイマーを、複数のウィジェットに。',
     pillOnce: '買い切り',
     pillNoAds: '広告なし',
     pillNoData: 'データ収集なし',
-    featureWidget: 'ウィジェット枠が無制限',
-    featureWidgetSub: '無料の3枠を超えて、好きなだけプリセットをウィジェットに表示。',
+    featureWidget: 'ウィジェット欄もプリセットも無制限',
+    featureWidgetSub: '無料はウィジェット欄1つ・3プリセットまで。Proで欄もプリセットも無制限に。',
     featureSupport: '個人開発を応援',
     featureSupportSub: 'あなたの購入が、今後のアップデートを支えます。',
     cta: '購入する',
@@ -168,9 +168,9 @@ export const ja = {
     purchased: 'Pro にアップグレードしました',
     pending: '購入の承認待ちです。承認されると自動で有効になります。',
     purchaseFailed: '購入を完了できませんでした。時間をおいて再度お試しください。',
-    active: 'Pro 有効',
-    activeSub: 'ご購入ありがとうございます',
-    widgetLimit: '無料ではウィジェット枠は3つまでです。Pro で無制限になります。',
+    active: 'Pro購入済',
+    activeSub: '',
+    widgetLimit: '無料はウィジェット欄1つ・3プリセットまで。Proで無制限になります。',
   },
 
   onboarding: {

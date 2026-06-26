@@ -186,9 +186,11 @@ export default function PaywallScreen() {
         {isPro ? (
           <View style={{ alignItems: 'center', marginBottom: spacing.md }}>
             <Text style={{ color: c.accent, fontSize: 17, fontWeight: '900' }}>{s.pro.active}</Text>
-            <Text style={{ color: c.textSecondary, fontSize: 13, fontWeight: '600', marginTop: 2 }}>
-              {s.pro.activeSub}
-            </Text>
+            {s.pro.activeSub.length > 0 && (
+              <Text style={{ color: c.textSecondary, fontSize: 13, fontWeight: '600', marginTop: 2 }}>
+                {s.pro.activeSub}
+              </Text>
+            )}
           </View>
         ) : (
           <>

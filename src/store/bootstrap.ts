@@ -16,8 +16,9 @@ import { useBoardsStore } from './boards';
 import { useTimersStore } from './timers';
 import { useProStore } from './pro';
 import { useSettingsStore } from './settings';
-import { mirrorPresetsToAppGroup, mirrorRunningToAppGroup } from '../native/shared';
+import { mirrorPresetsToAppGroup, mirrorBoardsToAppGroup, mirrorRunningToAppGroup } from '../native/shared';
 import { widgetService } from '../native/widget';
+import { t } from '../i18n';
 
 const SEEDED_KEY = 'seeded';
 const BOARDS_SEEDED_KEY = 'boards_seeded';
@@ -72,12 +73,21 @@ export async function bootstrap(): Promise<void> {
   await useProStore.getState().load();
   await useSettingsStore.getState().refreshPermission();
 
-  // プリセット・実行中タイマーを App Group にミラー（Control/ウィジェット用）。変更時も追従。
+  // プリセット・ボード・実行中タイマーを App Group にミラー（ウィジェット用）。変更時も追従。
+  const fallbackName = (n: number) => t().board.fallbackName(n);
   mirrorPresetsToAppGroup(usePresetsStore.getState().presets);
+  {
+    const b = useBoardsStore.getState();
+    mirrorBoardsToAppGroup(b.boards, b.membership, fallbackName);
+  }
   mirrorRunningToAppGroup(useTimersStore.getState().timers);
   void widgetService.reloadTimelines();
   usePresetsStore.subscribe((state) => {
     mirrorPresetsToAppGroup(state.presets);
+    void widgetService.reloadTimelines();
+  });
+  useBoardsStore.subscribe((state) => {
+    mirrorBoardsToAppGroup(state.boards, state.membership, fallbackName);
     void widgetService.reloadTimelines();
   });
   useTimersStore.subscribe((state) => {
