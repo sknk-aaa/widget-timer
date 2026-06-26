@@ -2,6 +2,7 @@ import * as React from 'react';
 import { View, Text, ScrollView, Switch, Alert, Pressable } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAudioPlayer } from 'expo-audio';
 import { usePresetsStore } from '../src/store/presets';
 import { useProStore } from '../src/store/pro';
 import { FREE_WIDGET_SLOTS, SOUND_IDS } from '../src/domain/types';
@@ -34,6 +35,28 @@ export default function PresetScreen() {
   const [sound, setSound] = React.useState(existing?.sound ?? 'default');
   const [inWidget, setInWidget] = React.useState(existing?.inWidget ?? false);
   const [dialActive, setDialActive] = React.useState(false);
+
+  // 音プレビュー（'default' は iPhone 標準音なので試聴対象外）。
+  const pXylophone = useAudioPlayer(require('../assets/sounds/xylophone.mp3'));
+  const pDigital = useAudioPlayer(require('../assets/sounds/digital.mp3'));
+  const pWhale = useAudioPlayer(require('../assets/sounds/whale.mp3'));
+  const previewById: Record<string, ReturnType<typeof useAudioPlayer> | null> = {
+    default: null,
+    xylophone: pXylophone,
+    digital: pDigital,
+    whale: pWhale,
+  };
+
+  const onPickSound = (id: string) => {
+    setSound(id);
+    haptics.light();
+    [pXylophone, pDigital, pWhale].forEach((p) => p.pause());
+    const p = previewById[id];
+    if (p) {
+      p.seekTo(0);
+      p.play();
+    }
+  };
 
   const close = () => router.back();
 
@@ -137,10 +160,7 @@ export default function PresetScreen() {
               return (
                 <Pressable
                   key={id}
-                  onPress={() => {
-                    setSound(id);
-                    haptics.light();
-                  }}
+                  onPress={() => onPickSound(id)}
                   accessibilityRole="button"
                   accessibilityState={{ selected }}
                   accessibilityLabel={s.sounds[id]}

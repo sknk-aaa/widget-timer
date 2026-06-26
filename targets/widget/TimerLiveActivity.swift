@@ -9,21 +9,24 @@ import AlarmKit
 struct TimerLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: AlarmAttributes<TimerMetadata>.self) { context in
-            HStack(spacing: 12) {
-                IconChip(
-                    icon: context.attributes.metadata?.icon ?? "timer",
-                    colorID: context.attributes.metadata?.colorID ?? "blue"
-                )
-                VStack(alignment: .leading, spacing: 2) {
-                    remaining(context.state)
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
-                        .monospacedDigit()
-                    endLabel(context.state)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+            VStack(spacing: 10) {
+                HStack(spacing: 12) {
+                    IconChip(
+                        icon: context.attributes.metadata?.icon ?? "timer",
+                        colorID: context.attributes.metadata?.colorID ?? "blue"
+                    )
+                    VStack(alignment: .leading, spacing: 2) {
+                        remaining(context.state)
+                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .monospacedDigit()
+                        endLabel(context.state)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    ControlButtons(state: context.state, alarmID: context.attributes.metadata?.alarmID ?? "")
                 }
-                Spacer()
-                ControlButtons(state: context.state, alarmID: context.attributes.metadata?.alarmID ?? "")
+                timeBar(context.state, paletteColor(context.attributes.metadata?.colorID ?? "blue"))
             }
             .padding()
             .activityBackgroundTint(Color.black.opacity(0.25))
@@ -41,7 +44,10 @@ struct TimerLiveActivity: Widget {
                         .monospacedDigit()
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    ControlButtons(state: context.state, alarmID: context.attributes.metadata?.alarmID ?? "")
+                    VStack(spacing: 8) {
+                        timeBar(context.state, paletteColor(context.attributes.metadata?.colorID ?? "blue"))
+                        ControlButtons(state: context.state, alarmID: context.attributes.metadata?.alarmID ?? "")
+                    }
                 }
             } compactLeading: {
                 Image(systemName: iconToSymbol(context.attributes.metadata?.icon ?? "timer"))
@@ -68,6 +74,29 @@ struct TimerLiveActivity: Widget {
             Text(LX.finished)
         @unknown default:
             Text("")
+        }
+    }
+
+    // 残り時間に連動するプリセット色のタイムバー（時間経過で満ちていく）。
+    // ProgressView(timerInterval:) はシステムが自動更新するためプッシュ不要。
+    @ViewBuilder
+    private func timeBar(_ state: AlarmPresentationState, _ color: Color) -> some View {
+        switch state.mode {
+        case .countdown(let countdown):
+            ProgressView(timerInterval: Date.now...countdown.fireDate, countsDown: true) {
+                EmptyView()
+            } currentValueLabel: {
+                EmptyView()
+            }
+            .tint(color)
+        case .paused(let paused):
+            let total = paused.totalCountdownDuration
+            let frac = total > 0 ? max(0, min(1, paused.previouslyElapsedDuration / total)) : 0
+            ProgressView(value: frac)
+                .tint(color)
+                .opacity(0.6)
+        default:
+            EmptyView()
         }
     }
 
