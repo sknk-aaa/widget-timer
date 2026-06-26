@@ -2,6 +2,7 @@ import * as React from 'react';
 import {
   View,
   Text,
+  Image,
   Pressable,
   ScrollView,
   useWindowDimensions,
@@ -15,7 +16,7 @@ import { alarmService } from '../src/native/alarm';
 import { useTheme } from '../src/ui/theme';
 import { Button } from '../src/ui/components/Button';
 import { PresetTileVisual } from '../src/ui/components/PresetTile';
-import { PlusIcon, ChevronIcon } from '../src/ui/icons/ui';
+import { PlusIcon } from '../src/ui/icons/ui';
 import { haptics } from '../src/ui/haptics';
 import { t } from '../src/i18n';
 
@@ -70,9 +71,9 @@ export default function OnboardingScreen() {
         onMomentumScrollEnd={onScrollEnd}
         style={{ flex: 1 }}
       >
+        <Page width={width}><ConceptPage /></Page>
         <Page width={width}><HomeAddPage /></Page>
         <Page width={width}><LockAddPage /></Page>
-        <Page width={width}><EditPage /></Page>
         <Page width={width}><StartPage /></Page>
       </ScrollView>
 
@@ -200,32 +201,17 @@ function LockAddPage() {
   );
 }
 
-function EditPage() {
-  const { c, spacing, radius } = useTheme();
+function ConceptPage() {
+  const { spacing } = useTheme();
   const s = t();
   return (
     <View style={{ alignItems: 'center' }}>
-      <View style={{ alignItems: 'center', gap: spacing.lg, marginBottom: spacing.xxxl }}>
-        <PresetTileVisual icon="book" color="blue" size={56} />
-        <View style={{ width: 224, backgroundColor: c.surface, borderRadius: radius.lg }}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              paddingHorizontal: spacing.lg,
-              paddingVertical: spacing.md,
-            }}
-          >
-            <Text style={{ color: c.textPrimary, fontSize: 14, fontWeight: '700' }}>{s.onboarding.editTitle}</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Text style={{ color: c.accent, fontSize: 14, fontWeight: '800' }}>{s.board.fallbackName(2)}</Text>
-              <ChevronIcon color={c.textTertiary} size={16} />
-            </View>
-          </View>
-        </View>
+      <View style={{ flexDirection: 'row', gap: spacing.md, marginBottom: spacing.xxxl }}>
+        <PresetTileVisual icon="ramen" color="orange" size={64} />
+        <PresetTileVisual icon="bed" color="indigo" size={64} />
+        <PresetTileVisual icon="book" color="blue" size={64} />
       </View>
-      <PageText title={s.onboarding.editTitle} body={s.onboarding.editBody} />
+      <PageText title={s.onboarding.conceptTitle} body={s.onboarding.conceptBody} />
     </View>
   );
 }
@@ -235,11 +221,10 @@ function StartPage() {
   const s = t();
   return (
     <View style={{ alignItems: 'center' }}>
-      <View style={{ flexDirection: 'row', gap: spacing.md, marginBottom: spacing.xxxl }}>
-        <PresetTileVisual icon="ramen" color="orange" size={60} />
-        <PresetTileVisual icon="bed" color="indigo" size={60} />
-        <PresetTileVisual icon="book" color="blue" size={60} />
-      </View>
+      <Image
+        source={require('../assets/icon.png')}
+        style={{ width: 100, height: 100, borderRadius: 24, marginBottom: spacing.xxxl }}
+      />
       <PageText title={s.onboarding.startTitle} body={s.onboarding.startBody} />
     </View>
   );
