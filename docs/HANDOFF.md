@@ -1,6 +1,6 @@
 # Handoff
 
-最終更新: 2026-06-27
+最終更新: 2026-06-30
 
 ## 現状
 
@@ -21,6 +21,16 @@
 - **未ビルドのコミット `53832dc`**（権限文言「通知」→「アラーム」）は次アップデートのビルドに含める。
 - 審査結果待ち。リジェクト時の典型対応は `docs/OPERATIONS.md` のリリース前チェックを参照。
 - 任意改善: SPEC/DESIGN とコードの細部同期（随時）、実機フィードバック反映。
+
+## Codex作業メモ
+
+- Codex Desktop / VSCode / CLI 間の引き継ぎはこの `docs/HANDOFF.md` を入口にする。
+- App Store スクリーンショット生成は Codex Desktop の `$imagegen` を使う。内蔵画像生成は `gpt-image-2`。
+- VSCode 上のCodexでは `OPENAI_API_KEY` 未設定のため、API経由の `gpt-image-2` 生成はしない。
+- スクショ素材は `assets/screenshot/*.PNG`。生成・合成したストア画像の出力先は `output/store/`。
+- 日本向けストア画像ではアプリ名「今すぐタイマー」を前面に出す。英語名 Tappri は補助扱い。
+- App Store 用画像は 1290x2796 PNG を基本にし、実機スクショのUIは過度に改変しない。
+- マーケ施策の蓄積は `docs/MARKETING.md` に集約する。
 
 ## 決定事項（重要・実装で確定）
 
