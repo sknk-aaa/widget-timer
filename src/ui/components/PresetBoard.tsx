@@ -119,10 +119,9 @@ export function PresetBoard(props: Props) {
   const hasMovedRef = React.useRef(false);
   const startMasterRef = React.useRef<string[]>([]);
   const startBoardRef = React.useRef<string[]>([]);
-  const workMasterRef = React.useRef<string[]>([]);
-  const workBoardRef = React.useRef<string[]>([]);
   const dragLayoutRef = React.useRef<BoardLayout | null>(null);
   const startPointerRef = React.useRef<Point | null>(null);
+  const previewKeyRef = React.useRef('');
   const masterIdsRef = React.useRef(masterIds);
   masterIdsRef.current = masterIds;
   const boardIdsRef = React.useRef(boardIds);
@@ -199,9 +198,8 @@ export function PresetBoard(props: Props) {
     dragScale.value = withSpring(1.08, springs.snappy);
     startMasterRef.current = [...masterIdsRef.current];
     startBoardRef.current = [...boardIdsRef.current];
-    workMasterRef.current = startMasterRef.current;
-    workBoardRef.current = startBoardRef.current;
     startPointerRef.current = { x: absoluteX, y: absoluteY };
+    previewKeyRef.current = '';
     hasMovedRef.current = false;
     draggingRef.current = { zone, id };
     setDraggingKey(`${zone}:${id}`);
@@ -253,18 +251,11 @@ export function PresetBoard(props: Props) {
     const result = computeDragResult(delta.x, delta.y);
     if (!result) return;
 
-    let changed = false;
-    if (!sameArr(result.nextBoard, workBoardRef.current)) {
-      workBoardRef.current = result.nextBoard;
-      setBoardIds(result.nextBoard);
-      changed = true;
+    const previewKey = `${result.target}:${result.nextBoard.join(',')}:${result.nextMaster.join(',')}`;
+    if (previewKey !== previewKeyRef.current) {
+      previewKeyRef.current = previewKey;
+      haptics.swap();
     }
-    if (!sameArr(result.nextMaster, workMasterRef.current)) {
-      workMasterRef.current = result.nextMaster;
-      setMasterIds(result.nextMaster);
-      changed = true;
-    }
-    if (changed) haptics.swap();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [computeDragResult, dragDelta]);
 
@@ -291,7 +282,7 @@ export function PresetBoard(props: Props) {
       } else if (target === 'board') {
         if (!sameArr(nextBoard, startBoard)) {
           const ok = cbRef.current.onSetBoard(nextBoard);
-          if (!ok) setBoardIds(cbRef.current.boardPresetIds);
+          setBoardIds(ok ? nextBoard : cbRef.current.boardPresetIds);
           handled = true;
         }
       }
@@ -299,10 +290,11 @@ export function PresetBoard(props: Props) {
       if (target === 'board' && !startBoard.includes(drag.id) && nextBoard.includes(drag.id)) {
         // 全てのプリセット → 欄へ追加
         const ok = cbRef.current.onSetBoard(nextBoard);
-        if (!ok) setBoardIds(cbRef.current.boardPresetIds);
+        setBoardIds(ok ? nextBoard : cbRef.current.boardPresetIds);
         handled = true;
       } else if (target === 'master' && !sameArr(nextMaster, startMaster)) {
         cbRef.current.onReorderAll(nextMaster);
+        setMasterIds(nextMaster);
         handled = true;
       }
     }
@@ -314,6 +306,7 @@ export function PresetBoard(props: Props) {
     draggingRef.current = null;
     dragLayoutRef.current = null;
     startPointerRef.current = null;
+    previewKeyRef.current = '';
     setDraggingKey(null);
     cbRef.current.onDragActiveChange(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
