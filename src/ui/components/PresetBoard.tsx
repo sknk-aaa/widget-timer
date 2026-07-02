@@ -47,6 +47,11 @@ interface DragResult {
   nextBoard: string[];
 }
 
+interface Point {
+  x: number;
+  y: number;
+}
+
 interface Props {
   boards: Board[];
   currentBoardId: string | null;
@@ -117,6 +122,7 @@ export function PresetBoard(props: Props) {
   const workMasterRef = React.useRef<string[]>([]);
   const workBoardRef = React.useRef<string[]>([]);
   const dragLayoutRef = React.useRef<BoardLayout | null>(null);
+  const startPointerRef = React.useRef<Point | null>(null);
   const masterIdsRef = React.useRef(masterIds);
   masterIdsRef.current = masterIds;
   const boardIdsRef = React.useRef(boardIds);
@@ -172,7 +178,14 @@ export function PresetBoard(props: Props) {
     return clamp(row * d.cols + col, 0, len);
   };
 
-  const onBegin = React.useCallback((zone: Zone, id: string) => {
+  const dragDelta = React.useCallback((tx: number, ty: number, absoluteX: number, absoluteY: number): Point => {
+    const startPointer = startPointerRef.current;
+    if (!startPointer) return { x: tx, y: ty };
+    // 並び替えプレビューで元セルも layout 移動するため、translation ではなく画面上の指の移動量を使う。
+    return { x: absoluteX - startPointer.x, y: absoluteY - startPointer.y };
+  }, []);
+
+  const onBegin = React.useCallback((zone: Zone, id: string, absoluteX: number, absoluteY: number) => {
     if (draggingRef.current) return; // 2本目の同時ドラッグは無視（状態混線防止）
     const list = zone === 'board' ? boardIdsRef.current : masterIdsRef.current;
     const index = list.indexOf(id);
@@ -188,6 +201,7 @@ export function PresetBoard(props: Props) {
     startBoardRef.current = [...boardIdsRef.current];
     workMasterRef.current = startMasterRef.current;
     workBoardRef.current = startBoardRef.current;
+    startPointerRef.current = { x: absoluteX, y: absoluteY };
     hasMovedRef.current = false;
     draggingRef.current = { zone, id };
     setDraggingKey(`${zone}:${id}`);
@@ -196,12 +210,12 @@ export function PresetBoard(props: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const computeDragResult = React.useCallback((tx: number, ty: number): DragResult | null => {
+  const computeDragResult = React.useCallback((dx: number, dy: number): DragResult | null => {
     const drag = draggingRef.current;
     if (!drag) return null;
     const d = dragLayoutRef.current ?? layoutRef.current;
-    const fx = startLeft.value + TILE_SIZE / 2 + tx;
-    const fy = startTop.value + TILE_SIZE / 2 + ty;
+    const fx = startLeft.value + TILE_SIZE / 2 + dx;
+    const fy = startTop.value + TILE_SIZE / 2 + dy;
     const target = targetAt(fy, d);
     const startMaster = startMasterRef.current;
     const startBoard = startBoardRef.current;
@@ -225,17 +239,18 @@ export function PresetBoard(props: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const onMove = React.useCallback((tx: number, ty: number) => {
+  const onMove = React.useCallback((tx: number, ty: number, absoluteX: number, absoluteY: number) => {
     const drag = draggingRef.current;
     if (!drag) return;
-    dragX.value = tx;
-    dragY.value = ty;
+    const delta = dragDelta(tx, ty, absoluteX, absoluteY);
+    dragX.value = delta.x;
+    dragY.value = delta.y;
     // デッドゾーン: 持ち上げ直後の微小な揺れでは並べ替え/欄移動をしない。
     if (!hasMovedRef.current) {
-      if (Math.abs(tx) < 12 && Math.abs(ty) < 12) return;
+      if (Math.abs(delta.x) < 12 && Math.abs(delta.y) < 12) return;
       hasMovedRef.current = true;
     }
-    const result = computeDragResult(tx, ty);
+    const result = computeDragResult(delta.x, delta.y);
     if (!result) return;
 
     let changed = false;
@@ -251,15 +266,16 @@ export function PresetBoard(props: Props) {
     }
     if (changed) haptics.swap();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [computeDragResult]);
+  }, [computeDragResult, dragDelta]);
 
-  const onEnd = React.useCallback((tx: number, ty: number, success: boolean) => {
+  const onEnd = React.useCallback((tx: number, ty: number, absoluteX: number, absoluteY: number, success: boolean) => {
     const drag = draggingRef.current;
     if (!drag) return;
     dragScale.value = withSpring(1, springs.snappy);
     const startBoard = startBoardRef.current;
     const startMaster = startMasterRef.current;
-    const result = success ? computeDragResult(tx, ty) : null;
+    const delta = dragDelta(tx, ty, absoluteX, absoluteY);
+    const result = success ? computeDragResult(delta.x, delta.y) : null;
     const target = result?.target ?? 'between';
     const nextBoard = result?.nextBoard ?? startBoard;
     const nextMaster = result?.nextMaster ?? startMaster;
@@ -297,10 +313,11 @@ export function PresetBoard(props: Props) {
     }
     draggingRef.current = null;
     dragLayoutRef.current = null;
+    startPointerRef.current = null;
     setDraggingKey(null);
     cbRef.current.onDragActiveChange(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [computeDragResult]);
+  }, [computeDragResult, dragDelta]);
 
   const onTap = React.useCallback((id: string) => {
     const p = byIdRef.current.get(id);
@@ -579,9 +596,9 @@ interface CellProps {
   c: Colors;
   editMode: boolean;
   isDragging: boolean;
-  onBegin: (zone: Zone, id: string) => void;
-  onMove: (tx: number, ty: number) => void;
-  onEnd: (tx: number, ty: number, success: boolean) => void;
+  onBegin: (zone: Zone, id: string, absoluteX: number, absoluteY: number) => void;
+  onMove: (tx: number, ty: number, absoluteX: number, absoluteY: number) => void;
+  onEnd: (tx: number, ty: number, absoluteX: number, absoluteY: number, success: boolean) => void;
   onTap: (id: string) => void;
   onDelete: (id: string) => void;
   onRemoveFromBoard: (id: string) => void;
@@ -650,9 +667,9 @@ const PresetCell = React.memo(function PresetCell({
     () =>
       Gesture.Pan()
         .activateAfterLongPress(220)
-        .onStart(() => runOnJS(onBegin)(zone, id))
-        .onUpdate((e) => runOnJS(onMove)(e.translationX, e.translationY))
-        .onFinalize((e, success) => runOnJS(onEnd)(e.translationX, e.translationY, success)),
+        .onStart((e) => runOnJS(onBegin)(zone, id, e.absoluteX, e.absoluteY))
+        .onUpdate((e) => runOnJS(onMove)(e.translationX, e.translationY, e.absoluteX, e.absoluteY))
+        .onFinalize((e, success) => runOnJS(onEnd)(e.translationX, e.translationY, e.absoluteX, e.absoluteY, success)),
     [id, zone, onBegin, onMove, onEnd],
   );
 
