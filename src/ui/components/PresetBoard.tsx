@@ -30,6 +30,16 @@ const BASE_CELL_H = TILE_SIZE + 24 + GAP;
 const LABEL_BLOCK = 40;
 
 type Zone = 'board' | 'master';
+type DropTarget = Zone | 'between';
+
+interface BoardLayout {
+  cols: number;
+  cellH: number;
+  nameBand: number;
+  boardAreaTop: number;
+  masterAreaTop: number;
+  masterLabelTop: number;
+}
 
 interface Props {
   boards: Board[];
@@ -95,12 +105,13 @@ export function PresetBoard(props: Props) {
   const [draggingKey, setDraggingKey] = React.useState<string | null>(null);
 
   const draggingRef = React.useRef<{ zone: Zone; id: string } | null>(null);
-  const lastTargetRef = React.useRef<Zone>('master');
+  const lastTargetRef = React.useRef<DropTarget>('master');
   const hasMovedRef = React.useRef(false);
   const startMasterRef = React.useRef<string[]>([]);
   const startBoardRef = React.useRef<string[]>([]);
   const workMasterRef = React.useRef<string[]>([]);
   const workBoardRef = React.useRef<string[]>([]);
+  const dragLayoutRef = React.useRef<BoardLayout | null>(null);
   const masterIdsRef = React.useRef(masterIds);
   masterIdsRef.current = masterIds;
   const boardIdsRef = React.useRef(boardIds);
@@ -123,7 +134,7 @@ export function PresetBoard(props: Props) {
   const masterRows = Math.max(1, Math.ceil((masterIds.length + 1) / cols));
   const totalHeight = masterAreaTop + masterRows * cellH + 8;
 
-  const layoutRef = React.useRef({ cols, cellH, nameBand, boardAreaTop, masterAreaTop, masterLabelTop });
+  const layoutRef = React.useRef<BoardLayout>({ cols, cellH, nameBand, boardAreaTop, masterAreaTop, masterLabelTop });
   layoutRef.current = { cols, cellH, nameBand, boardAreaTop, masterAreaTop, masterLabelTop };
   const cbRef = React.useRef(props);
   cbRef.current = props;
@@ -135,14 +146,19 @@ export function PresetBoard(props: Props) {
   const dragScale = useSharedValue(1);
 
   const slotLeft = (index: number, cols_: number) => PAD + (index % cols_) * CELL_W;
-  const slotTop = (zone: Zone, index: number) => {
-    const d = layoutRef.current;
+  const slotTop = (zone: Zone, index: number, d: BoardLayout = layoutRef.current) => {
     const top = (zone === 'board' ? d.boardAreaTop : d.masterAreaTop) + Math.floor(index / d.cols) * d.cellH;
     return top + d.nameBand;
   };
 
+  const targetAt = (fy: number, d: BoardLayout): DropTarget => {
+    if (fy < d.masterLabelTop) return 'board';
+    if (fy >= d.masterAreaTop) return 'master';
+    return 'between';
+  };
+
   const indexAt = (zone: Zone, fx: number, fy: number, len: number): number => {
-    const d = layoutRef.current;
+    const d = dragLayoutRef.current ?? layoutRef.current;
     const areaTop = zone === 'board' ? d.boardAreaTop : d.masterAreaTop;
     // fx,fy はドラッグ中タイルの中心。タイルの基準位置(左上)に戻してスロットを求める＝
     // 半セル分動かして初めて隣と入れ替わる（触れた瞬間の誤入れ替えを防ぐ）。
@@ -156,8 +172,10 @@ export function PresetBoard(props: Props) {
     const list = zone === 'board' ? boardIdsRef.current : masterIdsRef.current;
     const index = list.indexOf(id);
     if (index < 0) return;
-    startLeft.value = slotLeft(index, layoutRef.current.cols);
-    startTop.value = slotTop(zone, index);
+    const dragLayout = { ...layoutRef.current };
+    dragLayoutRef.current = dragLayout;
+    startLeft.value = slotLeft(index, dragLayout.cols);
+    startTop.value = slotTop(zone, index, dragLayout);
     dragX.value = 0;
     dragY.value = 0;
     dragScale.value = withSpring(1.08, springs.snappy);
@@ -184,10 +202,10 @@ export function PresetBoard(props: Props) {
       if (Math.abs(tx) < 12 && Math.abs(ty) < 12) return;
       hasMovedRef.current = true;
     }
-    const d = layoutRef.current;
+    const d = dragLayoutRef.current ?? layoutRef.current;
     const fx = startLeft.value + TILE_SIZE / 2 + tx;
     const fy = startTop.value + TILE_SIZE / 2 + ty;
-    const target: Zone = fy < d.masterLabelTop ? 'board' : 'master';
+    const target = targetAt(fy, d);
     lastTargetRef.current = target;
     const startMaster = startMasterRef.current;
     const startBoard = startBoardRef.current;
@@ -205,7 +223,7 @@ export function PresetBoard(props: Props) {
     } else {
       if (target === 'master') {
         nextMaster = moveTo(startMaster, drag.id, indexAt('master', fx, fy, startMaster.length - 1));
-      } else if (!startBoard.includes(drag.id)) {
+      } else if (target === 'board' && !startBoard.includes(drag.id)) {
         const j = indexAt('board', fx, fy, startBoard.length);
         nextBoard = [...startBoard.slice(0, j), drag.id, ...startBoard.slice(j)]; // 欄へ追加プレビュー
       }
@@ -242,7 +260,7 @@ export function PresetBoard(props: Props) {
         const ok = cbRef.current.onSetBoard(next);
         setBoardIds(ok ? next : cbRef.current.boardPresetIds);
         handled = true;
-      } else {
+      } else if (target === 'board') {
         const work = workBoardRef.current;
         if (!sameArr(work, startBoard)) {
           const ok = cbRef.current.onSetBoard(work);
@@ -257,7 +275,7 @@ export function PresetBoard(props: Props) {
         const ok = cbRef.current.onSetBoard(work);
         if (!ok) setBoardIds(cbRef.current.boardPresetIds);
         handled = true;
-      } else if (!sameArr(workMasterRef.current, startMaster)) {
+      } else if (target === 'master' && !sameArr(workMasterRef.current, startMaster)) {
         cbRef.current.onReorderAll(workMasterRef.current);
         handled = true;
       }
@@ -268,6 +286,7 @@ export function PresetBoard(props: Props) {
       setMasterIds(startMaster);
     }
     draggingRef.current = null;
+    dragLayoutRef.current = null;
     setDraggingKey(null);
     cbRef.current.onDragActiveChange(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
