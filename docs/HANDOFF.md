@@ -1,15 +1,17 @@
 # Handoff
 
-最終更新: 2026-07-02
+最終更新: 2026-07-04
 
 ## 現状
 
 **App Store 審査に初回提出済み（2026-06-27）。** 日英2言語（英語名 **TimerTiles** / ストア表記「TimerTiles: Widget Timer」、日本語名「今すぐタイマー」）。初回提出ビルド = GitHub Actions run `28249253876`（commit `8a67567`、提出時英語名はTappri）。審査通過後は自動リリースせず、TikTok/Xの告知準備と合わせて手動リリースする。
 
-2026-07-02 の追加修正:
+2026-07-04 までの追加修正:
 - **ウィジェット追加画面の日本語名表示を修正済み**（`targets/widget/assets/{ja,en}.lproj/Localizable.strings` で `widget.displayName` / `widget.description` を管理）。ユーザー実機確認で、日本語端末のWidget追加画面が「今すぐタイマー」になることを確認済み。
 - **プリセットドラッグ並び替えの途中キャンセル問題を修正済み**。最終形は「ドラッグ中に `setBoardIds` / `setMasterIds` で配列を入れ替えない。浮いているタイルだけ動かし、`onFinalize` で最終位置を計算して確定」。ユーザー確認で「治った」と報告あり。
-- 直近の `gp`: commit `aa682c1` まで push 済み、GitHub Actions `ios.yml` run `28576937015` 起動済み。
+- 直近の `gp`: commit `d0d93e6` まで push 済み、GitHub Actions `ios.yml` run `28701377604` 成功済み。
+- **英語名は TimerTiles に決定し、コード/docsの英語表示名を更新済み**。日本語名は「今すぐタイマー」のまま。App Store Connect 側の英語タイトル/キーワード/説明は公開前に手動同期する。
+- **ホーム/ロック画面ウィジェット起動の高速化を実施済み**。ユーザー実機確認で、ホーム画面からの起動は早くなり、ロック画面ウィジェットからも通知欄/Live Activity表示が復旧し起動が早いことを確認済み。
 - **ロック画面ウィジェット起動後のLive Activity表示ラグ対策**として、Widgetの `Button` からプリセットIDだけでなく秒数/アイコン/色/音を直接 `StartPresetTimerWidgetIntent` に渡し、タップ後のApp GroupプリセットJSON再読込と成功ログを削った。`TimerLiveActivity()` は通知欄表示に必要なためWidgetBundle登録を維持する。
 - **リリース前の安定化**として、AlarmKit予約失敗時のアプリ内タイマー表示ロールバック、プリセット編集画面から削除した時のボード再読込、App Group JSON読込の防御、権限拒否バナー強化、Pro＋応援ボタンの二重タップ防止を追加。
 
@@ -27,7 +29,8 @@
 
 - 審査結果待ち。リジェクト時の典型対応は `docs/OPERATIONS.md` のリリース前チェックを参照。
 - 審査通過後は公開タイミングを手動で決め、TikTok/Xの告知と同時に初速を作る。
-- 英語アプリ名は **TimerTiles** に決定。候補・方針は `docs/MARKETING.md`。
+- App Store Connect 側で英語名を **TimerTiles: Widget Timer** に同期し、説明/スクショ/必要ならキーワードも更新する。提出時旧名は Tappri。
+- ストア説明・SNS・スクショ内で **iOS 26以降対応** を明記する（iOS 26未満は基本インストール不可なので、期待値ズレ防止）。
 - 任意改善: SPEC/DESIGN とコードの細部同期（随時）、実機フィードバック反映。
 
 ## Codex作業メモ
@@ -55,6 +58,7 @@
 ## 既知の問題 / 制約（iOS仕様で対応不可を含む）
 
 - **通知をスワイプで消してもアラームは鳴る**（AlarmKit/iOS の仕様。非表示化APIなし）。ユーザー合意済み。
+- **iOS 26+ 専用**。`deploymentTarget=26.0` / ネイティブモジュールも iOS 26.0 のため、iOS 26未満は基本インストール対象外。ストア訴求では「iOS 26以降対応」を明記する。
 - **ロック画面ウィジェットのタップ操作はデバイス認証が必要**（iOSのインタラクティブウィジェット仕様）。
 - **ウィジェット自体の更新遅延**は WidgetKit 仕様（ランチャー専用化で「状態反映の遅延」は回避済み）。
 - Expo Go では AlarmKit/ウィジェット/Live Activity/課金は動かない（モック）。本物の挙動は TestFlight のみ。
