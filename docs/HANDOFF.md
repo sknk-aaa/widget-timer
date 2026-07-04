@@ -4,12 +4,14 @@
 
 ## 現状
 
-**App Store 審査に初回提出済み（2026-06-27）。** 日英2言語（英語名 **TimerTiles** / ストア表記「TimerTiles: Widget Timer」、日本語名「今すぐタイマー」）。初回提出ビルド = GitHub Actions run `28249253876`（commit `8a67567`、提出時英語名はTappri）。審査通過後は自動リリースせず、TikTok/Xの告知準備と合わせて手動リリースする。
+**App Store 公開済み。** 現在は最新ビルドで次バージョンのアップデート申請済み。日英2言語（英語名 **TimerTiles** / ストア表記「TimerTiles: Widget Timer」、日本語名「今すぐタイマー」）。初回提出ビルド = GitHub Actions run `28249253876`（commit `8a67567`、提出時英語名はTappri）。初回リリースはユーザーが手動で実施済み。
 
 2026-07-04 までの追加修正:
+- **公開後の次バージョン申請用に `CFBundleShortVersionString` を `1.0.1` へ更新済み**。`1.0.0` はApp Store Connect上でpre-release trainが閉じており、新規ビルド提出が拒否されたため。commit `87fa504`、GitHub Actions `ios.yml` run `28706868283` 成功済み。
+- **TikTokプロフィール用LPをGitHub Pages向けに追加・調整済み**。公開URLは `https://sknk-aaa.github.io/widget-timer/tiktok/`。TikTok内でApp Store直リンクが開けない場合の中継ページとして使う。ストアリンクは `docs/tiktok/index.html` の `APP_STORE_URL` 1箇所で管理。
 - **ウィジェット追加画面の日本語名表示を修正済み**（`targets/widget/assets/{ja,en}.lproj/Localizable.strings` で `widget.displayName` / `widget.description` を管理）。ユーザー実機確認で、日本語端末のWidget追加画面が「今すぐタイマー」になることを確認済み。
 - **プリセットドラッグ並び替えの途中キャンセル問題を修正済み**。最終形は「ドラッグ中に `setBoardIds` / `setMasterIds` で配列を入れ替えない。浮いているタイルだけ動かし、`onFinalize` で最終位置を計算して確定」。ユーザー確認で「治った」と報告あり。
-- 直近の `gp`: commit `d0d93e6` まで push 済み、GitHub Actions `ios.yml` run `28701377604` 成功済み。
+- 直近の `gp`: commit `87fa504` まで push 済み、GitHub Actions `ios.yml` run `28706868283` 成功済み。
 - **英語名は TimerTiles に決定し、コード/docsの英語表示名を更新済み**。日本語名は「今すぐタイマー」のまま。App Store Connect 側の英語タイトル/キーワード/説明は公開前に手動同期する。
 - **ホーム/ロック画面ウィジェット起動の高速化を実施済み**。ユーザー実機確認で、ホーム画面からの起動は早くなり、ロック画面ウィジェットからも通知欄/Live Activity表示が復旧し起動が早いことを確認済み。
 - **ロック画面ウィジェット起動後のLive Activity表示ラグ対策**として、Widgetの `Button` からプリセットIDだけでなく秒数/アイコン/色/音を直接 `StartPresetTimerWidgetIntent` に渡し、タップ後のApp GroupプリセットJSON再読込と成功ログを削った。`TimerLiveActivity()` は通知欄表示に必要なためWidgetBundle登録を維持する。
@@ -25,11 +27,12 @@
 - 設定（メニューにカラーアイコン）、FAQ、レビュー導線、ご意見フォーム（Tally）。
 - DB(Drizzle+expo-sqlite,起動時DDL)・Zustand・ネイティブ抽象化（Expo Goモック／実機実装）・白アイコン・ダーク・触覚/モーション・i18n(ja/en)・CI/配信。
 
-## 提出後の残作業
+## 公開後 / アップデート申請中の残作業
 
-- 審査結果待ち。リジェクト時の典型対応は `docs/OPERATIONS.md` のリリース前チェックを参照。
-- 審査通過後は公開タイミングを手動で決め、TikTok/Xの告知と同時に初速を作る。
-- App Store Connect 側で英語名を **TimerTiles: Widget Timer** に同期し、説明/スクショ/必要ならキーワードも更新する。提出時旧名は Tappri。
+- 次バージョンのアップデート審査結果待ち。リジェクト時の典型対応は `docs/OPERATIONS.md` のリリース前チェックを参照。
+- 公開後の初速を見る。TikTok/X告知、TikTokプロフィールLP、App Storeページ、レビュー導線の反応を確認する。
+- App Store Connect 側の英語名/説明/キーワード/スクショ文言が **TimerTiles: Widget Timer** と最新訴求に同期済みか確認する。提出時旧名は Tappri。
+- 不具合報告、クラッシュ、レビュー、低評価理由を優先して拾い、必要なら小さな修正アップデートを早めに出す。
 - ストア説明・SNS・スクショ内で **iOS 26以降対応** を明記する（iOS 26未満は基本インストール不可なので、期待値ズレ防止）。
 - 任意改善: SPEC/DESIGN とコードの細部同期（随時）、実機フィードバック反映。
 

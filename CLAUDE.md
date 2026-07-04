@@ -2,6 +2,8 @@
 
 ウィジェットからワンタップ起動する iOS 26+ 専用の相対カウントダウンタイマー。Expo(React Native)＋Drizzle/expo-sqlite＋Zustand。ネイティブ（AlarmKit/WidgetKit/ActivityKit/StoreKit2）は `src/native/*` のインターフェース裏に隠し、Expo Go ではモック、TestFlight では実装に差し替える二層構成。製品要件は SPEC.md、実装設計は docs/DESIGN.md。
 
+現在はApp Store公開済み・次バージョンのアップデート申請中。作業開始時は docs/HANDOFF.md と docs/MARKETING.md を読み、公開後の初速、レビュー/不具合監視、SNS導線、ASO、次アップデート候補を意識する。
+
 ## このアプリ固有の厳守事項
 
 - **アイコンは絵文字禁止。** 白グリフの画像アイコン（`src/ui/icons/registry.tsx` の react-native-svg）を使う。プリセットは「白アイコン＋背景色」で識別する（表示名は任意で付けられ、あればタイルにも出る）。
