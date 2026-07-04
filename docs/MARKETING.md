@@ -46,6 +46,7 @@
 - 現在はApp Store審査中。スクリーンショット・ASO・ストア掲載情報は提出済み。
 - 英語名は TimerTiles に変更済み。App Store Connect 側の英語タイトル/説明/キーワード/スクショ文言は公開前に手動同期する。
 - リリースは自動ではなく手動。審査通過後すぐ公開せず、TikTok/X投稿とタイミングを合わせて初速を作る。
+- TikTokプロフィールにはApp Store直リンクではなく、GitHub Pagesの専用LP `docs/tiktok/index.html` を挟む。公開後URLは `https://sknk-aaa.github.io/widget-timer/tiktok/`。
 - TikTokはフォロワー約1200人。これまで作ってきたアプリの作り方や個人開発の過程を簡単に解説するアカウント。
 - Xはフォロワー約1500人。個人開発者としての人格で発信している。
 - TikTokでは「個人開発でこういうアプリを作った」文脈、Xでは個人開発者としての公開報告・開発背景・使いどころを出す。
