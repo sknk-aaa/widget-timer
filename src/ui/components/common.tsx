@@ -63,11 +63,13 @@ export function SectionLabel({
 }
 
 export function Banner({
+  title,
   text,
   actionLabel,
   onAction,
   tone = 'warning',
 }: {
+  title?: string;
   text: string;
   actionLabel?: string;
   onAction?: () => void;
@@ -88,7 +90,12 @@ export function Banner({
         borderLeftColor: accent,
       }}
     >
-      <Text style={{ flex: 1, color: c.textPrimary, fontSize: 13, fontWeight: '500' }}>{text}</Text>
+      <View style={{ flex: 1, gap: 2 }}>
+        {title && (
+          <Text style={{ color: c.textPrimary, fontSize: 13, fontWeight: '800' }}>{title}</Text>
+        )}
+        <Text style={{ color: c.textPrimary, fontSize: 13, fontWeight: '500', lineHeight: 18 }}>{text}</Text>
+      </View>
       {actionLabel && onAction && (
         <Pressable onPress={onAction} hitSlop={8}>
           <Text style={{ color: accent, fontSize: 13, fontWeight: '700' }}>{actionLabel}</Text>

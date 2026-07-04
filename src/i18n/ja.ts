@@ -172,6 +172,7 @@ export const ja = {
     purchased: 'Pro にアップグレードしました',
     pending: '購入の承認待ちです。承認されると自動で有効になります。',
     purchaseFailed: '購入を完了できませんでした。時間をおいて再度お試しください。',
+    supportLoading: '処理中…',
     active: 'Pro購入済',
     activeSub: '',
     widgetLimit: '無料はウィジェット欄1つ・3プリセットまで。Proで無制限になります。',
@@ -208,7 +209,8 @@ export const ja = {
 
   alarm: {
     permissionDenied: 'アラームを鳴らせません',
-    permissionDeniedBody: 'アラームが許可されていないため、タイマー終了時に音が鳴りません。',
+    permissionDeniedBody: 'アラームが許可されていないため、タイマー終了時に音が鳴りません。設定から許可してください。',
+    startFailed: 'タイマーを開始できませんでした。アラームの許可を確認してください。',
     openSettings: '設定を開く',
   },
 

@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAudioPlayer } from 'expo-audio';
 import { usePresetsStore } from '../src/store/presets';
+import { useBoardsStore } from '../src/store/boards';
 import { SOUND_IDS } from '../src/domain/types';
 import { DEFAULT_COLOR_ID } from '../src/domain/colors';
 import { DEFAULT_ICON_ID } from '../src/ui/icons/registry';
@@ -78,6 +79,7 @@ export default function PresetScreen() {
         style: 'destructive',
         onPress: () => {
           usePresetsStore.getState().remove(existing.id);
+          useBoardsStore.getState().load();
           close();
         },
       },

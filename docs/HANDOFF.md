@@ -11,6 +11,7 @@
 - **プリセットドラッグ並び替えの途中キャンセル問題を修正済み**。最終形は「ドラッグ中に `setBoardIds` / `setMasterIds` で配列を入れ替えない。浮いているタイルだけ動かし、`onFinalize` で最終位置を計算して確定」。ユーザー確認で「治った」と報告あり。
 - 直近の `gp`: commit `aa682c1` まで push 済み、GitHub Actions `ios.yml` run `28576937015` 起動済み。
 - **ロック画面ウィジェット起動後のLive Activity表示ラグ対策**として、Widgetの `Button` からプリセットIDだけでなく秒数/アイコン/色/音を直接 `StartPresetTimerWidgetIntent` に渡し、タップ後のApp GroupプリセットJSON再読込と成功ログを削った。`TimerLiveActivity()` は通知欄表示に必要なためWidgetBundle登録を維持する。
+- **リリース前の安定化**として、AlarmKit予約失敗時のアプリ内タイマー表示ロールバック、プリセット編集画面から削除した時のボード再読込、App Group JSON読込の防御、権限拒否バナー強化、Pro＋応援ボタンの二重タップ防止を追加。
 
 実装済み（実機/TestFlight で確認済み）:
 - **起動経路**: アプリ内タップ／ホーム・ロック画面ウィジェット（タップ→起動）。ロック画面はデバイス認証後に起動。

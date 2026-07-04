@@ -50,7 +50,9 @@ export default function MainScreen() {
     const p = usePresetsStore.getState().presets.find((x) => x.id === id);
     if (p) {
       haptics.start();
-      void useTimersStore.getState().startFromPreset(p, 'widget');
+      void useTimersStore.getState().startFromPreset(p, 'widget').catch(() => {
+        Alert.alert(s.alarm.permissionDenied, s.alarm.startFailed);
+      });
     }
     router.setParams({ start: '' });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -65,7 +67,11 @@ export default function MainScreen() {
 
   const launch = async (p: Preset) => {
     haptics.start();
-    await useTimersStore.getState().startFromPreset(p, 'app');
+    try {
+      await useTimersStore.getState().startFromPreset(p, 'app');
+    } catch {
+      Alert.alert(s.alarm.permissionDenied, s.alarm.startFailed);
+    }
   };
 
   const onSetBoard = (ids: string[]): boolean => {
@@ -226,6 +232,7 @@ export default function MainScreen() {
         {alarmPermission === 'denied' && (
           <View style={{ marginBottom: spacing.lg }}>
             <Banner
+              title={s.alarm.permissionDenied}
               text={s.alarm.permissionDeniedBody}
               actionLabel={s.alarm.openSettings}
               onAction={openAppSettings}

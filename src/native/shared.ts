@@ -89,9 +89,13 @@ export function readRunningFromAppGroup(): SharedRunningEntry[] {
   if (!ImasuguNative) return [];
   const json = ImasuguNative.getSharedRunning();
   if (!json) return [];
-  const parsed: unknown = JSON.parse(json);
-  if (!Array.isArray(parsed)) return [];
-  return parsed.filter(isSharedRunningEntry);
+  try {
+    const parsed: unknown = JSON.parse(json);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(isSharedRunningEntry);
+  } catch {
+    return [];
+  }
 }
 
 /**

@@ -20,6 +20,7 @@ export default function PaywallScreen() {
   const supportPrice = useProStore((st) => st.supportPrice);
   const [loading, setLoading] = React.useState(false);
   const [restoring, setRestoring] = React.useState(false);
+  const [supporting, setSupporting] = React.useState(false);
 
   const benefits = [
     { title: s.pro.featureWidget, sub: s.pro.featureWidgetSub },
@@ -32,7 +33,7 @@ export default function PaywallScreen() {
   }, [price, supportPrice]);
 
   const purchase = async () => {
-    if (loading) return;
+    if (loading || supporting) return;
     setLoading(true);
     const result = await useProStore.getState().purchase();
     setLoading(false);
@@ -61,7 +62,9 @@ export default function PaywallScreen() {
   };
 
   const support = async () => {
-    const r = await useProStore.getState().support();
+    if (loading || supporting) return;
+    setSupporting(true);
+    const r = await useProStore.getState().support().finally(() => setSupporting(false));
     if (r === 'purchased') {
       haptics.start();
       // 「Pro＋応援」は Pro を付与するので、購入後は使い方モーダルへ。
@@ -228,9 +231,10 @@ export default function PaywallScreen() {
             {/* 「Pro＋応援」= もう一つの選択肢（Proも付与）。Pro取得後は非表示。 */}
             <View style={{ marginTop: spacing.lg }}>
               <Button
-                title={supportPrice ? `${s.settings.support} ${supportPrice}` : s.settings.support}
+                title={supporting ? s.pro.supportLoading : supportPrice ? `${s.settings.support} ${supportPrice}` : s.settings.support}
                 variant="secondary"
                 onPress={() => void support()}
+                loading={supporting}
               />
             </View>
           </>

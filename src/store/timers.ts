@@ -88,22 +88,28 @@ export const useTimersStore = create<TimersState>((set, get) => ({
       sound: input.sound,
     };
     insertRunningTimer(timer);
-    // 起動履歴を記録（「最近使った」「統計」の土台）。
+    set({ timers: [...get().timers, timer] });
+
+    try {
+      await alarmService.schedule({
+        timerId: timer.id,
+        durationSec: timer.durationSec,
+        endAt: timer.endAt,
+        icon: timer.icon,
+        color: timer.color,
+        sound: timer.sound,
+      });
+    } catch (error) {
+      deleteRunningTimer(timer.id);
+      set({ timers: get().timers.filter((t) => t.id !== timer.id) });
+      throw error;
+    }
+    // 起動履歴を記録（「最近使った」「統計」の土台）。実際に予約できた起動だけ残す。
     insertLaunchHistory({
       presetId: input.presetId,
       durationSec: input.durationSec,
       startedAt: now,
       source: input.source,
-    });
-    set({ timers: [...get().timers, timer] });
-
-    await alarmService.schedule({
-      timerId: timer.id,
-      durationSec: timer.durationSec,
-      endAt: timer.endAt,
-      icon: timer.icon,
-      color: timer.color,
-      sound: timer.sound,
     });
     await liveActivityService.start(liveParams(timer));
     void widgetService.reloadTimelines();

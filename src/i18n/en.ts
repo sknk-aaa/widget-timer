@@ -174,6 +174,7 @@ export const en: Strings = {
     purchased: 'Upgraded to Pro',
     pending: 'Your purchase is pending approval. It will activate automatically once approved.',
     purchaseFailed: "Couldn't complete the purchase. Please try again later.",
+    supportLoading: 'Processing…',
     active: 'Pro purchased',
     activeSub: '',
     widgetLimit: 'Free includes 1 board with 3 presets. Pro makes it unlimited.',
@@ -210,7 +211,8 @@ export const en: Strings = {
 
   alarm: {
     permissionDenied: "Can't sound the alarm",
-    permissionDeniedBody: "Alarm permission isn't granted, so the timer won't sound when it ends.",
+    permissionDeniedBody: "Alarm permission isn't granted, so the timer won't sound when it ends. Please allow it in Settings.",
+    startFailed: "Couldn't start the timer. Please check alarm permission.",
     openSettings: 'Open Settings',
   },
 
