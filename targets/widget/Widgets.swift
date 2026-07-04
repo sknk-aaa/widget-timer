@@ -109,7 +109,13 @@ private struct AccessoryView: View {
             ZStack {
                 AccessoryWidgetBackground()
                 if let p = entry.presets.first {
-                    Button(intent: StartPresetTimerWidgetIntent(presetID: p.id)) {
+                    Button(intent: StartPresetTimerWidgetIntent(
+                        presetID: p.id,
+                        durationSec: p.durationSec,
+                        icon: p.icon,
+                        colorID: p.color,
+                        sound: p.sound ?? "default"
+                    )) {
                         VStack(spacing: 0) {
                             Image(systemName: iconToSymbol(p.icon)).font(.caption)
                             Text(durationLabel(p.durationSec)).font(.system(size: 9, weight: .semibold))
@@ -131,7 +137,13 @@ private struct AccessoryView: View {
                 // 先頭プリセットを角丸チップのボタンで表示（無音起動）。
                 HStack(spacing: 6) {
                     ForEach(Array(entry.presets.prefix(3))) { p in
-                        Button(intent: StartPresetTimerWidgetIntent(presetID: p.id)) {
+                        Button(intent: StartPresetTimerWidgetIntent(
+                            presetID: p.id,
+                            durationSec: p.durationSec,
+                            icon: p.icon,
+                            colorID: p.color,
+                            sound: p.sound ?? "default"
+                        )) {
                             VStack(spacing: 2) {
                                 Image(systemName: iconToSymbol(p.icon))
                                     .font(.system(size: 15, weight: .semibold))

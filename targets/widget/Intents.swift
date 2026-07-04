@@ -138,33 +138,33 @@ enum AlarmScheduler {
 }
 
 enum StartPresetTimerPerformer {
-    static func run(presetID: String, logPrefix: String) async {
-        let t0 = CFAbsoluteTimeGetCurrent()
-        NSLog("[%@] start preset=%@", logPrefix, presetID)
-        guard let preset = Shared.preset(id: presetID) else {
-            NSLog("[%@] preset not found (presets=%d) %.3fs", logPrefix, Shared.loadPresets().count, CFAbsoluteTimeGetCurrent() - t0)
-            return
-        }
-        // alarmID は schedule 内で確定IDに差し替えられるためここでは空でよい。
-        let metadata = TimerMetadata(presetID: preset.id, icon: preset.icon, colorID: preset.color, alarmID: "")
+    static func run(presetID: String?, durationSec: Int, icon: String, colorID: String, sound: String, logPrefix: String) async {
+        let metadata = TimerMetadata(presetID: presetID, icon: icon, colorID: colorID, alarmID: "")
         do {
-            let beforeSchedule = CFAbsoluteTimeGetCurrent()
-            let id = try await AlarmScheduler.schedule(
-                durationSec: preset.durationSec,
+            _ = try await AlarmScheduler.schedule(
+                durationSec: durationSec,
                 metadata: metadata,
-                tint: paletteColor(preset.color),
-                sound: preset.sound ?? "default"
-            )
-            NSLog(
-                "[%@] scheduled OK id=%@ schedule=%.3fs total=%.3fs",
-                logPrefix,
-                id.uuidString,
-                CFAbsoluteTimeGetCurrent() - beforeSchedule,
-                CFAbsoluteTimeGetCurrent() - t0
+                tint: paletteColor(colorID),
+                sound: sound
             )
         } catch {
-            NSLog("[%@] schedule ERROR: %@ total=%.3fs", logPrefix, "\(error)", CFAbsoluteTimeGetCurrent() - t0)
+            NSLog("[%@] schedule ERROR: %@", logPrefix, "\(error)")
         }
+    }
+
+    static func runFromShared(presetID: String, logPrefix: String) async {
+        guard let preset = Shared.preset(id: presetID) else {
+            NSLog("[%@] preset not found (presets=%d)", logPrefix, Shared.loadPresets().count)
+            return
+        }
+        await run(
+            presetID: preset.id,
+            durationSec: preset.durationSec,
+            icon: preset.icon,
+            colorID: preset.color,
+            sound: preset.sound ?? "default",
+            logPrefix: logPrefix
+        )
     }
 }
 
@@ -176,12 +176,33 @@ struct StartPresetTimerWidgetIntent: AppIntent {
 
     @Parameter(title: "プリセットID")
     var presetID: String
+    @Parameter(title: "秒数")
+    var durationSec: Int
+    @Parameter(title: "アイコン")
+    var icon: String
+    @Parameter(title: "色")
+    var colorID: String
+    @Parameter(title: "音")
+    var sound: String
 
     init() {}
-    init(presetID: String) { self.presetID = presetID }
+    init(presetID: String, durationSec: Int, icon: String, colorID: String, sound: String) {
+        self.presetID = presetID
+        self.durationSec = durationSec
+        self.icon = icon
+        self.colorID = colorID
+        self.sound = sound
+    }
 
     func perform() async throws -> some IntentResult {
-        await StartPresetTimerPerformer.run(presetID: presetID, logPrefix: "ImasuguWidget")
+        await StartPresetTimerPerformer.run(
+            presetID: presetID,
+            durationSec: durationSec,
+            icon: icon,
+            colorID: colorID,
+            sound: sound,
+            logPrefix: "ImasuguWidget"
+        )
         return .result()
     }
 }
@@ -200,7 +221,7 @@ struct StartPresetTimerIntent: AppIntent, LiveActivityIntent {
     init(presetID: String) { self.presetID = presetID }
 
     func perform() async throws -> some IntentResult {
-        await StartPresetTimerPerformer.run(presetID: presetID, logPrefix: "ImasuguWidgetLive")
+        await StartPresetTimerPerformer.runFromShared(presetID: presetID, logPrefix: "ImasuguWidgetLive")
         return .result()
     }
 }
