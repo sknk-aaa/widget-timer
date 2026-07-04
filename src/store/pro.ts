@@ -8,6 +8,8 @@ interface ProState {
   supportPrice: string | null;
   /** 起動時: 所有状態＋価格を取得。 */
   load: () => Promise<void>;
+  /** ペイウォール用の価格だけ取得。起動表示はブロックしない。 */
+  loadPrices: () => Promise<void>;
   /** フォアグラウンド復帰時など: 所有状態だけ再確認（外部購入/承認の反映）。 */
   refresh: () => Promise<void>;
   purchase: () => Promise<PurchaseResult>;
@@ -16,7 +18,7 @@ interface ProState {
   support: () => Promise<PurchaseResult>;
 }
 
-export const useProStore = create<ProState>((set) => ({
+export const useProStore = create<ProState>((set, get) => ({
   isPro: false,
   price: null,
   supportPrice: null,
@@ -24,6 +26,10 @@ export const useProStore = create<ProState>((set) => ({
   load: async () => {
     const isPro = await purchaseService.isPro();
     set({ isPro });
+    await get().loadPrices();
+  },
+
+  loadPrices: async () => {
     const price = await getProPrice();
     const supportPrice = await getSupportPrice();
     set({ price, supportPrice });

@@ -28,10 +28,10 @@ enum AlarmScheduler {
         )
         _ = try await AlarmManager.shared.schedule(id: id, configuration: configuration)
         recordRunning(alarmID: id, presetID: meta.presetID)
-        // ウィジェットがカウントダウン表示できるよう実行中モデルを App Group に追記＋再読込
+        // アプリが次回起動時に即ドック表示できるよう、実行中モデルを App Group に追記。
+        // ウィジェット本体はランチャー専用なので、開始直後のタイムライン再読込は待たない。
         let endAt = Date().addingTimeInterval(TimeInterval(durationSec)).timeIntervalSince1970 * 1000
         appendRunning(id: id, endAt: endAt, icon: meta.icon, colorID: meta.colorID, durationSec: durationSec, sound: sound)
-        WidgetCenter.shared.reloadAllTimelines()
         return id
     }
 
@@ -137,7 +137,56 @@ enum AlarmScheduler {
     }
 }
 
-/// プリセット起動 Intent（Control・ウィジェット・アプリ内で共用）。
+enum StartPresetTimerPerformer {
+    static func run(presetID: String, logPrefix: String) async {
+        let t0 = CFAbsoluteTimeGetCurrent()
+        NSLog("[%@] start preset=%@", logPrefix, presetID)
+        guard let preset = Shared.preset(id: presetID) else {
+            NSLog("[%@] preset not found (presets=%d) %.3fs", logPrefix, Shared.loadPresets().count, CFAbsoluteTimeGetCurrent() - t0)
+            return
+        }
+        // alarmID は schedule 内で確定IDに差し替えられるためここでは空でよい。
+        let metadata = TimerMetadata(presetID: preset.id, icon: preset.icon, colorID: preset.color, alarmID: "")
+        do {
+            let beforeSchedule = CFAbsoluteTimeGetCurrent()
+            let id = try await AlarmScheduler.schedule(
+                durationSec: preset.durationSec,
+                metadata: metadata,
+                tint: paletteColor(preset.color),
+                sound: preset.sound ?? "default"
+            )
+            NSLog(
+                "[%@] scheduled OK id=%@ schedule=%.3fs total=%.3fs",
+                logPrefix,
+                id.uuidString,
+                CFAbsoluteTimeGetCurrent() - beforeSchedule,
+                CFAbsoluteTimeGetCurrent() - t0
+            )
+        } catch {
+            NSLog("[%@] schedule ERROR: %@ total=%.3fs", logPrefix, "\(error)", CFAbsoluteTimeGetCurrent() - t0)
+        }
+    }
+}
+
+/// ウィジェット上のプリセット起動 Intent。Live Activity 操作ではないため、通常 AppIntent として軽く実行する。
+struct StartPresetTimerWidgetIntent: AppIntent {
+    static var title: LocalizedStringResource = "タイマーを開始"
+    static var description = IntentDescription("プリセットのタイマーを開始します")
+    static var openAppWhenRun = false
+
+    @Parameter(title: "プリセットID")
+    var presetID: String
+
+    init() {}
+    init(presetID: String) { self.presetID = presetID }
+
+    func perform() async throws -> some IntentResult {
+        await StartPresetTimerPerformer.run(presetID: presetID, logPrefix: "ImasuguWidget")
+        return .result()
+    }
+}
+
+/// 互換用のプリセット起動 Intent。Live Activity 系から呼ぶ必要が出た場合だけ使う。
 struct StartPresetTimerIntent: AppIntent, LiveActivityIntent {
     static var title: LocalizedStringResource = "タイマーを開始"
     static var description = IntentDescription("プリセットのタイマーを開始します")
@@ -150,26 +199,8 @@ struct StartPresetTimerIntent: AppIntent, LiveActivityIntent {
     init() {}
     init(presetID: String) { self.presetID = presetID }
 
-    @MainActor
     func perform() async throws -> some IntentResult {
-        NSLog("[ImasuguWidget] StartPresetTimerIntent preset=%@", presetID)
-        guard let preset = Shared.preset(id: presetID) else {
-            NSLog("[ImasuguWidget] preset not found (presets=%d)", Shared.loadPresets().count)
-            return .result()
-        }
-        // alarmID は schedule 内で確定IDに差し替えられるためここでは空でよい。
-        let metadata = TimerMetadata(presetID: preset.id, icon: preset.icon, colorID: preset.color, alarmID: "")
-        do {
-            let id = try await AlarmScheduler.schedule(
-                durationSec: preset.durationSec,
-                metadata: metadata,
-                tint: paletteColor(preset.color),
-                sound: preset.sound ?? "default"
-            )
-            NSLog("[ImasuguWidget] scheduled OK id=%@", id.uuidString)
-        } catch {
-            NSLog("[ImasuguWidget] schedule ERROR: %@", "\(error)")
-        }
+        await StartPresetTimerPerformer.run(presetID: presetID, logPrefix: "ImasuguWidgetLive")
         return .result()
     }
 }

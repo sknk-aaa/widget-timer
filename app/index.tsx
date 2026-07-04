@@ -223,7 +223,7 @@ export default function MainScreen() {
         }}
         showsVerticalScrollIndicator={false}
       >
-        {alarmPermission !== 'granted' && (
+        {alarmPermission === 'denied' && (
           <View style={{ marginBottom: spacing.lg }}>
             <Banner
               text={s.alarm.permissionDeniedBody}

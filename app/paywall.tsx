@@ -27,6 +27,10 @@ export default function PaywallScreen() {
   ];
   const pills = [s.pro.pillOnce, s.pro.pillNoAds, s.pro.pillNoData];
 
+  React.useEffect(() => {
+    if (!price || !supportPrice) void useProStore.getState().loadPrices();
+  }, [price, supportPrice]);
+
   const purchase = async () => {
     if (loading) return;
     setLoading(true);

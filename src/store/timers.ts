@@ -106,7 +106,7 @@ export const useTimersStore = create<TimersState>((set, get) => ({
       sound: timer.sound,
     });
     await liveActivityService.start(liveParams(timer));
-    await widgetService.reloadTimelines();
+    void widgetService.reloadTimelines();
     return timer;
   },
 

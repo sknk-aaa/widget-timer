@@ -22,6 +22,7 @@ import { t } from '../i18n';
 
 const SEEDED_KEY = 'seeded';
 const BOARDS_SEEDED_KEY = 'boards_seeded';
+let widgetMirrorsInstalled = false;
 
 const DEFAULT_PRESETS: Omit<Preset, 'id'>[] = [
   { name: '', icon: 'ramen', color: 'orange', durationSec: 180, inWidget: true, sortOrder: 0, sound: 'default' },
@@ -58,22 +59,7 @@ function seedBoardsIfNeeded(): void {
   setMeta(BOARDS_SEEDED_KEY, '1');
 }
 
-/** アプリ起動時に DB を初期化し、ストアを読み込む。 */
-export async function bootstrap(): Promise<void> {
-  runMigrations();
-  seedDefaultsIfNeeded();
-  seedBoardsIfNeeded();
-  useSettingsStore.getState().load();
-  usePresetsStore.getState().load();
-  useBoardsStore.getState().load();
-  useTimersStore.getState().load();
-  useTimersStore.getState().reconcile();
-  // ウィジェット/ロック画面から無音起動したぶんを取り込む（ミラー前に行い消えないようにする）。
-  useTimersStore.getState().importFromShared();
-  await useProStore.getState().load();
-  await useSettingsStore.getState().refreshPermission();
-
-  // プリセット・ボード・実行中タイマーを App Group にミラー（ウィジェット用）。変更時も追従。
+function mirrorWidgetData(): void {
   const fallbackName = (n: number) => t().board.fallbackName(n);
   mirrorPresetsToAppGroup(usePresetsStore.getState().presets);
   {
@@ -82,6 +68,14 @@ export async function bootstrap(): Promise<void> {
   }
   mirrorRunningToAppGroup(useTimersStore.getState().timers);
   void widgetService.reloadTimelines();
+}
+
+function installWidgetMirrors(): void {
+  if (widgetMirrorsInstalled) return;
+  widgetMirrorsInstalled = true;
+
+  mirrorWidgetData();
+  const fallbackName = (n: number) => t().board.fallbackName(n);
   usePresetsStore.subscribe((state) => {
     mirrorPresetsToAppGroup(state.presets);
     void widgetService.reloadTimelines();
@@ -94,4 +88,26 @@ export async function bootstrap(): Promise<void> {
     mirrorRunningToAppGroup(state.timers);
     void widgetService.reloadTimelines();
   });
+}
+
+function bootstrapDeferred(): void {
+  installWidgetMirrors();
+  void useProStore.getState().refresh();
+  void useProStore.getState().loadPrices();
+  void useSettingsStore.getState().refreshPermission();
+}
+
+/** アプリ起動時に DB を初期化し、初回描画に必要なストアだけ読み込む。 */
+export async function bootstrap(): Promise<void> {
+  runMigrations();
+  seedDefaultsIfNeeded();
+  seedBoardsIfNeeded();
+  useSettingsStore.getState().load();
+  usePresetsStore.getState().load();
+  useBoardsStore.getState().load();
+  useTimersStore.getState().load();
+  useTimersStore.getState().reconcile();
+  // ウィジェット/ロック画面から無音起動したぶんを取り込む（ミラー前に行い消えないようにする）。
+  useTimersStore.getState().importFromShared();
+  bootstrapDeferred();
 }
