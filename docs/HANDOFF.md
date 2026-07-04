@@ -4,7 +4,7 @@
 
 ## 現状
 
-**App Store 審査に初回提出済み（2026-06-27）。** 日英2言語（英語名 **Tappri** / ストア表記「Tappri: Widget Timer」、日本語名「今すぐタイマー」）。初回提出ビルド = GitHub Actions run `28249253876`（commit `8a67567`）。審査通過後は自動リリースせず、TikTok/Xの告知準備と合わせて手動リリースする。
+**App Store 審査に初回提出済み（2026-06-27）。** 日英2言語（英語名 **TimerTiles** / ストア表記「TimerTiles: Widget Timer」、日本語名「今すぐタイマー」）。初回提出ビルド = GitHub Actions run `28249253876`（commit `8a67567`、提出時英語名はTappri）。審査通過後は自動リリースせず、TikTok/Xの告知準備と合わせて手動リリースする。
 
 2026-07-02 の追加修正:
 - **ウィジェット追加画面の日本語名表示を修正済み**（`targets/widget/assets/{ja,en}.lproj/Localizable.strings` で `widget.displayName` / `widget.description` を管理）。ユーザー実機確認で、日本語端末のWidget追加画面が「今すぐタイマー」になることを確認済み。
@@ -25,7 +25,7 @@
 
 - 審査結果待ち。リジェクト時の典型対応は `docs/OPERATIONS.md` のリリース前チェックを参照。
 - 審査通過後は公開タイミングを手動で決め、TikTok/Xの告知と同時に初速を作る。
-- 英語アプリ名 **Tappri** はユーザーが「微妙」と感じており再検討中。候補・方針は `docs/MARKETING.md`。
+- 英語アプリ名は **TimerTiles** に決定。候補・方針は `docs/MARKETING.md`。
 - 任意改善: SPEC/DESIGN とコードの細部同期（随時）、実機フィードバック反映。
 
 ## Codex作業メモ
@@ -34,7 +34,7 @@
 - App Store スクリーンショット生成は Codex Desktop の `$imagegen` を使う。内蔵画像生成は `gpt-image-2`。
 - VSCode 上のCodexでは `OPENAI_API_KEY` 未設定のため、API経由の `gpt-image-2` 生成はしない。
 - スクショ素材は `assets/screenshot/*.PNG`。生成・合成したストア画像の出力先は `output/store/`。
-- 日本向けストア画像ではアプリ名「今すぐタイマー」を前面に出す。英語名 Tappri は補助扱い。
+- 日本向けストア画像ではアプリ名「今すぐタイマー」を前面に出す。英語名 TimerTiles は補助扱い。
 - App Store 用画像は 1290x2796 PNG を基本にし、実機スクショのUIは過度に改変しない。
 - ChatGPT等の画像生成だけで作ったストア画像は、文字・端末スクショ・アイコン細部がボケたり溶けたりしやすい。仕上げ版は実スクショ素材＋フォント描画で再構成するのが安全。
 - 生成/加工中の画像素材が `assets/screenshot/framed-screenshots/` と `output/store/` にある。現時点では未コミットの作業素材扱い。

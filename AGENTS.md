@@ -1,8 +1,8 @@
-# AGENTS.md — 今すぐタイマー / Tappri（widget-timer）
+# AGENTS.md — 今すぐタイマー / TimerTiles（widget-timer）
 
 > 同dirの `CLAUDE.md` も同じ内容（併設）。共通ルールは `/home/aaa/project/AGENTS.md`、その上に本ファイルが乗る。
 
-ウィジェットからワンタップ起動する **iOS 26+ 専用**の相対カウントダウンタイマー。英語名 **Tappri**（ストア表記「Tappri: Widget Timer」）／日本語名「今すぐタイマー」。**Expo(React Native) ＋ Drizzle/expo-sqlite ＋ Zustand**。
+ウィジェットからワンタップ起動する **iOS 26+ 専用**の相対カウントダウンタイマー。英語名 **TimerTiles**（ストア表記「TimerTiles: Widget Timer」）／日本語名「今すぐタイマー」。**Expo(React Native) ＋ Drizzle/expo-sqlite ＋ Zustand**。
 
 **二層構成**: ネイティブ（AlarmKit / WidgetKit / ActivityKit / StoreKit2）は `src/native/*` のインターフェース裏に隠し、**Expo Go ではモック、TestFlight では実装**に差し替える。`targets/widget/*` が WidgetKit 拡張、`modules/imasugu-native/*` がアプリ内 AlarmKit/StoreKit ブリッジ。
 
@@ -10,7 +10,7 @@
 
 - このアプリは「作って終わり」ではなく、App Storeで公開し、ストア訴求・スクリーンショット・SNS/動画施策・レビュー獲得・ASO・価格/Pro導線まで改善して売上を作る前提のプロダクト。
 - 作業開始時は `docs/HANDOFF.md` と `docs/MARKETING.md` を読み、現在フェーズを把握する。現在はリリース前・App Store審査待ちなので、審査通過後の公開/告知、リジェクト時対応、ストア画像、ASO、初動SNS、次アップデート候補を自分から意識する。
-- 日本向けではアプリ名「今すぐタイマー」を主役にする。英語名 Tappri は海外/補助文脈で使い、日本向けストア画像では前面に出しすぎない。
+- 日本向けではアプリ名「今すぐタイマー」を主役にする。英語名 TimerTiles は海外/補助文脈で使い、日本向けストア画像では前面に出しすぎない。
 - 判断軸は「ウィジェットから即開始できる価値が初見で伝わるか」「日常タイマーとして信頼できるか」「iOSらしく安っぽく見えないか」「課金導線が押し売りに見えないか」。
 - マーケ施策、ストア画像方針、SNS/動画台本、価格/アイコンAB案は `docs/MARKETING.md` に蓄積する。
 

@@ -39,8 +39,8 @@ com.sknk.imasugutimer.support
 ```
 
 - Expo slug: `widget-timer`
-- アプリ表示名: 今すぐタイマー（日本語）/ Tappri（英語・ホーム画面の `CFBundleDisplayName`）
-- ストア表記（英語タイトル）: Tappri: Widget Timer
+- アプリ表示名: 今すぐタイマー（日本語）/ TimerTiles（英語・ホーム画面の `CFBundleDisplayName`）
+- ストア表記（英語タイトル）: TimerTiles: Widget Timer
 - GitHub: `sknk-aaa/widget-timer`
 - 対応OS: iOS 26+（`app.config.ts` の deploymentTarget=26.0）
 
@@ -104,7 +104,7 @@ npm start
 
 - サポートURL: `https://tally.so/r/rjgJYL`（Tally フォーム）／プライバシーポリシー: `https://sknk-aaa.github.io/widget-timer/privacy.html`／利用規約: Apple 標準EULA。
 - カテゴリ: ユーティリティ（プライマリ）/ 仕事効率化（セカンダリ）。
-- 名称/サブタイトル/キーワード/説明（日英）は提出時に設定済み。英語キーワードはタイトル「Tappri: Widget Timer」に widget/timer を含むため両語を除外して構成。
+- 名称/サブタイトル/キーワード/説明（日英）は提出時に設定済み。英語名は TimerTiles に変更予定。英語キーワードはタイトル「TimerTiles: Widget Timer」に widget/timer を含むため両語を除外して構成。
 
 ### 法的URL（`src/domain/links.ts`）
 

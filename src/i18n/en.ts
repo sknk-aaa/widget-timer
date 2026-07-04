@@ -2,7 +2,7 @@ import type { Strings } from './ja';
 
 // English. Mirrors ja.ts exactly (same keys/signatures).
 export const en: Strings = {
-  appName: 'Tappri',
+  appName: 'TimerTiles',
 
   common: {
     close: 'Close',
@@ -94,7 +94,7 @@ export const en: Strings = {
     support: 'Support the developer',
     supportThanks: 'Thank you for your support!',
     share: 'Tell a friend',
-    shareMessage: 'Tappri — start a timer in one tap from your widget.',
+    shareMessage: 'TimerTiles — start a timer in one tap from your widget.',
     replayTutorial: 'Replay the tutorial',
     faq: 'FAQ',
     about: 'About',
@@ -114,7 +114,7 @@ export const en: Strings = {
       },
       {
         q: 'How do I add the widget?',
-        a: 'Long-press an empty spot on your Home Screen → "+" → choose "Tappri" to add it.',
+        a: 'Long-press an empty spot on your Home Screen → "+" → choose "TimerTiles" to add it.',
       },
       {
         q: 'How do I show a preset on the widget?',
