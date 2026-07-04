@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="theme-color" content="#fffaf5" />
     <title>今すぐタイマー | よく使うタイマーを、ワンタップで起動</title>
     <meta
       name="description"
@@ -12,13 +12,18 @@
     <style>
       :root {
         --accent: #ff6a1a;
-        --accent-dark: #e95400;
-        --ink: #17130f;
-        --muted: #6d6660;
-        --soft: #fff3ec;
-        --line: #f0e7df;
-        --paper: #ffffff;
-        --shadow: 0 18px 50px rgba(255, 106, 26, 0.18);
+        --accent-dark: #d84f00;
+        --ink: #17120d;
+        --sub: #5f5750;
+        --dim: #8a8178;
+        --paper: #fffaf5;
+        --white: #ffffff;
+        --line: rgba(34, 24, 16, 0.1);
+        --line-strong: rgba(34, 24, 16, 0.18);
+        --blue: #335f8f;
+        --green: #1f7a55;
+        --shadow-soft: 0 18px 50px rgba(47, 31, 18, 0.12);
+        --shadow-button: 0 16px 32px rgba(255, 106, 26, 0.28);
       }
 
       * {
@@ -34,8 +39,9 @@
         margin: 0;
         color: var(--ink);
         background:
-          radial-gradient(circle at 18% -6%, rgba(255, 106, 26, 0.16), transparent 32%),
-          linear-gradient(180deg, #ffffff 0%, #fffaf7 100%);
+          linear-gradient(135deg, rgba(255, 106, 26, 0.11) 0 1px, transparent 1px 18px),
+          radial-gradient(circle at 92% 0%, rgba(255, 106, 26, 0.2), transparent 28%),
+          linear-gradient(180deg, #fffdfb 0%, var(--paper) 46%, #ffffff 100%);
         font-family:
           "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "YuGothic",
           "Noto Sans JP", system-ui, sans-serif;
@@ -43,138 +49,286 @@
         -webkit-font-smoothing: antialiased;
       }
 
+      img {
+        display: block;
+        max-width: 100%;
+      }
+
       .page {
-        width: min(100%, 520px);
+        width: min(100%, 720px);
         min-height: 100svh;
         margin: 0 auto;
-        padding: calc(24px + env(safe-area-inset-top)) 22px calc(26px + env(safe-area-inset-bottom));
+        padding: calc(18px + env(safe-area-inset-top)) 18px calc(28px + env(safe-area-inset-bottom));
+        overflow: hidden;
       }
 
       .hero {
-        display: grid;
-        justify-items: center;
-        text-align: center;
-        padding-top: 10px;
-      }
-
-      .icon-wrap {
         position: relative;
-        width: 100px;
-        height: 100px;
-        margin-bottom: 20px;
+        padding: 18px 0 0;
       }
 
-      .icon-wrap::before {
-        content: "";
-        position: absolute;
-        inset: -10px;
-        border-radius: 34px;
-        background: linear-gradient(135deg, rgba(255, 106, 26, 0.24), rgba(255, 255, 255, 0));
-        transform: rotate(-5deg);
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .icon-frame {
+        width: 58px;
+        height: 58px;
+        flex: 0 0 auto;
+        padding: 5px;
+        border: 1px solid rgba(255, 106, 26, 0.18);
+        border-radius: 17px;
+        background: rgba(255, 255, 255, 0.78);
+        box-shadow: 0 12px 28px rgba(43, 28, 17, 0.1);
       }
 
       .app-icon,
       .icon-fallback {
-        position: relative;
-        width: 100px;
-        height: 100px;
-        border-radius: 25px;
-        box-shadow: var(--shadow);
-      }
-
-      .app-icon {
-        display: block;
+        width: 48px;
+        height: 48px;
+        border-radius: 13px;
       }
 
       .icon-fallback {
         display: none;
         place-items: center;
         color: var(--accent);
-        background: var(--soft);
-        border: 1px solid var(--line);
-        font-size: 32px;
+        background: #fff1e7;
+        font-size: 18px;
         font-weight: 900;
       }
 
-      .eyebrow {
-        margin: 0 0 8px;
-        color: var(--accent-dark);
-        font-size: 13px;
+      .brand-name {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.1;
+        font-weight: 900;
+      }
+
+      .brand-sub {
+        margin: 5px 0 0;
+        color: var(--dim);
+        font-size: 12px;
         font-weight: 800;
       }
 
-      h1 {
-        margin: 0;
-        font-size: clamp(30px, 9vw, 42px);
-        line-height: 1.08;
+      .label {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        margin: 30px 0 12px;
+        padding: 8px 11px;
+        border: 1px solid rgba(255, 106, 26, 0.2);
+        border-radius: 999px;
+        color: var(--accent-dark);
+        background: rgba(255, 255, 255, 0.78);
+        font-size: 12px;
         font-weight: 900;
       }
 
-      .copy {
-        margin: 14px 0 0;
-        max-width: 340px;
-        color: var(--muted);
+      .label::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: var(--accent);
+        box-shadow: 0 0 0 5px rgba(255, 106, 26, 0.12);
+      }
+
+      h1 {
+        max-width: 540px;
+        margin: 0;
+        font-size: clamp(34px, 10vw, 62px);
+        line-height: 1.03;
+        font-weight: 950;
+      }
+
+      .lead {
+        max-width: 430px;
+        margin: 15px 0 0;
+        color: var(--sub);
         font-size: 16px;
-        line-height: 1.7;
-        font-weight: 650;
+        line-height: 1.75;
+        font-weight: 700;
+      }
+
+      .cta-row {
+        display: grid;
+        gap: 10px;
+        margin: 24px 0 0;
       }
 
       .store-button {
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 10px;
         width: 100%;
-        min-height: 58px;
-        margin-top: 24px;
+        min-height: 60px;
         border-radius: 18px;
         color: #ffffff;
-        background: linear-gradient(180deg, #ff7a2f 0%, var(--accent) 100%);
-        box-shadow: 0 16px 30px rgba(255, 106, 26, 0.28);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent),
+          linear-gradient(180deg, #ff7f35 0%, var(--accent) 100%);
+        box-shadow: var(--shadow-button);
         text-decoration: none;
         font-size: 17px;
-        font-weight: 900;
-        transition: transform 160ms ease, box-shadow 160ms ease;
+        font-weight: 950;
+        transition:
+          transform 160ms ease,
+          box-shadow 160ms ease,
+          filter 160ms ease;
+      }
+
+      .store-button svg {
+        width: 20px;
+        height: 20px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
       }
 
       .store-button:active {
         transform: translateY(1px) scale(0.99);
+        filter: saturate(0.96);
         box-shadow: 0 10px 22px rgba(255, 106, 26, 0.24);
+      }
+
+      .trust {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+
+      .trust span {
+        display: grid;
+        min-height: 44px;
+        place-items: center;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        color: #4c443d;
+        background: rgba(255, 255, 255, 0.72);
+        font-size: 11px;
+        font-weight: 900;
+        text-align: center;
+      }
+
+      .showcase {
+        margin: 30px -18px 0;
+      }
+
+      .rail {
+        display: flex;
+        gap: 14px;
+        padding: 0 18px 10px;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .rail::-webkit-scrollbar {
+        display: none;
+      }
+
+      .shot {
+        width: min(86vw, 560px);
+        flex: 0 0 auto;
+        scroll-snap-align: center;
+        margin: 0;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.68);
+        border-radius: 26px;
+        background: #ff6a1a;
+        box-shadow: var(--shadow-soft);
+      }
+
+      .shot img {
+        width: 100%;
+        aspect-ratio: 2888 / 1242;
+        object-fit: cover;
+      }
+
+      .shot-fallback {
+        display: none;
+        min-height: 180px;
+        place-items: center;
+        padding: 22px;
+        color: #ffffff;
+        font-size: 18px;
+        font-weight: 950;
+        text-align: center;
+      }
+
+      .section-head {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 14px;
+        margin: 26px 0 12px;
+      }
+
+      .section-head h2 {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.25;
+        font-weight: 950;
+      }
+
+      .section-head p {
+        margin: 0;
+        color: var(--dim);
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
       }
 
       .features {
         display: grid;
-        gap: 12px;
-        margin: 28px 0 0;
+        gap: 10px;
       }
 
       .feature {
         display: grid;
-        grid-template-columns: 44px 1fr;
+        grid-template-columns: 48px 1fr;
         gap: 14px;
         align-items: center;
         padding: 15px;
         border: 1px solid var(--line);
         border-radius: 20px;
-        background: rgba(255, 255, 255, 0.82);
-        box-shadow: 0 10px 28px rgba(35, 24, 13, 0.04);
+        background: rgba(255, 255, 255, 0.8);
+        box-shadow: 0 8px 24px rgba(28, 19, 12, 0.05);
       }
 
       .mark {
         display: grid;
         place-items: center;
-        width: 44px;
-        height: 44px;
-        border-radius: 15px;
+        width: 48px;
+        height: 48px;
+        border-radius: 16px;
         color: var(--accent);
-        background: var(--soft);
+        background: #fff0e6;
+      }
+
+      .feature:nth-child(2) .mark {
+        color: var(--blue);
+        background: #eaf3ff;
+      }
+
+      .feature:nth-child(3) .mark {
+        color: var(--green);
+        background: #e9f6ef;
       }
 
       .mark svg {
         width: 24px;
         height: 24px;
-        stroke: currentColor;
-        stroke-width: 2.4;
         fill: none;
+        stroke: currentColor;
+        stroke-width: 2.35;
         stroke-linecap: round;
         stroke-linejoin: round;
       }
@@ -182,74 +336,137 @@
       .feature strong {
         display: block;
         font-size: 15px;
-        font-weight: 900;
+        font-weight: 950;
       }
 
       .feature span {
         display: block;
-        margin-top: 3px;
-        color: var(--muted);
+        margin-top: 4px;
+        color: var(--sub);
         font-size: 13px;
-        line-height: 1.45;
-        font-weight: 600;
+        line-height: 1.55;
+        font-weight: 650;
       }
 
-      .bottom {
-        margin-top: 26px;
-        padding-top: 2px;
+      .bottom-card {
+        margin: 28px 0 0;
+        padding: 18px;
+        border: 1px solid var(--line-strong);
+        border-radius: 26px;
+        background:
+          linear-gradient(135deg, rgba(255, 106, 26, 0.1), transparent 48%),
+          rgba(255, 255, 255, 0.86);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .bottom-card h2 {
+        margin: 0;
+        font-size: 22px;
+        line-height: 1.35;
+        font-weight: 950;
+      }
+
+      .bottom-card p {
+        margin: 9px 0 0;
+        color: var(--sub);
+        font-size: 13px;
+        line-height: 1.7;
+        font-weight: 700;
       }
 
       .note {
         margin: 14px auto 0;
-        max-width: 310px;
-        color: #8a817a;
+        max-width: 330px;
+        color: var(--dim);
         text-align: center;
         font-size: 12px;
-        line-height: 1.6;
-        font-weight: 600;
+        line-height: 1.65;
+        font-weight: 700;
       }
 
       .fine {
         margin: 18px 0 0;
-        color: #aaa19a;
+        color: #9a9188;
         text-align: center;
         font-size: 11px;
-        font-weight: 600;
+        font-weight: 700;
       }
 
-      @media (min-width: 480px) {
+      @media (min-width: 560px) {
         .page {
-          padding-inline: 34px;
+          padding-inline: 28px;
+        }
+
+        .showcase {
+          margin-inline: -28px;
+        }
+
+        .rail {
+          padding-inline: 28px;
+        }
+
+        .cta-row {
+          grid-template-columns: 1fr 1fr;
+          align-items: center;
+        }
+
+        .trust {
+          grid-column: 1 / -1;
         }
       }
 
       @media (prefers-reduced-motion: no-preference) {
-        .hero,
+        .brand,
+        .label,
+        h1,
+        .lead,
+        .cta-row,
+        .showcase,
         .feature,
-        .bottom {
-          animation: rise 560ms ease both;
+        .bottom-card {
+          animation: rise 620ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
         }
 
-        .features .feature:nth-child(1) {
-          animation-delay: 80ms;
+        .label {
+          animation-delay: 50ms;
         }
 
-        .features .feature:nth-child(2) {
-          animation-delay: 150ms;
+        h1 {
+          animation-delay: 90ms;
         }
 
-        .features .feature:nth-child(3) {
+        .lead {
+          animation-delay: 130ms;
+        }
+
+        .cta-row {
+          animation-delay: 170ms;
+        }
+
+        .showcase {
           animation-delay: 220ms;
         }
 
-        .bottom {
-          animation-delay: 280ms;
+        .feature:nth-child(1) {
+          animation-delay: 260ms;
+        }
+
+        .feature:nth-child(2) {
+          animation-delay: 310ms;
+        }
+
+        .feature:nth-child(3) {
+          animation-delay: 360ms;
+        }
+
+        .bottom-card {
+          animation-delay: 400ms;
         }
 
         @keyframes rise {
           from {
             opacity: 0;
-            transform: translateY(12px);
+            transform: translateY(14px);
           }
           to {
             opacity: 1;
@@ -262,60 +479,122 @@
   <body>
     <main class="page">
       <section class="hero" aria-labelledby="app-title">
-        <div class="icon-wrap" aria-hidden="true">
-          <img
-            class="app-icon"
-            src="../assets/icon.png"
-            alt=""
-            onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';"
-          />
-          <div class="icon-fallback">今</div>
-        </div>
-
-        <p class="eyebrow">iPhoneタイマーアプリ</p>
-        <h1 id="app-title">今すぐタイマー</h1>
-        <p class="copy">よく使うタイマーを、ワンタップで起動</p>
-
-        <a class="store-button" data-store-link href="#" rel="noopener">App Storeへ進む</a>
-      </section>
-
-      <section class="features" aria-label="主な機能">
-        <div class="feature">
-          <div class="mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M6 5h12" /><path d="M8 12h8" /><path d="M10 19h4" /></svg>
+        <div class="brand">
+          <div class="icon-frame" aria-hidden="true">
+            <img
+              class="app-icon"
+              src="../assets/icon.png"
+              alt=""
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';"
+            />
+            <div class="icon-fallback">今</div>
           </div>
           <div>
-            <strong>よく使う時間を保存</strong>
-            <span>3分、20分、50分。毎回セットする手間を減らせます。</span>
+            <p class="brand-name">今すぐタイマー</p>
+            <p class="brand-sub">iPhone専用・ウィジェットタイマー</p>
           </div>
         </div>
 
-        <div class="feature">
-          <div class="mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="3" /><path d="M8 9h3" /><path d="M8 13h8" /></svg>
-          </div>
-          <div>
-            <strong>ウィジェットから起動</strong>
-            <span>ホーム画面・ロック画面から、すぐタイマーを始められます。</span>
-          </div>
-        </div>
+        <p class="label">App Storeへ</p>
+        <h1 id="app-title">よく使うタイマーを、ワンタップで起動</h1>
+        <p class="lead">
+          ホーム画面・ロック画面のウィジェットから、カップ麺、仮眠、勉強などのタイマーをすぐ始められます。
+        </p>
 
-        <div class="feature">
-          <div class="mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M12 3v4" /><path d="M12 17v4" /><path d="M4.2 7.5l3.5 2" /><path d="M16.3 14.5l3.5 2" /><path d="M19.8 7.5l-3.5 2" /><path d="M7.7 14.5l-3.5 2" /><circle cx="12" cy="12" r="3.4" /></svg>
-          </div>
-          <div>
-            <strong>生活のちょっとした時間に</strong>
-            <span>カップ麺、仮眠、勉強、休憩。思いついた瞬間に使えます。</span>
+        <div class="cta-row">
+          <a class="store-button" data-store-link href="#" rel="noopener">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7" /><path d="M8 7h9v9" /></svg>
+            App Storeへ進む
+          </a>
+          <div class="trust" aria-label="アプリ情報">
+            <span>iOS 26以降</span>
+            <span>外部送信なし</span>
+            <span>日英対応</span>
           </div>
         </div>
       </section>
 
-      <section class="bottom">
-        <a class="store-button" data-store-link href="#" rel="noopener">App Storeで見る</a>
-        <p class="note">開けない場合は、右上のメニューからSafariで開いてください。</p>
-        <p class="fine">iOS 26以降対応</p>
+      <section class="showcase" aria-label="アプリ画面">
+        <div class="rail">
+          <figure class="shot">
+            <img
+              src="../assets/store/pattern3/1.png"
+              alt="ロック画面とホーム画面のウィジェットからワンタップでタイマーを開始できる紹介画像"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';"
+            />
+            <figcaption class="shot-fallback">1タップでタイマー開始</figcaption>
+          </figure>
+          <figure class="shot">
+            <img
+              src="../assets/store/pattern3/2.png"
+              alt="よく使うタイマーを保存してすぐ起動できる紹介画像"
+              loading="lazy"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';"
+            />
+            <figcaption class="shot-fallback">よく使うタイマーをすぐ起動</figcaption>
+          </figure>
+          <figure class="shot">
+            <img
+              src="../assets/store/pattern3/3.png"
+              alt="色とアイコンで自分だけのプリセットを作れる紹介画像"
+              loading="lazy"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';"
+            />
+            <figcaption class="shot-fallback">自分だけのアイコンを作成</figcaption>
+          </figure>
+        </div>
       </section>
+
+      <section aria-label="主な機能">
+        <div class="section-head">
+          <h2>毎日使う時間を、すぐ押せる形に。</h2>
+          <p>3つの特徴</p>
+        </div>
+
+        <div class="features">
+          <div class="feature">
+            <div class="mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M6 5h12" /><path d="M8 12h8" /><path d="M10 19h4" /></svg>
+            </div>
+            <div>
+              <strong>よく使う時間を保存</strong>
+              <span>3分、25分、2時間など、毎回セットする手間を減らせます。</span>
+            </div>
+          </div>
+
+          <div class="feature">
+            <div class="mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="3" /><path d="M8 9h3" /><path d="M8 13h8" /></svg>
+            </div>
+            <div>
+              <strong>ホーム画面・ロック画面から起動</strong>
+              <span>アプリを探さず、ウィジェットのタイルをタップするだけで始まります。</span>
+            </div>
+          </div>
+
+          <div class="feature">
+            <div class="mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 3v4" /><path d="M12 17v4" /><path d="M4.2 7.5l3.5 2" /><path d="M16.3 14.5l3.5 2" /><path d="M19.8 7.5l-3.5 2" /><path d="M7.7 14.5l-3.5 2" /><circle cx="12" cy="12" r="3.4" /></svg>
+            </div>
+            <div>
+              <strong>生活の小さな用事に使える</strong>
+              <span>カップ麺、仮眠、勉強、休憩、筋トレ。思いついた瞬間に使えます。</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="bottom-card">
+        <h2>まずはApp Storeで確認</h2>
+        <p>このページから自動では移動しません。ボタンを押すとApp Storeが開きます。</p>
+        <a class="store-button" data-store-link href="#" rel="noopener">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7" /><path d="M8 7h9v9" /></svg>
+          App Storeで見る
+        </a>
+      </section>
+
+      <p class="note">開けない場合は、右上のメニューからSafariで開いてください。</p>
+      <p class="fine">iOS 26以降対応</p>
     </main>
 
     <script>
