@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#fffaf5" />
+    <meta name="theme-color" content="#f7f3ee" />
     <title>今すぐタイマー | よく使うタイマーを、ワンタップで起動</title>
     <meta
       name="description"
@@ -12,18 +12,11 @@
     <style>
       :root {
         --accent: #ff6a1a;
-        --accent-dark: #d84f00;
-        --ink: #17120d;
-        --sub: #5f5750;
-        --dim: #8a8178;
-        --paper: #fffaf5;
-        --white: #ffffff;
-        --line: rgba(34, 24, 16, 0.1);
-        --line-strong: rgba(34, 24, 16, 0.18);
-        --blue: #335f8f;
-        --green: #1f7a55;
-        --shadow-soft: 0 18px 50px rgba(47, 31, 18, 0.12);
-        --shadow-button: 0 16px 32px rgba(255, 106, 26, 0.28);
+        --ink: #111111;
+        --muted: #6c655f;
+        --paper: #f7f3ee;
+        --surface: rgba(255, 255, 255, 0.72);
+        --line: rgba(17, 17, 17, 0.1);
       }
 
       * {
@@ -39,14 +32,19 @@
         margin: 0;
         color: var(--ink);
         background:
-          linear-gradient(135deg, rgba(255, 106, 26, 0.11) 0 1px, transparent 1px 18px),
-          radial-gradient(circle at 92% 0%, rgba(255, 106, 26, 0.2), transparent 28%),
-          linear-gradient(180deg, #fffdfb 0%, var(--paper) 46%, #ffffff 100%);
+          radial-gradient(circle at 50% -12%, rgba(255, 106, 26, 0.18), transparent 34%),
+          linear-gradient(180deg, #fffaf6 0%, var(--paper) 58%, #ffffff 100%);
         font-family:
+          -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
           "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "YuGothic",
-          "Noto Sans JP", system-ui, sans-serif;
+          sans-serif;
         letter-spacing: 0;
         -webkit-font-smoothing: antialiased;
+        text-rendering: geometricPrecision;
+      }
+
+      a {
+        color: inherit;
       }
 
       img {
@@ -55,176 +53,131 @@
       }
 
       .page {
-        width: min(100%, 720px);
+        width: min(100%, 560px);
         min-height: 100svh;
         margin: 0 auto;
-        padding: calc(18px + env(safe-area-inset-top)) 18px calc(28px + env(safe-area-inset-bottom));
-        overflow: hidden;
+        padding: calc(18px + env(safe-area-inset-top)) 18px calc(18px + env(safe-area-inset-bottom));
       }
 
       .hero {
-        position: relative;
-        padding: 18px 0 0;
+        min-height: calc(100svh - 36px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 22px;
       }
 
       .brand {
-        display: flex;
-        align-items: center;
+        display: grid;
+        justify-items: center;
         gap: 12px;
+        text-align: center;
       }
 
-      .icon-frame {
-        width: 58px;
-        height: 58px;
-        flex: 0 0 auto;
+      .icon-shell {
+        width: 72px;
+        height: 72px;
         padding: 5px;
-        border: 1px solid rgba(255, 106, 26, 0.18);
-        border-radius: 17px;
-        background: rgba(255, 255, 255, 0.78);
-        box-shadow: 0 12px 28px rgba(43, 28, 17, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.88);
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.7);
+        box-shadow:
+          0 20px 48px rgba(43, 30, 18, 0.12),
+          0 1px 0 rgba(255, 255, 255, 0.9) inset;
       }
 
       .app-icon,
       .icon-fallback {
-        width: 48px;
-        height: 48px;
-        border-radius: 13px;
+        width: 62px;
+        height: 62px;
+        border-radius: 17px;
       }
 
       .icon-fallback {
         display: none;
         place-items: center;
         color: var(--accent);
-        background: #fff1e7;
-        font-size: 18px;
-        font-weight: 900;
-      }
-
-      .brand-name {
-        margin: 0;
-        font-size: 20px;
-        line-height: 1.1;
-        font-weight: 900;
-      }
-
-      .brand-sub {
-        margin: 5px 0 0;
-        color: var(--dim);
-        font-size: 12px;
+        background: #fff2e8;
+        font-size: 23px;
         font-weight: 800;
       }
 
-      .label {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        margin: 30px 0 12px;
-        padding: 8px 11px;
-        border: 1px solid rgba(255, 106, 26, 0.2);
-        border-radius: 999px;
-        color: var(--accent-dark);
-        background: rgba(255, 255, 255, 0.78);
-        font-size: 12px;
-        font-weight: 900;
-      }
-
-      .label::before {
-        content: "";
-        width: 7px;
-        height: 7px;
-        border-radius: 999px;
-        background: var(--accent);
-        box-shadow: 0 0 0 5px rgba(255, 106, 26, 0.12);
-      }
-
-      h1 {
-        max-width: 540px;
+      .app-name {
         margin: 0;
-        font-size: clamp(34px, 10vw, 62px);
-        line-height: 1.03;
-        font-weight: 950;
-      }
-
-      .lead {
-        max-width: 430px;
-        margin: 15px 0 0;
-        color: var(--sub);
-        font-size: 16px;
-        line-height: 1.75;
+        font-size: 18px;
+        line-height: 1.1;
         font-weight: 700;
       }
 
-      .cta-row {
-        display: grid;
-        gap: 10px;
-        margin: 24px 0 0;
+      h1 {
+        max-width: 450px;
+        margin: 0 auto;
+        text-align: center;
+        font-size: clamp(34px, 9.6vw, 54px);
+        line-height: 1.06;
+        font-weight: 800;
+      }
+
+      .accent {
+        color: var(--accent);
+      }
+
+      .lead {
+        max-width: 330px;
+        margin: -8px auto 0;
+        color: var(--muted);
+        text-align: center;
+        font-size: 15px;
+        line-height: 1.75;
+        font-weight: 500;
       }
 
       .store-button {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 10px;
         width: 100%;
-        min-height: 60px;
-        border-radius: 18px;
+        min-height: 58px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 999px;
         color: #ffffff;
-        background:
-          linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent),
-          linear-gradient(180deg, #ff7f35 0%, var(--accent) 100%);
-        box-shadow: var(--shadow-button);
+        background: #111111;
+        box-shadow:
+          0 18px 42px rgba(17, 17, 17, 0.22),
+          0 1px 0 rgba(255, 255, 255, 0.12) inset;
         text-decoration: none;
-        font-size: 17px;
-        font-weight: 950;
+        font-size: 16px;
+        font-weight: 700;
         transition:
-          transform 160ms ease,
-          box-shadow 160ms ease,
-          filter 160ms ease;
+          transform 140ms ease,
+          box-shadow 140ms ease,
+          background 140ms ease;
       }
 
-      .store-button svg {
-        width: 20px;
-        height: 20px;
-        fill: none;
-        stroke: currentColor;
-        stroke-width: 2.5;
-        stroke-linecap: round;
-        stroke-linejoin: round;
+      .store-button::before {
+        content: "";
+        width: 9px;
+        height: 9px;
+        margin-right: 10px;
+        border-radius: 999px;
+        background: var(--accent);
+        box-shadow: 0 0 0 4px rgba(255, 106, 26, 0.2);
       }
 
       .store-button:active {
-        transform: translateY(1px) scale(0.99);
-        filter: saturate(0.96);
-        box-shadow: 0 10px 22px rgba(255, 106, 26, 0.24);
+        transform: translateY(1px) scale(0.992);
+        background: #1b1b1b;
+        box-shadow: 0 12px 28px rgba(17, 17, 17, 0.2);
       }
 
-      .trust {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
-      }
-
-      .trust span {
-        display: grid;
-        min-height: 44px;
-        place-items: center;
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        color: #4c443d;
-        background: rgba(255, 255, 255, 0.72);
-        font-size: 11px;
-        font-weight: 900;
-        text-align: center;
-      }
-
-      .showcase {
-        margin: 30px -18px 0;
+      .preview {
+        margin: 2px -18px 0;
       }
 
       .rail {
         display: flex;
-        gap: 14px;
-        padding: 0 18px 10px;
+        gap: 12px;
+        padding: 0 18px 8px;
         overflow-x: auto;
         scroll-snap-type: x mandatory;
         -webkit-overflow-scrolling: touch;
@@ -235,15 +188,15 @@
       }
 
       .shot {
-        width: min(86vw, 560px);
-        flex: 0 0 auto;
-        scroll-snap-align: center;
+        width: min(82vw, 420px);
         margin: 0;
+        flex: 0 0 auto;
         overflow: hidden;
-        border: 1px solid rgba(255, 255, 255, 0.68);
-        border-radius: 26px;
-        background: #ff6a1a;
-        box-shadow: var(--shadow-soft);
+        scroll-snap-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        border-radius: 22px;
+        background: var(--accent);
+        box-shadow: 0 18px 44px rgba(43, 30, 18, 0.14);
       }
 
       .shot img {
@@ -254,219 +207,73 @@
 
       .shot-fallback {
         display: none;
-        min-height: 180px;
+        min-height: 154px;
         place-items: center;
-        padding: 22px;
-        color: #ffffff;
-        font-size: 18px;
-        font-weight: 950;
-        text-align: center;
-      }
-
-      .section-head {
-        display: flex;
-        align-items: end;
-        justify-content: space-between;
-        gap: 14px;
-        margin: 26px 0 12px;
-      }
-
-      .section-head h2 {
-        margin: 0;
-        font-size: 20px;
-        line-height: 1.25;
-        font-weight: 950;
-      }
-
-      .section-head p {
-        margin: 0;
-        color: var(--dim);
-        font-size: 12px;
-        font-weight: 800;
-        white-space: nowrap;
-      }
-
-      .features {
-        display: grid;
-        gap: 10px;
-      }
-
-      .feature {
-        display: grid;
-        grid-template-columns: 48px 1fr;
-        gap: 14px;
-        align-items: center;
-        padding: 15px;
-        border: 1px solid var(--line);
-        border-radius: 20px;
-        background: rgba(255, 255, 255, 0.8);
-        box-shadow: 0 8px 24px rgba(28, 19, 12, 0.05);
-      }
-
-      .mark {
-        display: grid;
-        place-items: center;
-        width: 48px;
-        height: 48px;
-        border-radius: 16px;
-        color: var(--accent);
-        background: #fff0e6;
-      }
-
-      .feature:nth-child(2) .mark {
-        color: var(--blue);
-        background: #eaf3ff;
-      }
-
-      .feature:nth-child(3) .mark {
-        color: var(--green);
-        background: #e9f6ef;
-      }
-
-      .mark svg {
-        width: 24px;
-        height: 24px;
-        fill: none;
-        stroke: currentColor;
-        stroke-width: 2.35;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-      }
-
-      .feature strong {
-        display: block;
-        font-size: 15px;
-        font-weight: 950;
-      }
-
-      .feature span {
-        display: block;
-        margin-top: 4px;
-        color: var(--sub);
-        font-size: 13px;
-        line-height: 1.55;
-        font-weight: 650;
-      }
-
-      .bottom-card {
-        margin: 28px 0 0;
         padding: 18px;
-        border: 1px solid var(--line-strong);
-        border-radius: 26px;
-        background:
-          linear-gradient(135deg, rgba(255, 106, 26, 0.1), transparent 48%),
-          rgba(255, 255, 255, 0.86);
-        box-shadow: var(--shadow-soft);
-      }
-
-      .bottom-card h2 {
-        margin: 0;
-        font-size: 22px;
-        line-height: 1.35;
-        font-weight: 950;
-      }
-
-      .bottom-card p {
-        margin: 9px 0 0;
-        color: var(--sub);
-        font-size: 13px;
-        line-height: 1.7;
+        color: #ffffff;
+        text-align: center;
+        font-size: 16px;
         font-weight: 700;
       }
 
       .note {
-        margin: 14px auto 0;
-        max-width: 330px;
-        color: var(--dim);
-        text-align: center;
-        font-size: 12px;
-        line-height: 1.65;
-        font-weight: 700;
-      }
-
-      .fine {
-        margin: 18px 0 0;
-        color: #9a9188;
+        margin: -4px auto 0;
+        max-width: 310px;
+        color: #8a837b;
         text-align: center;
         font-size: 11px;
-        font-weight: 700;
+        line-height: 1.6;
+        font-weight: 500;
       }
 
-      @media (min-width: 560px) {
+      @media (min-width: 520px) {
         .page {
-          padding-inline: 28px;
+          padding-inline: 24px;
         }
 
-        .showcase {
-          margin-inline: -28px;
+        .preview {
+          margin-inline: -24px;
         }
 
         .rail {
-          padding-inline: 28px;
-        }
-
-        .cta-row {
-          grid-template-columns: 1fr 1fr;
-          align-items: center;
-        }
-
-        .trust {
-          grid-column: 1 / -1;
+          padding-inline: 24px;
         }
       }
 
       @media (prefers-reduced-motion: no-preference) {
         .brand,
-        .label,
         h1,
         .lead,
-        .cta-row,
-        .showcase,
-        .feature,
-        .bottom-card {
-          animation: rise 620ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-        }
-
-        .label {
-          animation-delay: 50ms;
+        .store-button,
+        .preview,
+        .note {
+          animation: enter 560ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
         }
 
         h1 {
-          animation-delay: 90ms;
+          animation-delay: 60ms;
         }
 
         .lead {
-          animation-delay: 130ms;
+          animation-delay: 100ms;
         }
 
-        .cta-row {
-          animation-delay: 170ms;
+        .store-button {
+          animation-delay: 140ms;
         }
 
-        .showcase {
+        .preview {
+          animation-delay: 180ms;
+        }
+
+        .note {
           animation-delay: 220ms;
         }
 
-        .feature:nth-child(1) {
-          animation-delay: 260ms;
-        }
-
-        .feature:nth-child(2) {
-          animation-delay: 310ms;
-        }
-
-        .feature:nth-child(3) {
-          animation-delay: 360ms;
-        }
-
-        .bottom-card {
-          animation-delay: 400ms;
-        }
-
-        @keyframes rise {
+        @keyframes enter {
           from {
             opacity: 0;
-            transform: translateY(14px);
+            transform: translateY(10px);
           }
           to {
             opacity: 1;
@@ -480,7 +287,7 @@
     <main class="page">
       <section class="hero" aria-labelledby="app-title">
         <div class="brand">
-          <div class="icon-frame" aria-hidden="true">
+          <div class="icon-shell" aria-hidden="true">
             <img
               class="app-icon"
               src="../assets/icon.png"
@@ -489,112 +296,47 @@
             />
             <div class="icon-fallback">今</div>
           </div>
-          <div>
-            <p class="brand-name">今すぐタイマー</p>
-            <p class="brand-sub">iPhone専用・ウィジェットタイマー</p>
-          </div>
+          <p class="app-name">今すぐタイマー</p>
         </div>
 
-        <p class="label">App Storeへ</p>
-        <h1 id="app-title">よく使うタイマーを、ワンタップで起動</h1>
-        <p class="lead">
-          ホーム画面・ロック画面のウィジェットから、カップ麺、仮眠、勉強などのタイマーをすぐ始められます。
-        </p>
+        <h1 id="app-title">タイマーを、<span class="accent">1タップ</span>で。</h1>
+        <p class="lead">ホーム画面・ロック画面のウィジェットからすぐ起動。</p>
 
-        <div class="cta-row">
-          <a class="store-button" data-store-link href="#" rel="noopener">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7" /><path d="M8 7h9v9" /></svg>
-            App Storeへ進む
-          </a>
-          <div class="trust" aria-label="アプリ情報">
-            <span>iOS 26以降</span>
-            <span>外部送信なし</span>
-            <span>日英対応</span>
+        <a class="store-button" data-store-link href="#" rel="noopener">App Storeで開く</a>
+
+        <section class="preview" aria-label="アプリ画面">
+          <div class="rail">
+            <figure class="shot">
+              <img
+                src="../assets/store/pattern3/1.png"
+                alt="ウィジェットからワンタップでタイマーを開始できる紹介画像"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';"
+              />
+              <figcaption class="shot-fallback">1タップでタイマー開始</figcaption>
+            </figure>
+            <figure class="shot">
+              <img
+                src="../assets/store/pattern3/2.png"
+                alt="よく使うタイマーをすぐ起動できる紹介画像"
+                loading="lazy"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';"
+              />
+              <figcaption class="shot-fallback">よく使うタイマーをすぐ起動</figcaption>
+            </figure>
+            <figure class="shot">
+              <img
+                src="../assets/store/pattern3/3.png"
+                alt="色とアイコンでプリセットを作れる紹介画像"
+                loading="lazy"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';"
+              />
+              <figcaption class="shot-fallback">プリセットを作成</figcaption>
+            </figure>
           </div>
-        </div>
+        </section>
+
+        <p class="note">開けない場合は、右上のメニューからSafariで開いてください。</p>
       </section>
-
-      <section class="showcase" aria-label="アプリ画面">
-        <div class="rail">
-          <figure class="shot">
-            <img
-              src="../assets/store/pattern3/1.png"
-              alt="ロック画面とホーム画面のウィジェットからワンタップでタイマーを開始できる紹介画像"
-              onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';"
-            />
-            <figcaption class="shot-fallback">1タップでタイマー開始</figcaption>
-          </figure>
-          <figure class="shot">
-            <img
-              src="../assets/store/pattern3/2.png"
-              alt="よく使うタイマーを保存してすぐ起動できる紹介画像"
-              loading="lazy"
-              onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';"
-            />
-            <figcaption class="shot-fallback">よく使うタイマーをすぐ起動</figcaption>
-          </figure>
-          <figure class="shot">
-            <img
-              src="../assets/store/pattern3/3.png"
-              alt="色とアイコンで自分だけのプリセットを作れる紹介画像"
-              loading="lazy"
-              onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';"
-            />
-            <figcaption class="shot-fallback">自分だけのアイコンを作成</figcaption>
-          </figure>
-        </div>
-      </section>
-
-      <section aria-label="主な機能">
-        <div class="section-head">
-          <h2>毎日使う時間を、すぐ押せる形に。</h2>
-          <p>3つの特徴</p>
-        </div>
-
-        <div class="features">
-          <div class="feature">
-            <div class="mark" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M6 5h12" /><path d="M8 12h8" /><path d="M10 19h4" /></svg>
-            </div>
-            <div>
-              <strong>よく使う時間を保存</strong>
-              <span>3分、25分、2時間など、毎回セットする手間を減らせます。</span>
-            </div>
-          </div>
-
-          <div class="feature">
-            <div class="mark" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="3" /><path d="M8 9h3" /><path d="M8 13h8" /></svg>
-            </div>
-            <div>
-              <strong>ホーム画面・ロック画面から起動</strong>
-              <span>アプリを探さず、ウィジェットのタイルをタップするだけで始まります。</span>
-            </div>
-          </div>
-
-          <div class="feature">
-            <div class="mark" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M12 3v4" /><path d="M12 17v4" /><path d="M4.2 7.5l3.5 2" /><path d="M16.3 14.5l3.5 2" /><path d="M19.8 7.5l-3.5 2" /><path d="M7.7 14.5l-3.5 2" /><circle cx="12" cy="12" r="3.4" /></svg>
-            </div>
-            <div>
-              <strong>生活の小さな用事に使える</strong>
-              <span>カップ麺、仮眠、勉強、休憩、筋トレ。思いついた瞬間に使えます。</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="bottom-card">
-        <h2>まずはApp Storeで確認</h2>
-        <p>このページから自動では移動しません。ボタンを押すとApp Storeが開きます。</p>
-        <a class="store-button" data-store-link href="#" rel="noopener">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7" /><path d="M8 7h9v9" /></svg>
-          App Storeで見る
-        </a>
-      </section>
-
-      <p class="note">開けない場合は、右上のメニューからSafariで開いてください。</p>
-      <p class="fine">iOS 26以降対応</p>
     </main>
 
     <script>
