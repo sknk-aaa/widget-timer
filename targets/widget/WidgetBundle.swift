@@ -5,5 +5,6 @@ import SwiftUI
 struct ImasuguWidgetBundle: WidgetBundle {
     var body: some Widget {
         PresetWidget()
+        TimerLiveActivity()
     }
 }
