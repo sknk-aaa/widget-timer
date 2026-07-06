@@ -97,7 +97,7 @@ export const ja = {
     faq: 'よくある質問',
     about: 'アプリ情報',
     version: 'バージョン',
-    contact: 'ご意見・ご要望',
+    contact: 'ご意見ご要望はこちら',
     review: 'レビューして応援',
     privacy: 'プライバシーポリシー',
     terms: '利用規約',
@@ -189,6 +189,7 @@ export const ja = {
     readyTitle: 'さあ、今すぐ始めよう。',
     readyBody: 'まずはウィジェットを追加。ワンタップ生活へ。',
     seeHowTo: 'ウィジェットの追加方法を見る',
+    seeHowToMenuHint: 'あとからメニューでも確認できます',
   },
 
   how: {

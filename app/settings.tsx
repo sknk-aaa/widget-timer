@@ -14,7 +14,6 @@ import {
   StarIcon,
   ShareIcon,
   GridIcon,
-  HelpIcon,
   VibrationIcon,
   InfoIcon,
   ChatIcon,
@@ -155,28 +154,28 @@ export default function SettingsScreen() {
         <View style={{ backgroundColor: c.surface, borderRadius: radius.lg, marginBottom: spacing.xl }}>
           <Row
             first
-            icon={<MenuIcon color="#BC7400"><StarIcon color="#FFFFFF" size={16} /></MenuIcon>}
-            label={s.settings.review}
-            chevron
-            onPress={() => void openWriteReview()}
-          />
-          <Row
-            icon={<MenuIcon color="#3B82F6"><ShareIcon color="#FFFFFF" size={16} /></MenuIcon>}
-            label={s.settings.share}
-            chevron
-            onPress={share}
-          />
-          <Row
             icon={<MenuIcon color="#FF6A1A"><GridIcon color="#FFFFFF" size={16} /></MenuIcon>}
             label={s.how.add}
             chevron
             onPress={() => router.push({ pathname: '/how', params: { video: 'add' } })}
           />
           <Row
-            icon={<MenuIcon color="#0B8E8E"><HelpIcon color="#FFFFFF" size={16} /></MenuIcon>}
-            label={s.settings.faq}
+            icon={<MenuIcon color="#BC7400"><StarIcon color="#FFFFFF" size={16} /></MenuIcon>}
+            label={s.settings.review}
             chevron
-            onPress={() => router.push('/faq')}
+            onPress={() => void openWriteReview()}
+          />
+          <Row
+            icon={<MenuIcon color="#1E9E66"><ChatIcon color="#FFFFFF" size={16} /></MenuIcon>}
+            label={s.settings.contact}
+            chevron
+            onPress={() => Linking.openURL(CONTACT_URL)}
+          />
+          <Row
+            icon={<MenuIcon color="#3B82F6"><ShareIcon color="#FFFFFF" size={16} /></MenuIcon>}
+            label={s.settings.share}
+            chevron
+            onPress={share}
           />
         </View>
 
@@ -187,12 +186,6 @@ export default function SettingsScreen() {
             icon={<MenuIcon color="#8A8A8E"><InfoIcon color="#FFFFFF" size={16} /></MenuIcon>}
             label={s.settings.version}
             value={Constants.expoConfig?.version ?? '1.0.0'}
-          />
-          <Row
-            icon={<MenuIcon color="#1E9E66"><ChatIcon color="#FFFFFF" size={16} /></MenuIcon>}
-            label={s.settings.contact}
-            chevron
-            onPress={() => Linking.openURL(CONTACT_URL)}
           />
           <Row
             icon={<MenuIcon color="#6366F1"><LockIcon color="#FFFFFF" size={16} /></MenuIcon>}

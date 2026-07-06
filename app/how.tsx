@@ -1,46 +1,71 @@
 import * as React from 'react';
-import { View, Text, Pressable } from 'react-native';
+import {
+  View,
+  Text,
+  Pressable,
+  Image,
+  ScrollView,
+  useWindowDimensions,
+  type ImageSourcePropType,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useVideoPlayer, VideoView } from 'expo-video';
 import { useTheme } from '../src/ui/theme';
 import { PhoneFrame } from '../src/ui/components/PhoneFrame';
 import { ChevronIcon } from '../src/ui/icons/ui';
-import { t, isJaLocale } from '../src/i18n';
+import { t } from '../src/i18n';
 
-// チュートリアル動画（ja/en をロケールで出し分け）。mp4 は metro の assetExts に追加済み。
-const SOURCES = {
-  home: { ja: require('../assets/onboarding/how-home.mp4'), en: require('../assets/onboarding/how-home-en.mp4') },
-  lock: { ja: require('../assets/onboarding/how-lock.mp4'), en: require('../assets/onboarding/how-lock-en.mp4') },
-  change: { ja: require('../assets/onboarding/how-whiget2.mp4'), en: require('../assets/onboarding/how-whiget2-en.mp4') },
+const SLIDES = {
+  home: [
+    { text: 'ホーム画面を長押し\n左上の「編集」をタップ', image: require('../assets/howto/home_1.png') },
+    { text: '「ウィジェットを追加」をタップ', image: require('../assets/howto/home_2.png') },
+    { text: '「今すぐタイマー」で検索', image: require('../assets/howto/home_3.png') },
+    { text: 'ウィジェット枠を選択して決定', image: require('../assets/howto/home_4.png') },
+  ],
+  lock: [
+    { text: 'ロック画面を長押し\n下部の「カスタマイズ」をタップ', image: require('../assets/howto/lock_1.png') },
+    { text: '「ウィジェットを追加」をタップ', image: require('../assets/howto/lock_2.png') },
+    { text: '「今すぐタイマー」を選んで追加', image: require('../assets/howto/lock_3.png') },
+  ],
 };
-type VideoKey = keyof typeof SOURCES;
-const src = (k: VideoKey) => SOURCES[k][isJaLocale ? 'ja' : 'en'];
+type SlideTab = keyof typeof SLIDES;
+type Slide = { text: string; image: ImageSourcePropType };
+const ALL_SLIDES = [...SLIDES.home, ...SLIDES.lock] as readonly Slide[];
 
 export default function HowScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const { c, spacing } = useTheme();
   const s = t();
   const { video } = useLocalSearchParams<{ video?: string }>();
+  const scrollRef = React.useRef<ScrollView>(null);
 
-  // 'add' = ホーム＋ロックをまとめてタブ切替。それ以外は単一動画。
+  // 'add' = ホーム＋ロックをまとめてタブ切替。それ以外は単一タブで表示。
   const isAdd = video === 'add';
-  const single: VideoKey = video === 'lock' ? 'lock' : video === 'change' ? 'change' : 'home';
   const [tab, setTab] = React.useState<'home' | 'lock'>('home');
-  const key: VideoKey = isAdd ? tab : single;
-  const title = isAdd ? s.how.add : key === 'lock' ? s.how.lock : key === 'change' ? s.how.change : s.how.home;
-
-  const player = useVideoPlayer(src(isAdd ? 'home' : single), (p) => {
-    p.loop = true;
-    p.muted = true;
-    p.play();
-  });
+  const key: SlideTab = isAdd ? tab : video === 'lock' ? 'lock' : 'home';
+  const title = isAdd ? s.how.add : key === 'lock' ? s.how.lock : s.how.home;
+  const [index, setIndex] = React.useState(0);
+  const slides = SLIDES[key] as readonly Slide[];
 
   React.useEffect(() => {
-    player.replace(src(key));
-    player.play();
-  }, [key, player]);
+    for (const slide of ALL_SLIDES) {
+      const source = Image.resolveAssetSource(slide.image);
+      if (source?.uri) void Image.prefetch(source.uri);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    setIndex(0);
+    scrollRef.current?.scrollTo({ x: 0, animated: false });
+  }, [key]);
+
+  const onScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    setIndex(Math.round(e.nativeEvent.contentOffset.x / width));
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: insets.top }}>
@@ -66,11 +91,47 @@ export default function HowScreen() {
         </View>
       )}
 
-      <View style={{ flex: 1, paddingVertical: spacing.lg, paddingBottom: insets.bottom + spacing.lg }}>
-        <PhoneFrame>
-          <VideoView style={{ flex: 1 }} player={player} contentFit="cover" nativeControls={false} />
-        </PhoneFrame>
-      </View>
+      <ScrollView
+        ref={scrollRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onMomentumScrollEnd={onScrollEnd}
+        style={{ flex: 1 }}
+      >
+        {slides.map((slide, i) => (
+          <View key={`${key}-${i}`} style={{ width, flex: 1 }}>
+            <View style={{ paddingHorizontal: spacing.xl, paddingTop: spacing.sm, gap: spacing.md }}>
+              <Text style={{ color: c.textPrimary, fontSize: 20, fontWeight: '900', lineHeight: 28, textAlign: 'center' }}>
+                {slide.text}
+              </Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: spacing.sm }}>
+                {slides.map((_, dot) => (
+                  <View
+                    key={dot}
+                    style={{
+                      width: dot === index ? 22 : 7,
+                      height: 7,
+                      borderRadius: 4,
+                      backgroundColor: dot === index ? c.accent : c.hairline,
+                    }}
+                  />
+                ))}
+              </View>
+            </View>
+            <View style={{ flex: 1, paddingVertical: spacing.md, paddingBottom: insets.bottom + spacing.lg }}>
+              <PhoneFrame screenBackground="#FFFFFF">
+                <Image
+                  source={slide.image}
+                  fadeDuration={0}
+                  style={{ flex: 1, width: '100%', height: '100%', backgroundColor: '#FFFFFF' }}
+                  resizeMode="cover"
+                />
+              </PhoneFrame>
+            </View>
+          </View>
+        ))}
+      </ScrollView>
     </View>
   );
 }

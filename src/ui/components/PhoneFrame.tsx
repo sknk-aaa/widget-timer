@@ -5,7 +5,7 @@ import { View, Platform } from 'react-native';
  * チュートリアル動画などを iPhone のベゼルに収めて見せるフレーム。
  * 親の高さに合わせて縦長（端末比）にスケールする。children は画面いっぱいに敷く。
  */
-export function PhoneFrame({ children }: { children: React.ReactNode }) {
+export function PhoneFrame({ children, screenBackground = '#000' }: { children: React.ReactNode; screenBackground?: string }) {
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
       <View
@@ -20,7 +20,7 @@ export function PhoneFrame({ children }: { children: React.ReactNode }) {
             : { elevation: 10 }),
         }}
       >
-        <View style={{ flex: 1, borderRadius: 38, overflow: 'hidden', backgroundColor: '#000' }}>
+        <View style={{ flex: 1, borderRadius: 38, overflow: 'hidden', backgroundColor: screenBackground }}>
           {children}
         </View>
       </View>

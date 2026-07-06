@@ -191,6 +191,7 @@ export const en: Strings = {
     readyTitle: "Let's start — right now.",
     readyBody: 'Add the widget and go one-tap.',
     seeHowTo: 'See how to add the widget',
+    seeHowToMenuHint: 'You can also check this later from the menu',
   },
 
   how: {

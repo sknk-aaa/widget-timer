@@ -27,7 +27,7 @@ let widgetMirrorsInstalled = false;
 const DEFAULT_PRESETS: Omit<Preset, 'id'>[] = [
   { name: '', icon: 'ramen', color: 'orange', durationSec: 180, inWidget: false, sortOrder: 0, sound: 'default' },
   { name: '', icon: 'bed', color: 'indigo', durationSec: 1200, inWidget: false, sortOrder: 1, sound: 'default' },
-  { name: '', icon: 'book', color: 'blue', durationSec: 1500, inWidget: false, sortOrder: 2, sound: 'default' },
+  { name: '', icon: 'book', color: 'blue', durationSec: 3600, inWidget: false, sortOrder: 2, sound: 'default' },
 ];
 
 function seedDefaultsIfNeeded(): void {

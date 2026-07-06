@@ -120,9 +120,12 @@ export default function OnboardingScreen() {
               hitSlop={8}
               accessibilityRole="button"
               accessibilityLabel={s.onboarding.seeHowTo}
-              style={{ alignItems: 'center', paddingVertical: spacing.sm }}
+              style={{ alignItems: 'center', paddingVertical: spacing.sm, gap: 4 }}
             >
               <Text style={{ color: OB.accent, fontSize: 14, fontWeight: '700' }}>{s.onboarding.seeHowTo}</Text>
+              <Text style={{ color: OB.body, fontSize: 12, fontWeight: '600', textAlign: 'center' }}>
+                {s.onboarding.seeHowToMenuHint}
+              </Text>
             </Pressable>
           </>
         )}
