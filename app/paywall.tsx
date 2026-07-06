@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProStore } from '../src/store/pro';
 import { useTheme } from '../src/ui/theme';
 import { Button } from '../src/ui/components/Button';
-import { CheckIcon } from '../src/ui/icons/ui';
+import { CheckIcon, ClockIcon, GridIcon, StarIcon } from '../src/ui/icons/ui';
 import { haptics } from '../src/ui/haptics';
 import { PRIVACY_URL, TERMS_URL } from '../src/domain/links';
 import { t } from '../src/i18n';
@@ -13,7 +13,7 @@ import { t } from '../src/i18n';
 export default function PaywallScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { c, spacing, radius } = useTheme();
+  const { c, spacing, radius, isDark } = useTheme();
   const s = t();
   const price = useProStore((st) => st.price);
   const isPro = useProStore((st) => st.isPro);
@@ -23,8 +23,9 @@ export default function PaywallScreen() {
   const [supporting, setSupporting] = React.useState(false);
 
   const benefits = [
-    { title: s.pro.featureWidget, sub: s.pro.featureWidgetSub },
-    { title: s.pro.featureSupport, sub: s.pro.featureSupportSub },
+    { title: s.pro.featureBoards, sub: s.pro.featureBoardsSub, icon: 'grid' as const },
+    { title: s.pro.featurePresets, sub: s.pro.featurePresetsSub, icon: 'clock' as const },
+    { title: s.pro.featureOneTime, sub: s.pro.featureOneTimeSub, icon: 'star' as const },
   ];
   const pills = [s.pro.pillOnce, s.pro.pillNoAds, s.pro.pillNoData];
 
@@ -97,27 +98,39 @@ export default function PaywallScreen() {
           <Text style={{ color: c.textSecondary, fontSize: 16, fontWeight: '600' }}>{s.common.close}</Text>
         </Pressable>
 
-        {/* ヒーロー */}
-        <View style={{ alignItems: 'center', marginBottom: spacing.xl, marginTop: spacing.lg }}>
+        <View style={{ alignItems: 'center', marginBottom: spacing.lg, marginTop: spacing.lg }}>
           <View
             style={{
-              borderRadius: 24,
-              marginBottom: spacing.lg,
+              borderRadius: 22,
+              marginBottom: spacing.md,
+              borderWidth: 1,
+              borderColor: c.hairline,
               shadowColor: c.accent,
-              shadowOpacity: 0.45,
-              shadowRadius: 22,
-              shadowOffset: { width: 0, height: 10 },
+              shadowOpacity: isDark ? 0.25 : 0.16,
+              shadowRadius: 18,
+              shadowOffset: { width: 0, height: 8 },
             }}
           >
             <Image
               source={require('../assets/icon.png')}
-              style={{ width: 92, height: 92, borderRadius: 24 }}
+              style={{ width: 74, height: 74, borderRadius: 22 }}
             />
+          </View>
+          <View
+            style={{
+              backgroundColor: isDark ? 'rgba(255,106,26,0.16)' : 'rgba(255,106,26,0.10)',
+              borderRadius: radius.pill,
+              paddingHorizontal: spacing.md,
+              paddingVertical: 6,
+              marginBottom: spacing.sm,
+            }}
+          >
+            <Text style={{ color: c.accent, fontSize: 12, fontWeight: '900' }}>{s.pro.title}</Text>
           </View>
           <Text
             style={{
               color: c.textPrimary,
-              fontSize: 26,
+              fontSize: 25,
               fontWeight: '900',
               letterSpacing: 0.2,
               textAlign: 'center',
@@ -139,38 +152,21 @@ export default function PaywallScreen() {
           </Text>
         </View>
 
-        {/* 特典カード */}
+        <ComparePanel
+          freeTitle={s.pro.compareFree}
+          freeSub={s.pro.compareFreeSub}
+          proTitle={s.pro.comparePro}
+          proSub={s.pro.compareProSub}
+        />
+
         <View
           style={{
-            backgroundColor: c.surface,
-            borderRadius: radius.lg,
-            padding: spacing.lg,
-            gap: spacing.lg,
+            gap: spacing.md,
             marginBottom: spacing.lg,
           }}
         >
           {benefits.map((b) => (
-            <View key={b.title} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md }}>
-              <View
-                style={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: 15,
-                  backgroundColor: c.accent,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginTop: 1,
-                }}
-              >
-                <CheckIcon color="#FFFFFF" size={18} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ color: c.textPrimary, fontSize: 16, fontWeight: '800' }}>{b.title}</Text>
-                <Text style={{ color: c.textSecondary, fontSize: 13, fontWeight: '500', marginTop: 2, lineHeight: 18 }}>
-                  {b.sub}
-                </Text>
-              </View>
-            </View>
+            <FeatureCard key={b.title} title={b.title} sub={b.sub} icon={b.icon} />
           ))}
         </View>
 
@@ -250,6 +246,108 @@ export default function PaywallScreen() {
           </Pressable>
         </View>
       </ScrollView>
+    </View>
+  );
+}
+
+function ComparePanel({
+  freeTitle,
+  freeSub,
+  proTitle,
+  proSub,
+}: {
+  freeTitle: string;
+  freeSub: string;
+  proTitle: string;
+  proSub: string;
+}) {
+  const { c, spacing, radius, isDark } = useTheme();
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        gap: spacing.sm,
+        marginBottom: spacing.lg,
+      }}
+    >
+      <CompareCell title={freeTitle} sub={freeSub} muted />
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: isDark ? 'rgba(255,106,26,0.16)' : 'rgba(255,106,26,0.10)',
+          borderRadius: radius.lg,
+          borderWidth: 1,
+          borderColor: isDark ? 'rgba(255,106,26,0.28)' : 'rgba(255,106,26,0.22)',
+          padding: spacing.md,
+          gap: spacing.xs,
+        }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+          <CheckIcon color={c.accent} size={16} />
+          <Text style={{ color: c.textPrimary, fontSize: 14, fontWeight: '900' }}>{proTitle}</Text>
+        </View>
+        <Text style={{ color: c.textSecondary, fontSize: 12, fontWeight: '700', lineHeight: 17 }}>{proSub}</Text>
+      </View>
+    </View>
+  );
+}
+
+function CompareCell({ title, sub, muted }: { title: string; sub: string; muted?: boolean }) {
+  const { c, spacing, radius } = useTheme();
+  return (
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: c.surface,
+        borderRadius: radius.lg,
+        borderWidth: 1,
+        borderColor: c.hairline,
+        padding: spacing.md,
+        gap: spacing.xs,
+        opacity: muted ? 0.82 : 1,
+      }}
+    >
+      <Text style={{ color: c.textPrimary, fontSize: 14, fontWeight: '900' }}>{title}</Text>
+      <Text style={{ color: c.textSecondary, fontSize: 12, fontWeight: '700', lineHeight: 17 }}>{sub}</Text>
+    </View>
+  );
+}
+
+function FeatureCard({ title, sub, icon }: { title: string; sub: string; icon: 'grid' | 'clock' | 'star' }) {
+  const { c, spacing, radius, isDark } = useTheme();
+  const Icon = icon === 'grid' ? GridIcon : icon === 'clock' ? ClockIcon : StarIcon;
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        gap: spacing.md,
+        backgroundColor: c.surface,
+        borderRadius: radius.lg,
+        borderWidth: 1,
+        borderColor: c.hairline,
+        padding: spacing.lg,
+      }}
+    >
+      <View
+        style={{
+          width: 34,
+          height: 34,
+          borderRadius: 12,
+          backgroundColor: isDark ? 'rgba(255,106,26,0.18)' : 'rgba(255,106,26,0.11)',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginTop: 1,
+        }}
+      >
+        <Icon color={c.accent} size={18} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={{ color: c.textPrimary, fontSize: 15, fontWeight: '900' }}>{title}</Text>
+        <Text style={{ color: c.textSecondary, fontSize: 13, fontWeight: '600', marginTop: 3, lineHeight: 18 }}>
+          {sub}
+        </Text>
+      </View>
     </View>
   );
 }

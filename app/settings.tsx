@@ -19,6 +19,7 @@ import {
   ChatIcon,
   DocIcon,
   LockIcon,
+  ClockIcon,
 } from '../src/ui/icons/ui';
 import { haptics } from '../src/ui/haptics';
 import { PRIVACY_URL, TERMS_URL, CONTACT_URL, APP_STORE_URL } from '../src/domain/links';
@@ -28,7 +29,7 @@ import { t } from '../src/i18n';
 export default function SettingsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { c, spacing, radius } = useTheme();
+  const { c, spacing, radius, isDark } = useTheme();
   const s = t();
 
   const isPro = useProStore((st) => st.isPro);
@@ -55,63 +56,16 @@ export default function SettingsScreen() {
         <SheetHeader title={s.settings.title} onClose={() => router.back()} />
 
         {!isPro && (
-          <Pressable
+          <ProUpgradeCard
             onPress={() => router.push('/paywall')}
-            accessibilityRole="button"
-            accessibilityLabel={s.pro.title}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: spacing.md,
-              backgroundColor: c.accent,
-              borderRadius: radius.lg,
-              padding: spacing.lg,
-              marginBottom: spacing.xl,
-            }}
-          >
-            <StarIcon color="#FFFFFF" size={22} />
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '800' }}>
-                {s.pro.title}
-              </Text>
-              <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: '600' }}>
-                {s.pro.subtitle}
-              </Text>
-            </View>
-            <ChevronIcon color="#FFFFFF" size={20} />
-          </Pressable>
+            isDark={isDark}
+            title={s.pro.settingsTitle}
+            subtitle={s.pro.settingsSub}
+            widgetLabel={s.pro.settingsFeatureWidgets}
+            presetLabel={s.pro.settingsFeaturePresets}
+          />
         )}
 
-        <SectionLabel>{s.settings.feedback}</SectionLabel>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            backgroundColor: c.surface,
-            borderRadius: radius.lg,
-            paddingVertical: spacing.md,
-            paddingHorizontal: spacing.lg,
-            marginBottom: spacing.xl,
-          }}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, flex: 1 }}>
-            <MenuIcon color="#8B5CF6">
-              <VibrationIcon color="#FFFFFF" size={16} />
-            </MenuIcon>
-            <Text style={{ color: c.textPrimary, fontSize: 15, fontWeight: '500' }}>{s.settings.haptics}</Text>
-          </View>
-          <Switch
-            value={hapticsEnabled}
-            onValueChange={(v) => {
-              useSettingsStore.getState().setHapticsEnabled(v);
-              if (v) haptics.light();
-            }}
-            accessibilityLabel={s.settings.haptics}
-          />
-        </View>
-
-        <SectionLabel>{s.settings.pro}</SectionLabel>
         {isPro && (
           <Pressable
             onPress={() => router.push('/paywall')}
@@ -148,9 +102,6 @@ export default function SettingsScreen() {
             <ChevronIcon color={c.textTertiary} size={18} />
           </Pressable>
         )}
-        <View style={{ marginBottom: spacing.md }}>
-          <Button title={s.settings.restore} variant="secondary" onPress={restore} />
-        </View>
         <View style={{ backgroundColor: c.surface, borderRadius: radius.lg, marginBottom: spacing.xl }}>
           <Row
             first
@@ -177,6 +128,19 @@ export default function SettingsScreen() {
             chevron
             onPress={share}
           />
+          <SwitchRow
+            icon={<MenuIcon color="#8B5CF6"><VibrationIcon color="#FFFFFF" size={16} /></MenuIcon>}
+            label={s.settings.haptics}
+            value={hapticsEnabled}
+            onValueChange={(v) => {
+              useSettingsStore.getState().setHapticsEnabled(v);
+              if (v) haptics.light();
+            }}
+          />
+        </View>
+
+        <View style={{ marginBottom: spacing.xl }}>
+          <Button title={s.settings.restore} variant="secondary" onPress={restore} />
         </View>
 
         <SectionLabel>{s.settings.about}</SectionLabel>
@@ -201,6 +165,117 @@ export default function SettingsScreen() {
           />
         </View>
       </ScrollView>
+    </View>
+  );
+}
+
+function ProUpgradeCard({
+  onPress,
+  isDark,
+  title,
+  subtitle,
+  widgetLabel,
+  presetLabel,
+}: {
+  onPress: () => void;
+  isDark: boolean;
+  title: string;
+  subtitle: string;
+  widgetLabel: string;
+  presetLabel: string;
+}) {
+  const { c, spacing, radius } = useTheme();
+  const accentWash = isDark ? 'rgba(255,106,26,0.14)' : 'rgba(255,106,26,0.10)';
+  const iconSurface = isDark ? 'rgba(255,255,255,0.08)' : '#F5F1ED';
+
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.md,
+        backgroundColor: c.surface,
+        borderRadius: radius.lg,
+        borderWidth: 1,
+        borderColor: c.hairline,
+        padding: spacing.md,
+        marginBottom: spacing.lg,
+      }}
+    >
+      <View
+        style={{
+          width: 48,
+          height: 48,
+          borderRadius: 15,
+          backgroundColor: iconSurface,
+          borderWidth: 1,
+          borderColor: c.hairline,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <View
+          style={{
+            width: 29,
+            height: 29,
+            borderRadius: 10,
+            backgroundColor: c.accent,
+            alignItems: 'center',
+            justifyContent: 'center',
+            transform: [{ translateX: -4 }, { translateY: -3 }],
+          }}
+        >
+          <GridIcon color="#FFFFFF" size={16} />
+        </View>
+        <View
+          style={{
+            position: 'absolute',
+            right: 6,
+            bottom: 6,
+            width: 24,
+            height: 24,
+            borderRadius: 9,
+            backgroundColor: c.bgElevated,
+            borderWidth: 1,
+            borderColor: c.hairline,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <ClockIcon color={c.accent} size={14} />
+        </View>
+      </View>
+
+      <View style={{ flex: 1, gap: 7 }}>
+        <View style={{ gap: 3 }}>
+          <Text style={{ color: c.textPrimary, fontSize: 15, fontWeight: '800' }}>{title}</Text>
+          <Text style={{ color: c.textSecondary, fontSize: 12, fontWeight: '600', lineHeight: 17 }}>{subtitle}</Text>
+        </View>
+        <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' }}>
+          <FeaturePill color={accentWash} text={widgetLabel} />
+          <FeaturePill color={accentWash} text={presetLabel} />
+        </View>
+      </View>
+      <ChevronIcon color={c.textTertiary} size={18} />
+    </Pressable>
+  );
+}
+
+function FeaturePill({ color, text }: { color: string; text: string }) {
+  const { c, spacing, radius } = useTheme();
+  return (
+    <View
+      style={{
+        backgroundColor: color,
+        borderRadius: radius.pill,
+        paddingHorizontal: spacing.sm,
+        paddingVertical: 5,
+      }}
+    >
+      <Text style={{ color: c.textPrimary, fontSize: 11, fontWeight: '800' }}>{text}</Text>
     </View>
   );
 }
@@ -265,5 +340,38 @@ function Row({
         {chevron && <ChevronIcon color={c.textTertiary} size={18} />}
       </View>
     </Pressable>
+  );
+}
+
+function SwitchRow({
+  label,
+  value,
+  onValueChange,
+  icon,
+}: {
+  label: string;
+  value: boolean;
+  onValueChange: (value: boolean) => void;
+  icon?: React.ReactNode;
+}) {
+  const { c, spacing } = useTheme();
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.lg,
+        borderTopWidth: 1,
+        borderTopColor: c.hairline,
+      }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, flex: 1 }}>
+        {icon}
+        <Text style={{ color: c.textPrimary, fontSize: 15, fontWeight: '500' }}>{label}</Text>
+      </View>
+      <Switch value={value} onValueChange={onValueChange} accessibilityLabel={label} />
+    </View>
   );
 }
