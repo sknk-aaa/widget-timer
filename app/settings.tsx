@@ -55,17 +55,6 @@ export default function SettingsScreen() {
       >
         <SheetHeader title={s.settings.title} onClose={() => router.back()} />
 
-        {!isPro && (
-          <ProUpgradeCard
-            onPress={() => router.push('/paywall')}
-            isDark={isDark}
-            title={s.pro.settingsTitle}
-            subtitle={s.pro.settingsSub}
-            widgetLabel={s.pro.settingsFeatureWidgets}
-            presetLabel={s.pro.settingsFeaturePresets}
-          />
-        )}
-
         {isPro && (
           <Pressable
             onPress={() => router.push('/paywall')}
@@ -138,6 +127,17 @@ export default function SettingsScreen() {
             }}
           />
         </View>
+
+        {!isPro && (
+          <ProUpgradeCard
+            onPress={() => router.push('/paywall')}
+            isDark={isDark}
+            title={s.pro.settingsTitle}
+            subtitle={s.pro.settingsSub}
+            widgetLabel={s.pro.settingsFeatureWidgets}
+            presetLabel={s.pro.settingsFeaturePresets}
+          />
+        )}
 
         <View style={{ marginBottom: spacing.xl }}>
           <Button title={s.settings.restore} variant="secondary" onPress={restore} />
