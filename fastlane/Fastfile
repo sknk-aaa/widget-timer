@@ -1,4 +1,5 @@
 default_platform(:ios)
+require "json"
 
 # Widget 拡張の Xcode ターゲット名（apple-targets の name）。生成物で異なる場合は ENV で上書き。
 WIDGET_TARGET = ENV["WIDGET_TARGET"] || "ImasuguWidget"
@@ -32,6 +33,11 @@ platform :ios do
       UI.user_error!("ios/*.xcworkspace が見つかりません。先に expo prebuild + pod install を実行")
   end
 
+  def widget_extension_plist?(plist)
+    value = `/usr/libexec/PlistBuddy -c "Print :NSExtension:NSExtensionPointIdentifier" "#{plist}" 2>/dev/null`.strip
+    value == "com.apple.widgetkit-extension"
+  end
+
   desc "証明書/プロファイルを作成しmatchリポへ保存（初回1回だけ）"
   lane :certs do
     match(type: "appstore", readonly: false, app_identifier: [app_id, widget_id], api_key: asc_api_key)
@@ -58,12 +64,17 @@ platform :ios do
       code_sign_identity: "Apple Distribution", targets: [WIDGET_TARGET], profile_name: widget_profile
     )
 
-    # ビルド番号（アプリと拡張の Info.plist を揃える。重複アップロード回避）
+    # バージョン/ビルド番号（アプリと拡張の Info.plist を揃える。重複アップロード回避）
     build_no = ENV["GITHUB_RUN_NUMBER"] || Time.now.to_i.to_s
+    marketing_version = JSON.parse(File.read(File.join(root, "package.json")))["version"]
     plists = [File.join(root, "ios", scheme, "Info.plist")]
-    plists += Dir[File.join(root, "ios", "**", "Info.plist")].select { |p| p.downcase.include?(WIDGET_TARGET.downcase) }
+    plists += Dir[File.join(root, "ios", "**", "Info.plist")].reject { |p| p.include?("/Pods/") }.select do |p|
+      p.downcase.include?(WIDGET_TARGET.downcase) || widget_extension_plist?(p)
+    end
     plists.uniq.each do |plist|
-      set_info_plist_value(path: plist, key: "CFBundleVersion", value: build_no) if File.exist?(plist)
+      next unless File.exist?(plist)
+      set_info_plist_value(path: plist, key: "CFBundleShortVersionString", value: marketing_version)
+      set_info_plist_value(path: plist, key: "CFBundleVersion", value: build_no)
     end
 
     gym(
