@@ -25,9 +25,9 @@ const BOARDS_SEEDED_KEY = 'boards_seeded';
 let widgetMirrorsInstalled = false;
 
 const DEFAULT_PRESETS: Omit<Preset, 'id'>[] = [
-  { name: '', icon: 'ramen', color: 'orange', durationSec: 180, inWidget: true, sortOrder: 0, sound: 'default' },
-  { name: '', icon: 'bed', color: 'indigo', durationSec: 1200, inWidget: true, sortOrder: 1, sound: 'default' },
-  { name: '', icon: 'book', color: 'blue', durationSec: 1500, inWidget: true, sortOrder: 2, sound: 'default' },
+  { name: '', icon: 'ramen', color: 'orange', durationSec: 180, inWidget: false, sortOrder: 0, sound: 'default' },
+  { name: '', icon: 'bed', color: 'indigo', durationSec: 1200, inWidget: false, sortOrder: 1, sound: 'default' },
+  { name: '', icon: 'book', color: 'blue', durationSec: 1500, inWidget: false, sortOrder: 2, sound: 'default' },
 ];
 
 function seedDefaultsIfNeeded(): void {
@@ -38,7 +38,8 @@ function seedDefaultsIfNeeded(): void {
   setMeta(SEEDED_KEY, '1');
 }
 
-// ウィジェット欄（ボード）を初期化。デフォルト欄を1つ用意し、旧 inWidget プリセットを移行する。
+// ウィジェット欄（ボード）を初期化。新規インストールでは枠1は空。
+// 旧モデルからの更新時だけ、inWidget=true の既存プリセットを枠1へ移行する。
 function seedBoardsIfNeeded(): void {
   if (getMeta(BOARDS_SEEDED_KEY) === '1') return;
   let boards = listBoards();
