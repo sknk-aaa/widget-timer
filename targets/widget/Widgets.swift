@@ -75,9 +75,9 @@ private struct WaitingView: View {
                                 .fill(paletteColor(p.color))
                                 .frame(width: tile, height: tile)
                                 .overlay(
-                                    Image(systemName: iconToSymbol(p.icon))
+                                    PresetIconGlyph(icon: p.icon)
+                                        .frame(width: iconSize, height: iconSize)
                                         .foregroundStyle(.white)
-                                        .font(.system(size: iconSize, weight: .semibold))
                                 )
                             Text(durationLabel(p.durationSec))
                                 .font(.system(size: 10, weight: .semibold))
@@ -117,19 +117,22 @@ private struct AccessoryView: View {
                         sound: p.sound ?? "default"
                     )) {
                         VStack(spacing: 0) {
-                            Image(systemName: iconToSymbol(p.icon)).font(.caption)
+                            PresetIconGlyph(icon: p.icon)
+                                .frame(width: 15, height: 15)
                             Text(durationLabel(p.durationSec)).font(.system(size: 9, weight: .semibold))
                         }
                     }
                     .buttonStyle(.plain)
                 } else {
-                    Image(systemName: "timer").font(.title3)
+                    PresetIconGlyph(icon: "timer")
+                        .frame(width: 22, height: 22)
                 }
             }
         default: // accessoryRectangular
             if entry.presets.isEmpty {
                 HStack(spacing: 8) {
-                    Image(systemName: "timer").font(.title3)
+                    PresetIconGlyph(icon: "timer")
+                        .frame(width: 22, height: 22)
                     Text("今すぐタイマー").font(.headline)
                     Spacer()
                 }
@@ -145,8 +148,8 @@ private struct AccessoryView: View {
                             sound: p.sound ?? "default"
                         )) {
                             VStack(spacing: 2) {
-                                Image(systemName: iconToSymbol(p.icon))
-                                    .font(.system(size: 15, weight: .semibold))
+                                PresetIconGlyph(icon: p.icon)
+                                    .frame(width: 15, height: 15)
                                 Text(durationLabel(p.durationSec))
                                     .font(.system(size: 9, weight: .semibold))
                                     .monospacedDigit()

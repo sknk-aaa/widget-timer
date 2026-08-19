@@ -50,12 +50,14 @@ struct TimerLiveActivity: Widget {
                     }
                 }
             } compactLeading: {
-                Image(systemName: iconToSymbol(context.attributes.metadata?.icon ?? "timer"))
+                PresetIconGlyph(icon: context.attributes.metadata?.icon ?? "timer")
+                    .frame(width: 14, height: 14)
                     .foregroundStyle(paletteColor(context.attributes.metadata?.colorID ?? "blue"))
             } compactTrailing: {
                 remaining(context.state).monospacedDigit()
             } minimal: {
-                Image(systemName: "timer")
+                PresetIconGlyph(icon: "timer")
+                    .frame(width: 14, height: 14)
                     .foregroundStyle(paletteColor(context.attributes.metadata?.colorID ?? "blue"))
             }
             .keylineTint(paletteColor(context.attributes.metadata?.colorID ?? "blue"))
@@ -158,9 +160,9 @@ private struct IconChip: View {
             .fill(paletteColor(colorID))
             .frame(width: 40, height: 40)
             .overlay(
-                Image(systemName: iconToSymbol(icon))
+                PresetIconGlyph(icon: icon)
+                    .frame(width: 18, height: 18)
                     .foregroundStyle(.white)
-                    .font(.system(size: 18, weight: .semibold))
             )
     }
 }

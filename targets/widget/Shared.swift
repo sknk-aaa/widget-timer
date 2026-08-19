@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import AlarmKit
+import UIKit
 
 // アプリと拡張で共有する定数・モデル。
 // 注意: iOS 26 / AlarmKit は新しく、本ファイルは TestFlight 実機での
@@ -192,5 +193,35 @@ func iconToSymbol(_ icon: String) -> String {
     case "music": return "music.note"
     case "bell": return "bell.fill"
     default: return "timer"
+    }
+}
+
+private func widgetIconImage(_ icon: String) -> UIImage? {
+    let safeIcon = icon.range(of: #"^[a-z0-9_]+$"#, options: .regularExpression) == nil ? "timer" : icon
+    for name in ["widget_icon_\(safeIcon)", "widget_icon_timer"] {
+        for subdirectory in ["widget-icons", "assets/widget-icons", nil] as [String?] {
+            if let url = Bundle.main.url(forResource: name, withExtension: "png", subdirectory: subdirectory),
+               let image = UIImage(contentsOfFile: url.path) {
+                return image.withRenderingMode(.alwaysTemplate)
+            }
+        }
+    }
+    return nil
+}
+
+struct PresetIconGlyph: View {
+    let icon: String
+
+    var body: some View {
+        if let image = widgetIconImage(icon) {
+            Image(uiImage: image)
+                .resizable()
+                .renderingMode(.template)
+                .scaledToFit()
+        } else {
+            Image(systemName: iconToSymbol(icon))
+                .resizable()
+                .scaledToFit()
+        }
     }
 }
