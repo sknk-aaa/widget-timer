@@ -1,6 +1,6 @@
 {
   "name": "imasugu-timer",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": "expo-router/entry",
   "dependencies": {
     "babel-preset-expo": "~54.0.10",
