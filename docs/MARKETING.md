@@ -58,7 +58,7 @@
 
 ## リリース初動方針
 
-- 現在はApp Store公開済み。公開後改善フェーズ。2026-07-06 時点では `1.0.2` 向け TestFlight workflow の完了確認と、必要に応じた手動アップデート申請が次アクション。
+- 現在はApp Store公開済み。公開後改善フェーズ。2026-08-19 時点では `1.0.3` のTestFlightアップロードが成功済み。App Store Connectで処理完了後、必要に応じてユーザーが手動アップデート申請する。
 - 英語名は TimerTiles に変更済み。App Store Connect 側の英語タイトル/説明/キーワード/スクショ文言は、公開後も最新訴求とずれていないか確認する。
 - 初回リリースはユーザーが手動で実施済み。今後は公開後24〜72時間の反応を見ながら、TikTok/X投稿、LP導線、ストア文言、レビュー獲得を優先する。
 - TikTokプロフィールにはApp Store直リンクではなく、GitHub Pagesの専用LP `docs/tiktok/index.html` を挟む。公開後URLは `https://sknk-aaa.github.io/widget-timer/tiktok/`。
@@ -77,6 +77,7 @@
 ・ウィジェットの追加方法を、画像つきのスライドで分かりやすく確認できるようにしました。
 ・Pro画面と設定画面を見直し、無料版とPro版の違いがより伝わりやすくなりました。
 ・初期プリセットの内容を一部調整しました。
+・プリセットで設定したアイコンが、ウィジェットにも正しく反映されるように修正しました。
 ・その他、細かな表示や使いやすさを改善しました。
 ```
 
@@ -86,6 +87,7 @@ English:
 ・Added image-based slides to make widget setup easier to follow.
 ・Refined the Pro and Settings screens so the difference between Free and Pro is clearer.
 ・Adjusted one of the default presets.
+・Fixed an issue where preset icons could appear differently in widgets.
 ・Improved minor UI details and overall usability.
 ```
 

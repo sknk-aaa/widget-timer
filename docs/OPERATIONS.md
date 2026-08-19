@@ -104,7 +104,12 @@ npm start
 
 - サポートURL: `https://tally.so/r/rjgJYL`（Tally フォーム）／プライバシーポリシー: `https://sknk-aaa.github.io/widget-timer/privacy.html`／利用規約: Apple 標準EULA。
 - カテゴリ: ユーティリティ（プライマリ）/ 仕事効率化（セカンダリ）。
-- 名称/サブタイトル/キーワード/説明（日英）は提出時に設定済み。コード上の英語名は TimerTiles に変更済み。App Store Connect 側は公開前に `TimerTiles: Widget Timer` へ手動同期する。英語キーワードはタイトルに widget/timer を含むため両語を除外して構成。
+- 名称/サブタイトル/キーワード/説明（日英）は提出時に設定済み。コード上の英語名は TimerTiles。App Store Connect 側も `TimerTiles: Widget Timer` と最新訴求へ手動同期する。英語キーワードはタイトルに widget/timer を含むため両語を除外して構成。
+
+### TestFlight バージョン運用メモ
+
+- 最新の提出用バージョンは `1.0.3`（commit `a1dc7b6`、GitHub Actions run `32216738831` 成功）。
+- `1.0.1` / `1.0.2` はApp Store Connect上でpre-release trainが閉じたため、新規ビルド提出不可。`Invalid Pre-Release Train` が出た場合は、まずActionsログで閉じたtrainか確認し、`package.json` / `package-lock.json` / `app.config.ts` のversionを次の未使用バージョンへ揃える。
 
 ### 法的URL（`src/domain/links.ts`）
 
