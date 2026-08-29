@@ -66,7 +66,8 @@ platform :ios do
 
     # バージョン/ビルド番号（アプリと拡張の Info.plist を揃える。重複アップロード回避）
     build_no = ENV["GITHUB_RUN_NUMBER"] || Time.now.to_i.to_s
-    marketing_version = JSON.parse(File.read(File.join(root, "package.json")))["version"]
+    package_info = JSON.parse(File.read(File.join(root, "package.json")))
+    marketing_version = package_info["appStoreVersion"] || package_info["version"]
     plists = [File.join(root, "ios", scheme, "Info.plist")]
     plists += Dir[File.join(root, "ios", "**", "Info.plist")].reject { |p| p.include?("/Pods/") }.select do |p|
       p.downcase.include?(WIDGET_TARGET.downcase) || widget_extension_plist?(p)

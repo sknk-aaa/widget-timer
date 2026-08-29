@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { IS_PAID_UPFRONT } from '../domain/monetization';
 import { purchaseService, getProPrice, getSupportPrice, purchaseSupport } from '../native/purchases';
 import type { PurchaseResult } from '../native/types';
 
@@ -19,23 +20,37 @@ interface ProState {
 }
 
 export const useProStore = create<ProState>((set, get) => ({
-  isPro: false,
+  isPro: IS_PAID_UPFRONT,
   price: null,
   supportPrice: null,
 
   load: async () => {
+    if (IS_PAID_UPFRONT) {
+      set({ isPro: true });
+      await get().loadPrices();
+      return;
+    }
     const isPro = await purchaseService.isPro();
     set({ isPro });
     await get().loadPrices();
   },
 
   loadPrices: async () => {
+    if (IS_PAID_UPFRONT) {
+      const supportPrice = await getSupportPrice();
+      set({ price: null, supportPrice });
+      return;
+    }
     const price = await getProPrice();
     const supportPrice = await getSupportPrice();
     set({ price, supportPrice });
   },
 
   refresh: async () => {
+    if (IS_PAID_UPFRONT) {
+      set({ isPro: true });
+      return;
+    }
     const isPro = await purchaseService.isPro();
     set({ isPro });
   },
@@ -48,7 +63,7 @@ export const useProStore = create<ProState>((set, get) => ({
 
   restore: async () => {
     const ok = await purchaseService.restore();
-    set({ isPro: ok });
+    set({ isPro: IS_PAID_UPFRONT || ok });
     return ok;
   },
 

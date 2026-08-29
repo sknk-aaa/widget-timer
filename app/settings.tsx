@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
 import { useProStore } from '../src/store/pro';
 import { useSettingsStore } from '../src/store/settings';
+import { IS_PAID_UPFRONT } from '../src/domain/monetization';
 import { useTheme } from '../src/ui/theme';
 import { SheetHeader, SectionLabel } from '../src/ui/components/common';
 import { Button } from '../src/ui/components/Button';
@@ -55,7 +56,7 @@ export default function SettingsScreen() {
       >
         <SheetHeader title={s.settings.title} onClose={() => router.back()} />
 
-        {isPro && (
+        {!IS_PAID_UPFRONT && isPro && (
           <Pressable
             onPress={() => router.push('/paywall')}
             accessibilityRole="button"
@@ -105,6 +106,14 @@ export default function SettingsScreen() {
             chevron
             onPress={() => void openWriteReview()}
           />
+          {IS_PAID_UPFRONT && (
+            <Row
+              icon={<MenuIcon color="#FF6A1A"><StarIcon color="#FFFFFF" size={16} /></MenuIcon>}
+              label={s.settings.support}
+              chevron
+              onPress={() => router.push('/paywall')}
+            />
+          )}
           <Row
             icon={<MenuIcon color="#1E9E66"><ChatIcon color="#FFFFFF" size={16} /></MenuIcon>}
             label={s.settings.contact}
@@ -128,7 +137,7 @@ export default function SettingsScreen() {
           />
         </View>
 
-        {!isPro && (
+        {!IS_PAID_UPFRONT && !isPro && (
           <ProUpgradeCard
             onPress={() => router.push('/paywall')}
             isDark={isDark}
@@ -139,9 +148,11 @@ export default function SettingsScreen() {
           />
         )}
 
-        <View style={{ marginBottom: spacing.xl }}>
-          <Button title={s.settings.restore} variant="secondary" onPress={restore} />
-        </View>
+        {!IS_PAID_UPFRONT && (
+          <View style={{ marginBottom: spacing.xl }}>
+            <Button title={s.settings.restore} variant="secondary" onPress={restore} />
+          </View>
+        )}
 
         <SectionLabel>{s.settings.about}</SectionLabel>
         <View style={{ backgroundColor: c.surface, borderRadius: radius.lg }}>

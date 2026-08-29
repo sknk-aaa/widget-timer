@@ -43,6 +43,8 @@ com.sknk.imasugutimer.support
 - ストア表記（英語タイトル）: TimerTiles: Widget Timer
 - GitHub: `sknk-aaa/widget-timer`
 - 対応OS: iOS 26+（`app.config.ts` の deploymentTarget=26.0）
+- 有料アプリテスト時のApp Store表示バージョン: `1.2`（`app.config.ts` / `package.json` の `appStoreVersion`）
+- npm/packageバージョン: `1.2.0`（SemVer維持のため）
 
 > 識別子は確定済み（App Store Connect でアプリ作成済み）。変える場合は `app.config.ts` と各ワークフローの設定を更新する。
 
@@ -96,6 +98,7 @@ npm start
 
 - 全データ端末内（SQLite）。外部送信なし。Privacy Nutrition Label は「データ収集なし」で申告できる構成を維持する（**分析SDK等を入れない**）。
 - 課金は StoreKit 2（買い切り非消耗型）を直実装済み。RevenueCat 等は上記方針のため不採用。Pro／Pro＋応援の2製品、isPro は両製品所有のいずれかで成立。
+- `paid_upfront` モード時はアプリ自体を有料化する前提で、アプリ内は全機能解放。Pro購入導線は非表示、任意の応援購入だけ表示する。IAP商品自体は無料+Proモデルへ戻せるよう削除しない。
 - `NSAlarmKitUsageDescription` は `app.config.ts` の infoPlist に設定済み。
 - **プライバシーマニフェスト**: Required Reason API（App Group の UserDefaults, 理由 `C56D.1`/`CA92.1`）を申告。本体は `app.config.ts` の `ios.privacyManifests`、Widget拡張は `targets/widget/PrivacyInfo.xcprivacy`（apple-targets の同期フォルダで取込）。トラッキング・データ収集なし。
 - **Live Activity**: `NSSupportsLiveActivities=true` を本体 infoPlist に設定（AlarmKit の `AlarmAttributes` 表示に必須）。
@@ -110,6 +113,7 @@ npm start
 
 - 最新の提出用バージョンは `1.0.3`（commit `a1dc7b6`、GitHub Actions run `32216738831` 成功）。
 - `1.0.1` / `1.0.2` はApp Store Connect上でpre-release trainが閉じたため、新規ビルド提出不可。`Invalid Pre-Release Train` が出た場合は、まずActionsログで閉じたtrainか確認し、`package.json` / `package-lock.json` / `app.config.ts` のversionを次の未使用バージョンへ揃える。
+- 有料アプリ化テストでは `package.json` の `version` は `1.2.0`、`appStoreVersion` は `1.2`。Fastlaneは `appStoreVersion` を優先して `CFBundleShortVersionString` に入れる。
 
 ### 法的URL（`src/domain/links.ts`）
 

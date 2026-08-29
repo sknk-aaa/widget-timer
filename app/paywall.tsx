@@ -3,6 +3,7 @@ import { View, Text, Image, ScrollView, Pressable, Alert, Linking } from 'react-
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProStore } from '../src/store/pro';
+import { IS_PAID_UPFRONT } from '../src/domain/monetization';
 import { useTheme } from '../src/ui/theme';
 import { Button } from '../src/ui/components/Button';
 import { CheckIcon, ClockIcon, GridIcon, StarIcon } from '../src/ui/icons/ui';
@@ -68,6 +69,10 @@ export default function PaywallScreen() {
     const r = await useProStore.getState().support().finally(() => setSupporting(false));
     if (r === 'purchased') {
       haptics.start();
+      if (IS_PAID_UPFRONT) {
+        Alert.alert(s.support.thanksTitle, s.support.thanksBody);
+        return;
+      }
       // 「Pro＋応援」は Pro を付与するので、購入後は使い方モーダルへ。
       router.replace('/welcome-pro');
     } else if (r === 'pending') {
@@ -76,6 +81,131 @@ export default function PaywallScreen() {
       Alert.alert(s.pro.title, s.pro.purchaseFailed);
     }
   };
+
+  const restoreSupport = async () => {
+    if (restoring) return;
+    setRestoring(true);
+    const ok = await useProStore.getState().restore();
+    setRestoring(false);
+    Alert.alert(s.settings.support, ok ? s.support.restored : s.support.notRestored);
+  };
+
+  if (IS_PAID_UPFRONT) {
+    return (
+      <View style={{ flex: 1, backgroundColor: c.bg }} accessibilityViewIsModal>
+        <ScrollView
+          contentContainerStyle={{
+            padding: spacing.xl,
+            paddingTop: spacing.xxxl,
+            paddingBottom: insets.bottom + spacing.lg,
+            flexGrow: 1,
+          }}
+          showsVerticalScrollIndicator={false}
+        >
+          <Pressable
+            onPress={() => router.back()}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel={s.common.close}
+            style={{ position: 'absolute', top: spacing.lg, right: spacing.xl, zIndex: 1 }}
+          >
+            <Text style={{ color: c.textSecondary, fontSize: 16, fontWeight: '600' }}>{s.common.close}</Text>
+          </Pressable>
+
+          <View style={{ alignItems: 'center', marginBottom: spacing.xl, marginTop: spacing.lg }}>
+            <View
+              style={{
+                borderRadius: 22,
+                marginBottom: spacing.md,
+                borderWidth: 1,
+                borderColor: c.hairline,
+                shadowColor: c.accent,
+                shadowOpacity: isDark ? 0.22 : 0.14,
+                shadowRadius: 18,
+                shadowOffset: { width: 0, height: 8 },
+              }}
+            >
+              <Image
+                source={require('../assets/icon.png')}
+                style={{ width: 74, height: 74, borderRadius: 22 }}
+              />
+            </View>
+            <View
+              style={{
+                backgroundColor: isDark ? 'rgba(255,106,26,0.16)' : 'rgba(255,106,26,0.10)',
+                borderRadius: radius.pill,
+                paddingHorizontal: spacing.md,
+                paddingVertical: 6,
+                marginBottom: spacing.sm,
+              }}
+            >
+              <Text style={{ color: c.accent, fontSize: 12, fontWeight: '900' }}>{s.support.title}</Text>
+            </View>
+            <Text
+              style={{
+                color: c.textPrimary,
+                fontSize: 25,
+                fontWeight: '900',
+                letterSpacing: 0.2,
+                textAlign: 'center',
+              }}
+            >
+              {s.support.headline}
+            </Text>
+            <Text
+              style={{
+                color: c.textSecondary,
+                fontSize: 14,
+                fontWeight: '600',
+                marginTop: 6,
+                textAlign: 'center',
+                lineHeight: 20,
+              }}
+            >
+              {s.support.subtitle}
+            </Text>
+          </View>
+
+          <View style={{ gap: spacing.md, marginBottom: spacing.lg }}>
+            <FeatureCard title={s.support.featureUpdates} sub={s.support.featureUpdatesSub} icon="star" />
+            <FeatureCard title={s.support.featureComfort} sub={s.support.featureComfortSub} icon="grid" />
+            <FeatureCard title={s.support.featurePrivacy} sub={s.support.featurePrivacySub} icon="clock" />
+          </View>
+
+          <View style={{ flex: 1, minHeight: spacing.xl }} />
+
+          <Button
+            title={supporting ? s.pro.supportLoading : supportPrice ? `${s.support.cta} ${supportPrice}` : s.support.cta}
+            onPress={() => void support()}
+            loading={supporting}
+          />
+          <Pressable
+            onPress={restoreSupport}
+            disabled={restoring}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel={s.support.restore}
+            accessibilityState={{ busy: restoring }}
+            style={{ alignItems: 'center', marginTop: spacing.md, opacity: restoring ? 0.5 : 1 }}
+          >
+            <Text style={{ color: c.textSecondary, fontSize: 14, fontWeight: '600' }}>
+              {restoring ? s.pro.restoring : s.support.restore}
+            </Text>
+          </Pressable>
+
+          <View style={{ flexDirection: 'row', justifyContent: 'center', gap: spacing.lg, marginTop: spacing.lg }}>
+            <Pressable onPress={() => Linking.openURL(PRIVACY_URL)} hitSlop={8}>
+              <Text style={{ color: c.textTertiary, fontSize: 12, fontWeight: '600' }}>{s.settings.privacy}</Text>
+            </Pressable>
+            <Text style={{ color: c.textTertiary, fontSize: 12 }}>・</Text>
+            <Pressable onPress={() => Linking.openURL(TERMS_URL)} hitSlop={8}>
+              <Text style={{ color: c.textTertiary, fontSize: 12, fontWeight: '600' }}>{s.settings.terms}</Text>
+            </Pressable>
+          </View>
+        </ScrollView>
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }} accessibilityViewIsModal>

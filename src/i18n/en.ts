@@ -122,7 +122,7 @@ export const en: Strings = {
       },
       {
         q: 'How do I show a different board on the widget?',
-        a: 'Long-press the widget on your Home Screen → "Edit Widget" → pick the board under "Board". Place multiple widgets to show different boards (adding boards is Pro).',
+        a: 'Long-press the widget on your Home Screen → "Edit Widget" → pick the board under "Board". Place multiple widgets to show different boards.',
       },
       {
         q: 'Can I run multiple timers at once?',
@@ -133,8 +133,8 @@ export const en: Strings = {
         a: 'Yes. Choose the "Alert sound" in the preset edit screen.',
       },
       {
-        q: 'What does Pro do?',
-        a: 'It removes the limit on how many presets you can show on the widget (unlimited).',
+        q: 'Are there extra purchases?',
+        a: 'All core features are included with the paid app. An optional support purchase is available.',
       },
       {
         q: 'Where is my data stored?',
@@ -192,6 +192,24 @@ export const en: Strings = {
     active: 'Pro purchased',
     activeSub: '',
     widgetLimit: 'Free includes 1 board with 3 presets. Pro makes it unlimited.',
+  },
+
+  support: {
+    title: 'Optional support',
+    headline: 'Support future updates',
+    subtitle: 'TimerTiles is paid upfront and all features are included. This optional purchase helps keep the app improving.',
+    cta: 'Support',
+    restore: 'Restore support purchase',
+    restored: 'Support purchase restored',
+    notRestored: 'No support purchase was found',
+    thanksTitle: 'Thank you!',
+    thanksBody: 'Your support helps keep future updates going.',
+    featureUpdates: 'Ongoing updates',
+    featureUpdatesSub: 'I will keep refining the widget experience, usability, and small issues.',
+    featureComfort: 'All features stay included',
+    featureComfortSub: 'Boards and presets are unlimited even without the support purchase.',
+    featurePrivacy: 'No ads, no tracking',
+    featurePrivacySub: 'Your data stays on your device, as before.',
   },
 
   onboarding: {
