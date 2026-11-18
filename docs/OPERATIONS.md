@@ -43,7 +43,7 @@ com.sknk.imasugutimer.support
 - ストア表記（英語タイトル）: TimerTiles: Widget Timer
 - GitHub: `sknk-aaa/widget-timer`
 - 対応OS: iOS 26+（`app.config.ts` の deploymentTarget=26.0）
-- 現行App Store表示バージョン: `2.0`（`app.config.ts` / `package.json` の `appStoreVersion`）
+- 現行App Store表示バージョン: `2.0`（2026-11-18 App Store公開済み、ユーザー確認）
 - npm/packageバージョン: `2.0.0`（SemVer維持のため）
 
 > 識別子は確定済み（App Store Connect でアプリ作成済み）。変える場合は `app.config.ts` と各ワークフローの設定を更新する。
@@ -111,7 +111,7 @@ npm start
 
 ### TestFlight バージョン運用メモ
 
-- 2026-08-29時点で確認した提出用バージョンは `1.0.3`（commit `a1dc7b6`、GitHub Actions run `32216738831` 成功）。現行 `2.0` の提出状況はApp Store Connectで未確認。
+- 2026-08-29時点のTestFlight提出記録は `1.0.3`（commit `a1dc7b6`、GitHub Actions run `32216738831` 成功）。`2.0` は2026-11-18 App Store公開済み（ユーザー確認）。
 - `1.0.1` / `1.0.2` はApp Store Connect上でpre-release trainが閉じたため、新規ビルド提出不可。`Invalid Pre-Release Train` が出た場合は、まずActionsログで閉じたtrainか確認し、`package.json` / `package-lock.json` / `app.config.ts` のversionを次の未使用バージョンへ揃える。
 - `package.json` の `version` は `2.0.0`、`appStoreVersion` は `2.0`。Fastlaneは `appStoreVersion` を優先して `CFBundleShortVersionString` に入れる。
 

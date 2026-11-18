@@ -58,8 +58,8 @@
 
 ## リリース初動方針
 
-- 現在はApp Store公開済み。公開後改善フェーズ。2026-08-19 時点では `1.0.3` のTestFlightアップロードが成功済み。App Store Connectで処理完了後、必要に応じてユーザーが手動アップデート申請する。
-- 2026-11-18 時点では、App Storeの価格を無料にし、全機能を無制限で提供する方針。コードは `free_unlimited` モードに切替済み。将来の再有料化に備え `paid_upfront` と既存IAPは保持する。ストア価格の変更はApp Store Connectで行う。
+- 2026-11-18、App Storeでバージョン `2.0` 公開済み（ユーザー確認）。価格は無料、コードは `free_unlimited` モードで全機能・プリセット数・ウィジェット欄数を無制限にしている。
+- 2.0公開後はダウンロード、レビュー、問い合わせを見て初動を把握する。将来の再有料化に備え `paid_upfront` と既存IAPは保持する。
 - 英語名は TimerTiles に変更済み。App Store Connect 側の英語タイトル/説明/キーワード/スクショ文言は、公開後も最新訴求とずれていないか確認する。
 - 初回リリースはユーザーが手動で実施済み。今後は公開後24〜72時間の反応を見ながら、TikTok/X投稿、LP導線、ストア文言、レビュー獲得を優先する。
 - TikTokプロフィールにはApp Store直リンクではなく、GitHub Pagesの専用LP `docs/tiktok/index.html` を挟む。公開後URLは `https://sknk-aaa.github.io/widget-timer/tiktok/`。
@@ -68,37 +68,33 @@
 - TikTokでは「個人開発でこういうアプリを作った」文脈、Xでは個人開発者としての公開報告・開発背景・使いどころを出す。
 - まず見るべきものは、TikTokプロフィールLPのクリック導線、App Storeページ到達後の反応、X/TikTok投稿への反応、レビュー/不具合報告。次に作るべきものは、追加投稿、使い方ショート動画、レビュー依頼の自然な導線。
 
-## 有料アプリ化テスト（過去案）
+## 有料アプリ化テスト案（保留）
 
-- 過去案: `1.2` で価格¥300・14日間の有料アプリ化テスト。現行方針では保留。
+- 過去案: `1.2` で価格¥300・14日間の有料アプリ化テスト。現行方針は無料・無制限のため保留。
 - アプリ内: Pro制限なし。Pro購入導線なし。任意の「開発者を応援」だけ残す。
 - App Store文言: 「買い切り」「追加課金なし」「広告なし」「データ収集なし」を前面に出す。「無料」「Proで解放」系の表現は消す。
 - 見る数字: DL数、プロダクトページ閲覧、売上、レビュー、低評価理由、問い合わせ。
 - 判断: 売上が無料+Pro時代を明確に超えるなら継続。DLが激減して売上も弱いなら無料+Proへ戻す。売上は増えるがDLが落ちすぎるなら¥150で再テスト。
 - 注意: 任意応援IAPの購入シートに出る商品名はApp Store Connect側の設定に依存する。古い「Pro＋応援」表記が残らないよう確認する。
 
-## ストア更新文言メモ
+## 2.0 ストア更新文言（公開済み）
 
-直近アップデートのストア用文言候補（日英）。技術説明より、使い方の分かりやすさとPro導線の改善を前面に出す。
+2.0 の App Store「このバージョンの最新情報」に使用した文言。
 
 日本語:
 
 ```text
-・ウィジェットの追加方法を、画像つきのスライドで分かりやすく確認できるようにしました。
-・Pro画面と設定画面を見直し、無料版とPro版の違いがより伝わりやすくなりました。
-・初期プリセットの内容を一部調整しました。
-・プリセットで設定したアイコンが、ウィジェットにも正しく反映されるように修正しました。
-・その他、細かな表示や使いやすさを改善しました。
+・終了したタイマーが画面上部に残らないようにしました。
+・アプリを無料化し、ウィジェット欄とプリセット数の制限をなくしました。
+・設定メニューから「開発者を応援」を一時的に非表示にしました。
 ```
 
 English:
 
 ```text
-・Added image-based slides to make widget setup easier to follow.
-・Refined the Pro and Settings screens so the difference between Free and Pro is clearer.
-・Adjusted one of the default presets.
-・Fixed an issue where preset icons could appear differently in widgets.
-・Improved minor UI details and overall usability.
+・Completed timers are now removed from the top of the screen.
+・The app is now free, with no limits on widget boards or presets.
+・Temporarily removed “Support the Developer” from Settings.
 ```
 
 ## 今後作るもの
