@@ -1,14 +1,20 @@
 # Handoff
 
-最終更新: 2026-08-29
+最終更新: 2026-11-18
 
 ## 現状
 
 **App Store 公開済み。** 現在は公開後改善フェーズ。日英2言語（英語名 **TimerTiles** / ストア表記「TimerTiles: Widget Timer」、日本語名「今すぐタイマー」）。初回提出ビルド = GitHub Actions run `28249253876`（commit `8a67567`、提出時英語名はTappri）。初回リリースはユーザーが手動で実施済み。アップデート申請もユーザーがApp Store Connectで手動実施する。
 
+今回の更新作業:
+- コード上の次バージョンをApp Store表示 `2.0` / package `2.0.0` に更新。
+- 無料・全機能解放の `free_unlimited` モードを追加。将来は `MONETIZATION_MODE` を切り替えて既存の `free_plus_pro` または `paid_upfront` に戻せる。App Store Connect の価格変更と2.0のTestFlight/申請状況は未確認。
+- 完了したタイマーはホーム画面の実行中一覧から消し、ローカル実行記録を削除する。既存DBに残る完了済み行も起動時に掃除する。
+- 設定メニューから「開発者を応援」を削除。今回「＋タイマー」画面の履歴表示は対象外。
+
 2026-08-29 までの追加修正:
 - **問い合わせ対応: 「プリセットで設定したアイコンとWidget表示アイコンが異なる」不具合を修正済み**。原因はJS/App Groupの同期ではなく、Widget/Live Activity側が `icon` IDをSF Symbols近似表へ変換していたこと。アプリ側の `src/ui/icons/registry.tsx` を元にWidget用テンプレートPNG（`targets/widget/assets/widget-icons/widget_icon_*.png`）を32個生成し、`PresetIconGlyph` で読み込むようにした。画像が見つからない場合は従来のSF Symbolsへフォールバックする。commit `8cf5a66`。
-- **最新のTestFlight提出用バージョンは `1.0.3`**。`1.0.2` はApp Store Connect上でpre-release trainが閉じており、新規ビルド提出が拒否されたため、`package.json` / `package-lock.json` / `app.config.ts` を `1.0.3` に更新。commit `a1dc7b6`。
+- **2026-08-29時点のTestFlight提出用バージョンは `1.0.3`**。`1.0.2` はApp Store Connect上でpre-release trainが閉じており、新規ビルド提出が拒否されたため、`package.json` / `package-lock.json` / `app.config.ts` を `1.0.3` に更新。commit `a1dc7b6`。
 - **直近の `gp`**: commit `a1dc7b6` まで push 済み。GitHub Actions `ios.yml` run `32216738831` は成功し、`Build & upload to TestFlight` まで完了済み。直前の run `32215797348` は `Invalid Pre-Release Train`（`1.0.2` closed）で失敗。
 - **TikTokプロフィール用LPをGitHub Pages向けに追加・調整済み**。公開URLは `https://sknk-aaa.github.io/widget-timer/tiktok/`。TikTok内でApp Store直リンクが開けない場合の中継ページとして使う。ストアリンクは `docs/tiktok/index.html` の `APP_STORE_URL` 1箇所で管理。
 - **ウィジェット追加画面の日本語名表示を修正済み**（`targets/widget/assets/{ja,en}.lproj/Localizable.strings` で `widget.displayName` / `widget.description` を管理）。ユーザー実機確認で、日本語端末のWidget追加画面が「今すぐタイマー」になることを確認済み。
@@ -20,7 +26,7 @@
 - **初期プリセットと初期ウィジェット欄を調整済み**。新規インストール時の枠1は空。全てのプリセットは「カップ麺 3分 / 仮眠 20分 / 読書 1時間」。
 - **ウィジェット追加方法を動画から日本語スライドへ変更済み**。`assets/howto/home_1..4.png` / `lock_1..3.png` を使い、ホーム/ロック画面タブごとに横スワイプで手順を見せる。PNGは16-bitから8-bitへ軽量化し、表示時の黒い待ち時間を減らした。旧ホーム/ロック追加動画はこの画面では使わない。
 - **設定画面 / Pro導線を改善済み**。FAQ入口はメニューから削除。設定メニュー順は「ウィジェットの追加方法 / レビューして応援 / ご意見ご要望はこちら / 友だちにすすめる / 操作時の振動」。`Proでもっと自由に` カードはこの操作リストの下、`購入を復元` の直上へ移動。Pro画面は無料/Pro比較と機能カードで違いが伝わる構成に変更。
-- **有料アプリ化テスト用に `paid_upfront` モードを実装中**。App Store表示バージョンは `1.2`、npm/packageバージョンはSemVer維持のため `1.2.0`。`src/domain/monetization.ts` の `MONETIZATION_MODE = 'paid_upfront'` により、アプリ内は全ユーザーPro相当（ボード/プリセット制限なし）になり、Pro購入カード/Pro復元導線は非表示。設定から任意の「開発者を応援」購入だけ残す。Pro IAP商品は削除せず、無料+Proへ戻す時に復帰できるよう残す方針。
+- `paid_upfront` モードは将来の切り替え候補としてコードに保持。現行は `free_unlimited` で、設定のPro/復元導線と応援購入導線は表示しない。Pro IAP定義は削除していない。
 
 実装済み（実機/TestFlight で確認済み）:
 - **起動経路**: アプリ内タップ／ホーム・ロック画面ウィジェット（タップ→起動）。ロック画面はデバイス認証後に起動。
@@ -35,9 +41,8 @@
 ## 公開後 / アップデート申請中の残作業
 
 - App Store Connectで `1.0.3` ビルドの処理完了を確認し、必要ならこのビルドを選んでアップデート申請を手動で進める。リジェクト時の典型対応は `docs/OPERATIONS.md` のリリース前チェックを参照。
-- `1.0.3` TestFlight実機で、プリセット編集画面のアイコンとホーム/ロック画面Widget、Live Activity/Dynamic Islandのアイコンが一致するか確認する。
-- 有料化テスト用 `1.2` をTestFlightへ流して確認する。確認後、App Store Connectでアプリ価格を無料から低価格帯（まずは¥300目安）へ変更し、ストア文言から「無料/Proで解放」系を消す。
-- 任意応援IAPのApp Store Connect表示名が「Pro＋応援」のままだと購入シートで古く見えるため、必要なら「開発者を応援」系に手動変更する。
+- `2.0` の型チェック後、TestFlightへ提出して実機確認する。
+- App Store Connectでアプリ価格を無料に設定し、2.0ビルドを選択してユーザーが手動でアップデート申請する。価格設定と申請は未実施。
 - 公開後の初速を見る。TikTok/X告知、TikTokプロフィールLP、App Storeページ、レビュー導線の反応を確認する。
 - App Store Connect 側の英語名/説明/キーワード/スクショ文言が **TimerTiles: Widget Timer** と最新訴求に同期済みか確認する。提出時旧名は Tappri。
 - App Store キーワードの見直し候補を App Store Connect に反映するか判断する（候補は `docs/MARKETING.md` の ASO メモ）。

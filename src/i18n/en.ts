@@ -133,8 +133,8 @@ export const en: Strings = {
         a: 'Yes. Choose the "Alert sound" in the preset edit screen.',
       },
       {
-        q: 'Are there extra purchases?',
-        a: 'All core features are included with the paid app. An optional support purchase is available.',
+        q: 'Are there any feature limits?',
+        a: 'All core features are free. There are no limits on boards or presets.',
       },
       {
         q: 'Where is my data stored?',

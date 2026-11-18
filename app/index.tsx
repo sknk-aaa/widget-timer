@@ -164,7 +164,7 @@ export default function MainScreen() {
     router.push('/preset');
   };
 
-  const sortedTimers = [...timers].sort((a, b) => {
+  const sortedTimers = timers.filter((timer) => timer.state !== 'finished').sort((a, b) => {
     const ra = a.state === 'paused' ? (a.pausedRemainingSec ?? 0) * 1000 : a.endAt;
     const rb = b.state === 'paused' ? (b.pausedRemainingSec ?? 0) * 1000 : b.endAt;
     return ra - rb;

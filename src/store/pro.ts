@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { IS_PAID_UPFRONT } from '../domain/monetization';
+import { IS_ALL_FEATURES_UNLOCKED, IS_FREE_UNLIMITED, IS_PAID_UPFRONT } from '../domain/monetization';
 import { purchaseService, getProPrice, getSupportPrice, purchaseSupport } from '../native/purchases';
 import type { PurchaseResult } from '../native/types';
 
@@ -20,12 +20,12 @@ interface ProState {
 }
 
 export const useProStore = create<ProState>((set, get) => ({
-  isPro: IS_PAID_UPFRONT,
+  isPro: IS_ALL_FEATURES_UNLOCKED,
   price: null,
   supportPrice: null,
 
   load: async () => {
-    if (IS_PAID_UPFRONT) {
+    if (IS_ALL_FEATURES_UNLOCKED) {
       set({ isPro: true });
       await get().loadPrices();
       return;
@@ -36,6 +36,10 @@ export const useProStore = create<ProState>((set, get) => ({
   },
 
   loadPrices: async () => {
+    if (IS_FREE_UNLIMITED) {
+      set({ price: null, supportPrice: null });
+      return;
+    }
     if (IS_PAID_UPFRONT) {
       const supportPrice = await getSupportPrice();
       set({ price: null, supportPrice });
@@ -47,7 +51,7 @@ export const useProStore = create<ProState>((set, get) => ({
   },
 
   refresh: async () => {
-    if (IS_PAID_UPFRONT) {
+    if (IS_ALL_FEATURES_UNLOCKED) {
       set({ isPro: true });
       return;
     }
@@ -63,7 +67,7 @@ export const useProStore = create<ProState>((set, get) => ({
 
   restore: async () => {
     const ok = await purchaseService.restore();
-    set({ isPro: IS_PAID_UPFRONT || ok });
+    set({ isPro: IS_ALL_FEATURES_UNLOCKED || ok });
     return ok;
   },
 

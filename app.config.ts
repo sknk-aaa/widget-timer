@@ -7,7 +7,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: '今すぐタイマー',
   slug: 'widget-timer',
-  version: '1.2',
+  version: '2.0',
   orientation: 'portrait',
   icon: './assets/icon.png',
   scheme: 'imasugutimer',

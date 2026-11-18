@@ -70,7 +70,12 @@ export const useTimersStore = create<TimersState>((set, get) => ({
   pendingCancel: null,
 
   load: () => {
-    set({ timers: listRunningTimers() });
+    const timers = listRunningTimers();
+    const activeTimers = timers.filter((timer) => timer.state !== 'finished');
+    for (const timer of timers) {
+      if (timer.state === 'finished') deleteRunningTimer(timer.id);
+    }
+    set({ timers: activeTimers });
   },
 
   start: async (input) => {
@@ -228,13 +233,11 @@ export const useTimersStore = create<TimersState>((set, get) => ({
     );
     if (expired.length === 0) return;
     for (const t of expired) {
-      updateRunningTimer(t.id, { state: 'finished', pausedRemainingSec: null });
+      deleteRunningTimer(t.id);
       void liveActivityService.end(t.id);
     }
     set({
-      timers: get().timers.map((t) =>
-        expired.some((e) => e.id === t.id) ? { ...t, state: 'finished' } : t,
-      ),
+      timers: get().timers.filter((timer) => !expired.some((finished) => finished.id === timer.id)),
     });
     haptics.finish();
     void widgetService.reloadTimelines();

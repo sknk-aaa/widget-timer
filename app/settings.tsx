@@ -106,14 +106,6 @@ export default function SettingsScreen() {
             chevron
             onPress={() => void openWriteReview()}
           />
-          {IS_PAID_UPFRONT && (
-            <Row
-              icon={<MenuIcon color="#FF6A1A"><StarIcon color="#FFFFFF" size={16} /></MenuIcon>}
-              label={s.settings.support}
-              chevron
-              onPress={() => router.push('/paywall')}
-            />
-          )}
           <Row
             icon={<MenuIcon color="#1E9E66"><ChatIcon color="#FFFFFF" size={16} /></MenuIcon>}
             label={s.settings.contact}
